@@ -23,18 +23,18 @@ class PFxSettings:
  
     def __str__(self):
         sb = []
-        sb.append('Status LED           : %s' % (pd.status_led_dict[self.statusLED]))
-        sb.append('Volume Beep          : %s' % (pd.volume_beep_dict[self.volumeBeep]))
-        sb.append('Auto Power Down      : %s' % (pd.power_save_dict[self.autoPowerDown]))
-        sb.append('IR Lockout Mode      : %s' % (pd.lockout_dict[self.lockoutMode]))
-        sb.append('IR Auto Off          : %s' % (pd.ir_off_dict[self.irAutoOff]))
-        sb.append('BLE Auto Off         : %s' % (pd.ble_off_dict[self.bleAutoOff]))
-        sb.append('BLE Motor Disconnect : %s' % (pd.ble_motor_dict[self.bleMotorWhenDisconnect]))
-        sb.append('BLE Advert Power     : %s' % (self.bleAdvertPower))
-        sb.append('BLE Session Power    : %s' % (self.bleSessionPower))
-        sb.append('Motor sound notches  : %s' % (self.notchCount))
+        sb.append('Status LED            : %s' % (pd.status_led_dict[self.statusLED]))
+        sb.append('Volume Beep           : %s' % (pd.volume_beep_dict[self.volumeBeep]))
+        sb.append('Auto Power Down       : %s' % (pd.power_save_dict[self.autoPowerDown]))
+        sb.append('IR Lockout Mode       : %s' % (pd.lockout_dict[self.lockoutMode]))
+        sb.append('IR Auto Off           : %s' % (pd.ir_off_dict[self.irAutoOff]))
+        sb.append('BLE Auto Off          : %s' % (pd.ble_off_dict[self.bleAutoOff]))
+        sb.append('BLE Motor Disconnect  : %s' % (pd.ble_motor_dict[self.bleMotorWhenDisconnect]))
+        sb.append('BLE Advert Power      : %s' % (self.bleAdvertPower))
+        sb.append('BLE Session Power     : %s' % (self.bleSessionPower))
+        sb.append('Motor sound notches   : %s' % (self.notchCount))
         mb = "".join("{:02X} ".format(x) for x in self.notchBounds)
-        sb.append('Motor sound bounds   : %s' % (mb))
+        sb.append('Motor sound bounds    : %s' % (mb))
         s = '\n'.join(sb)
         return s
  
@@ -70,11 +70,9 @@ class PFxMotor:
  
     def __str__(self):
         sb = []
-        sb.append('  Invert direction      : %s' % (self.invert))
-        sb.append('  Torque compensation   : %s' % (self.torqueComp))
-        sb.append('  PF compatibility mode : %s' % (self.tlgMode))
-        sb.append('  Acceleration : %s  Deceleration: %s' % (self.accel, self.decel))
-        sb.append('  vMin : %s  vMid : %s  vMax : %s' % (self.vmin, self.vmid, self.vmax))
+        sb.append('  Invert : %s  Torque comp : %s  PF mode : %s' % (self.invert, self.torqueComp, self.tlgMode))
+        sb.append('  Accel  : %s  Decel : %s' % (self.accel, self.decel))
+        sb.append('  vMin   : %s  vMid  : %s  vMax : %s' % (self.vmin, self.vmid, self.vmax))
         s = '\n'.join(sb)
         return s
  
@@ -99,9 +97,9 @@ class PFxLights:
  
     def __str__(self):
         sb = []
-        sb.append('Default brightness   : %02X' % (self.defaultBrightness))
-        sb.append('Startup brightness   : ' + "".join("{:02X} ".format(x) for x in self.startupBrightness))
-        sb.append('PF output brightness : ' + "".join("{:02X} ".format(x) for x in [self.pfBrightnessA, self.pfBrightnessB, self.pfBrightnessC, self.pfBrightnessD]))
+        sb.append('Default brightness    : %02X' % (self.defaultBrightness))
+        sb.append('Startup brightness    : ' + "".join("{:02X} ".format(x) for x in self.startupBrightness))
+        sb.append('PF output brightness  : ' + "".join("{:02X} ".format(x) for x in [self.pfBrightnessA, self.pfBrightnessB, self.pfBrightnessC, self.pfBrightnessD]))
         s = '\n'.join(sb)
         return s
          

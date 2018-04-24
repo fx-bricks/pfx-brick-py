@@ -33,7 +33,15 @@ def light_ch_str(x):
         s.append('None')
     s = ' '.join(s)
     return s
-    
+
+def ch_to_mask(ch):
+    mask = 0
+    for c in ch:
+        if c < 1 or c > 8:
+            print("Channel out of range")
+        else:
+            mask = mask | (1 << (c-1))
+    return mask
 
 class PFxAction:
 
@@ -54,6 +62,65 @@ class PFxAction:
         self.soundFileId = 0
         self.soundParam1 = 0
         self.soundParam2 = 0
+
+    def _init_ch(self, ch):
+        self.clear()
+        self.lightOutputMask = ch_to_mask(ch)
+
+    def light_on(self, ch):
+        self._init_ch(ch)
+        self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
+        self.lightParam4 = EVT_TRANSITION_ON
+        return self
+        
+    def light_off(self, ch):
+        self._init_ch(ch)
+        self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
+        self.lightParam4 = EVT_TRANSITION_OFF
+        return self
+        
+    def light_toggle(self, ch):
+        self._init_ch(ch)
+        self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
+        self.lightParam4 = EVT_TRANSITION_TOGGLE
+        return self
+        
+    def combo_light_fx(self, fx, param=[0, 0, 0, 0, 0]):
+        return self.light_fx([], fx | EVT_LIGHT_COMBO_MASK, param)
+    
+    def light_fx(self, ch, fx, param=[0, 0, 0, 0, 0]):
+        self._init_ch(ch)
+        self.lightFxId = fx
+        for i,p in enumerate(param):
+            if i==0:
+                self.lightParam1 = p
+            elif i==1:
+                self.lightParam2 = p
+            elif i==2:
+                self.lightParam3 = p
+            elif i==3:
+                self.lightParam4 = p
+            elif i==4:
+                self.lightParam5 = p
+        return self            
+                
+    def clear(self):
+        self.command = 0
+        self.motorActionId = 0
+        self.motorParam1 = 0
+        self.motorParam2 = 0
+        self.lightFxId = 0
+        self.lightOutputMask = 0
+        self.lightPFOutputMask = 0
+        self.lightParam1 = 0
+        self.lightParam2 = 0
+        self.lightParam3 = 0
+        self.lightParam4 = 0
+        self.lightParam5 = 0
+        self.soundFxId = 0
+        self.soundFileId = 0
+        self.soundParam1 = 0
+        self.soundParam2 = 0        
 
     def __str__(self):
         sb = []
@@ -102,4 +169,22 @@ class PFxAction:
         self.soundParam1 = msg[15]
         self.soundParam2 = msg[16]
         
-        
+    def to_bytes(self):
+        msg = []
+        msg.append(self.command)
+        msg.append(self.motorActionId)
+        msg.append(self.motorParam1)
+        msg.append(self.motorParam2)
+        msg.append(self.lightFxId)
+        msg.append(self.lightOutputMask)
+        msg.append(self.lightPFOutputMask)
+        msg.append(self.lightParam1)
+        msg.append(self.lightParam2)
+        msg.append(self.lightParam3)
+        msg.append(self.lightParam4)
+        msg.append(self.lightParam5)
+        msg.append(self.soundFxId)
+        msg.append(self.soundFileId)
+        msg.append(self.soundParam1)
+        msg.append(self.soundParam2)
+        return msg

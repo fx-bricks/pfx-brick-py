@@ -6,6 +6,7 @@ import hid
 from pfxbrick.pfx import *
 from pfxbrick.pfxconfig import PFxConfig
 from pfxbrick.pfxaction import PFxAction
+from pfxbrick.pfxfiles import PFxDir, PFxFile
 from pfxbrick.pfxmsg import *
 from pfxbrick.pfxhelpers import *
 
@@ -36,6 +37,7 @@ class PFxBrick:
         self.name = ''
         
         self.config = PFxConfig()
+        self.filedir = PFxDir()
         
     def open(self):
         """
@@ -91,15 +93,15 @@ class PFxBrick:
         Prints the top level operational status information retrieved
         by a previous call to the get_status method.
         """
-        print("USB vendor ID        : %04X" % (self.usb_vid))
-        print("USB product ID       : %04X" % (self.usb_pid))
-        print("USB product desc     : %s" % (self.usb_prod_str))
-        print("USB manufacturer     : %s" % (self.usb_manu_str))
-        print("PFx Brick product ID : %s, %s" %(self.product_id, self.product_desc))
-        print("Serial number        : %s" % (self.serial_no))
-        print("Firmware version     : %s build %s" % (self.firmware_ver, self.firmware_build))
-        print("Status               : %02X %s" %(self.status, get_status_str(self.status)))
-        print("Errors               : %02X %s" %(self.error, get_error_str(self.error)))    
+        print("USB vendor ID         : %04X" % (self.usb_vid))
+        print("USB product ID        : %04X" % (self.usb_pid))
+        print("USB product desc      : %s" % (self.usb_prod_str))
+        print("USB manufacturer      : %s" % (self.usb_manu_str))
+        print("PFx Brick product ID  : %s, %s" %(self.product_id, self.product_desc))
+        print("Serial number         : %s" % (self.serial_no))
+        print("Firmware version      : %s build %s" % (self.firmware_ver, self.firmware_build))
+        print("Status                : %02X %s" %(self.status, get_status_str(self.status)))
+        print("Errors                : %02X %s" %(self.error, get_error_str(self.error)))    
         
     def get_config(self):
         """
@@ -161,4 +163,62 @@ class PFxBrick:
                 action.read_from_brick(res)
             return action
         
+    def set_action(self, evtID, ch, action):
+        """
+        Sets a new stored action associated with a particular
+        [eventID / IR] channel event. The eventID and channel value
+        form a composite address pointer into the event/action LUT
+        in the PFx Brick. The address to the LUT is formed as:
+        
+        Address[5:2] = event ID
+        Address[1:0] = channel
+        
+        :param int evtID: event ID LUT address component (0 - 0x20)
+        :param int ch: channel index LUT address component (0 - 3)
+        :param PFxAction action: action data structure class
+        """
+        if ch > 3 or evtID > EVT_ID_MAX:
+            print("Requested action (id=%02X, ch=%02X) is out of range" % (evtID, ch))
+            return None
+        else:
+            res = cmd_set_event_action(self.hid, evtID, ch, action)
+
+    def test_action(self, action):
+        """
+        Executes a passed action data structure. This function is
+        used to "test" actions to see how they behave. The passed
+        action is not stored in the event/action LUT.
+        
+        :param PFxAction action: action data structure class
+        """
+        res = cmd_test_action(self.hid, action.to_bytes())                            
     
+    def refresh_file_dir(self):
+        """
+        Reads the PFx Brick file system directory. This includes
+        the total storage used as well as the remaining capacity.
+        Individual file directory entries are stored in the
+        filedir.files data class.
+        """
+        res = cmd_get_free_space(self.hid)
+        if res:
+            self.filedir.bytesLeft = uint32_toint(res[3:7])
+            capacity = uint32_toint(res[7:11])
+            self.filedir.bytesUsed = capacity - self.filedir.bytesLeft
+        res = cmd_get_num_files(self.hid)
+        if res:
+            self.filedir.files = []
+            self.filedir.numFiles = uint16_toint(res[3:5])
+            for i in range(self.filedir.numFiles):
+                res = cmd_get_dir_entry(self.hid, i+1)
+                d = PFxFile()
+                d.read_from_brick(res)
+                self.filedir.files.append(d)
+
+    def reset_factory_config(self):
+        """
+        Resets the PFx Brick configuration settings to factory defaults.
+        """
+        res = cmd_set_factory_defaults(self.hid)
+        
+        

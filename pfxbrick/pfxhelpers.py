@@ -25,6 +25,14 @@ def get_error_str(x):
     if x in pd.err_dict:
         s = pd.err_dict[x]
     return s
+
+def uint16_toint(bytes):
+    res = (int(bytes[0] & 0xFF) << 8) | (int(bytes[1]) & 0xFF)
+    return res
+
+def uint32_toint(bytes):
+    res = (int(bytes[0] & 0xFF) << 24) | (int(bytes[1] & 0xFF) << 16) | (int(bytes[2] & 0xFF) << 8) | (int(bytes[3]) & 0xFF)
+    return res
     
 def uint16_tostr(msb, lsb):
     res = "".join("{:02X}".format(x) for x in [msb, lsb])
