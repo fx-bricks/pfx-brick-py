@@ -2,7 +2,6 @@
 
 # PFx Brick data helpers
 
-from pfxbrick.pfx import *
 import pfxbrick.pfxdict as pd
 
 

@@ -16,7 +16,7 @@ Requirements
 
 * Python 3.6+
 * hidapi
-* PFx Brick Interface Control Document (ICD) v.3.36
+* `PFx Brick Interface Control Document (ICD) v.3.36 <https://github.com/fx-bricks/pfx-brick-dev/raw/master/doc/ICD/PFxBrickICD-Rev3.36.pdf>`_
 
 Installation
 ------------
