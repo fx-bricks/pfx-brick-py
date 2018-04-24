@@ -10,6 +10,7 @@ Requirements
 ------------
 
 * Python 3.6+
+* hidapi
 * PFx Brick Interface Control Document (ICD) v.3.36
 
 Installation
@@ -44,13 +45,14 @@ An example of the package can be seen below
 
 .. code-block:: python
 
-    import pfxbrick as pfx
+    import pfxbrick.pfxbrick as pfx
 
     # Open a PFx Brick session instance
     brick = pfx.PFxBrick()
     brick.open()
     
     # Get the status and identity of the PFx Brick
+    print('PFx Brick ICD version : %s' %(brick.get_icd_rev()))
     brick.get_status()
     brick.print_status()
     

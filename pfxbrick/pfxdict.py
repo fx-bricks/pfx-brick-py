@@ -2,7 +2,7 @@
 
 # PFx Brick dictionary lookup helpers
 
-from pfx import *
+from pfxbrick.pfx import *
 
 status_dict = {
     PFX_STATUS_NORMAL: "Normal",

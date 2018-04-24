@@ -3,11 +3,11 @@
 # PFx Brick python API
 
 import hid
-from pfx import *
-from pfxconfig import PFxConfig
-from pfxaction import PFxAction
-from pfxmsg import *
-from pfxhelpers import *
+from pfxbrick.pfx import *
+from pfxbrick.pfxconfig import PFxConfig
+from pfxbrick.pfxaction import PFxAction
+from pfxbrick.pfxmsg import *
+from pfxbrick.pfxhelpers import *
 
 
 class PFxBrick:
@@ -23,6 +23,7 @@ class PFxBrick:
         self.product_desc = ""
         self.firmware_ver = ""
         self.firmware_build = ""
+        self.icd_rev = ""
         self.status = 0
         self.error = 0
         self.hid = ''
@@ -55,6 +56,19 @@ class PFxBrick:
         if self.is_open:
             self.hid.close()
         
+    def get_icd_rev(self, silent=False):
+        """
+        Requests the version of Interface Control Document (ICD)
+        the connected PFx Brick supports using the CMD_PFX_GET_ICD_REV
+        ICD message.  The resulting version number is stored in
+        this class and also returned.
+        
+        :param boolean silent: flag to optionally silence the status LED blink
+        """    
+        res = cmd_get_icd_rev(self.hid, silent)
+        self.icd_rev = uint16_tover(res[1], res[2])
+        return self.icd_rev
+        
     def get_status(self):
         """
         Requests the top level operational status of the PFx Brick
@@ -69,7 +83,7 @@ class PFxBrick:
             self.product_id = uint16_tostr(res[7], res[8])
             self.serial_no = uint32_tostr(res[9], res[10], res[11], res[12])
             self.product_desc = bytes(res[13:37]).decode("utf-8")
-            self.firmware_ver = uint16_tostr(res[37], res[38])
+            self.firmware_ver = uint16_tover(res[37], res[38])
             self.firmware_build = uint16_tostr(res[39], res[40])
                      
     def print_status(self):
@@ -84,8 +98,8 @@ class PFxBrick:
         print("PFx Brick product ID : %s, %s" %(self.product_id, self.product_desc))
         print("Serial number        : %s" % (self.serial_no))
         print("Firmware version     : %s build %s" % (self.firmware_ver, self.firmware_build))
-        print("Status : %02X %s" %(self.status, get_status_str(self.status)))
-        print("Errors : %02X %s" %(self.error, get_error_str(self.error)))    
+        print("Status               : %02X %s" %(self.status, get_status_str(self.status)))
+        print("Errors               : %02X %s" %(self.error, get_error_str(self.error)))    
         
     def get_config(self):
         """

@@ -3,7 +3,7 @@
 # PFx Brick message helpers
 
 import hid
-from pfx import *
+from pfxbrick.pfx import *
 
 def usb_transaction(hdev, send):
     hdev.write(send)
@@ -14,6 +14,10 @@ def usb_transaction(hdev, send):
         else:
             print("Error reading valid response from PFx Brick")
     return 0
+
+def cmd_get_icd_rev(hdev, silent=False):
+    msg = [PFX_CMD_GET_ICD_REV, PFX_GET_ICD_BYTE0, PFX_GET_ICD_BYTE1, PFX_GET_ICD_BYTE2, int(silent)]
+    return usb_transaction(hdev, msg)
 
 def cmd_get_status(hdev):
     msg = [PFX_CMD_GET_STATUS, PFX_STATUS_BYTE0, PFX_STATUS_BYTE1, PFX_STATUS_BYTE2, PFX_STATUS_BYTE3, PFX_STATUS_BYTE4, PFX_STATUS_BYTE5, PFX_STATUS_BYTE6]

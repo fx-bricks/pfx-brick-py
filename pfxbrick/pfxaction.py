@@ -2,8 +2,8 @@
 
 # PFx Brick configuration data helpers
 
-from pfx import *
-import pfxdict as pd
+from pfxbrick.pfx import *
+import pfxbrick.pfxdict as pd
 
 
 def motor_ch_str(x):

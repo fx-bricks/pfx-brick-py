@@ -2,9 +2,9 @@
  
 # PFx Brick configuration data helpers
  
-from pfx import *
-import pfxdict as pd
-from pfxhelpers import set_with_bit
+from pfxbrick.pfx import *
+import pfxbrick.pfxdict as pd
+from pfxbrick.pfxhelpers import set_with_bit
  
 class PFxSettings:
  
@@ -29,7 +29,7 @@ class PFxSettings:
         sb.append('IR Lockout Mode      : %s' % (pd.lockout_dict[self.lockoutMode]))
         sb.append('IR Auto Off          : %s' % (pd.ir_off_dict[self.irAutoOff]))
         sb.append('BLE Auto Off         : %s' % (pd.ble_off_dict[self.bleAutoOff]))
-        sb.append('BLE Motor Disconnect : %s' % (ble_motor_dict[self.bleMotorWhenDisconnect]))
+        sb.append('BLE Motor Disconnect : %s' % (pd.ble_motor_dict[self.bleMotorWhenDisconnect]))
         sb.append('BLE Advert Power     : %s' % (self.bleAdvertPower))
         sb.append('BLE Session Power    : %s' % (self.bleSessionPower))
         sb.append('Motor sound notches  : %s' % (self.notchCount))
