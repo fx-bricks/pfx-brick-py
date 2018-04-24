@@ -45,10 +45,10 @@ An example of the package can be seen below
 
 .. code-block:: python
 
-    import pfxbrick.pfxbrick as pfx
+    from pfxbrick import PFxBrick
 
     # Open a PFx Brick session instance
-    brick = pfx.PFxBrick()
+    brick = PFxBrick()
     brick.open()
     
     # Get the status and identity of the PFx Brick
