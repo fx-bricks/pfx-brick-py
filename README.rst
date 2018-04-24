@@ -1,6 +1,10 @@
 PFx Brick Python API
 ====================
 
+.. image:: https://travis-ci.org/fx-bricks/pfx-brick-py.svg?branch=master
+    :target: https://travis-ci.org/fx-bricks/pfx-brick-py
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg :target: https://github.com/fx-bricks/pfx-brick-py/blob/master/LICENSE.md
+
 This repository contains the API for developing python scripts and applications which communicate with the PFx Brick.
 
 Getting Started
