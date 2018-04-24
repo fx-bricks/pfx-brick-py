@@ -5,11 +5,10 @@
 
 import hid
 import time
-import pfxbrick.pfxbrick as pfx
-from pfxbrick.pfxaction import PFxAction
+from pfxbrick import PFxBrick, PFxAction
 from pfxbrick.pfx import *
 
-brick = pfx.PFxBrick()
+brick = PFxBrick()
 brick.open()
 print("Turn lights 1, 2, 3, 4 ON")
 a = PFxAction().light_on([1, 2, 3, 4])
