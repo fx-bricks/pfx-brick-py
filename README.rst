@@ -19,8 +19,8 @@ pfx-brick-py can be installed with pip:
 
 .. code-block:: shell
 
-    $ pip install pfx-brick-py
-
+    $ pip install pfxbrick
+    
 or directly from the source code:
 
 .. code-block:: shell
