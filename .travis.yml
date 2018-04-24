@@ -3,6 +3,13 @@ language: python
 python: 
   - "3.6"
 
+addons:
+    apt:
+        packages:
+            - libhidapi-dev
+            - libudev-dev
+            - libusb-1.0-0-dev
+
 install:
 - python setup.py install;
 
