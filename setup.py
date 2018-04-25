@@ -44,7 +44,7 @@ setuptools.setup(
     name=read_package_variable('__project__'),
     version=read_package_variable('__version__'),
 
-    description="PFx Brick API for python.",
+    description="A python API for host control of USB connected PFx Bricks.",
     url='https://github.com/fx-bricks/pfx-brick-py',
     author='Fx Bricks Inc.',
     author_email='info@fxbricks.com',
@@ -59,6 +59,8 @@ setuptools.setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.6',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License'
     ],
     install_requires=['hidapi']
 )

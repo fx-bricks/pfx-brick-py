@@ -38,18 +38,66 @@ class PFxBrick:
         
         self.config = PFxConfig()
         self.filedir = PFxDir()
-        
-    def open(self):
+
+    def find_bricks(self, show_list=False):
         """
-        Opens a USB communication session with a PFx Brick.
+        Enumerate and optionally print a list PFx Bricks currently connected to the USB bus.
+
+        :param boolean show_list: optionally print a list of enumerated PFx Bricks
+        :returns: the number of bricks discovered
+        """
+        numBricks = 0
+        serials = []
+        if not self.is_open:
+            for dev in hid.enumerate():
+                if dev['vendor_id'] == PFX_USB_VENDOR_ID and dev['product_id'] == PFX_USB_PRODUCT_ID:
+                    if dev['serial_number'] not in serials:
+                        numBricks += 1
+                        serials.append(dev['serial_number'])
+                        self.hid = hid.device()
+                        self.hid.open(PFX_USB_VENDOR_ID, PFX_USB_PRODUCT_ID, dev['serial_number'])
+                        self.usb_manu_str = self.hid.get_manufacturer_string()
+                        self.usb_prod_str = self.hid.get_product_string()
+                        self.usb_serno_str = self.hid.get_serial_number_string()
+                        if show_list == True:
+                            print('%d. %s, Serial No: %s' % (numBricks, self.usb_prod_str, self.usb_serno_str))
+                        self.hid.close()
+        else:
+            print("A PFx Brick session is currently open. Close the session before enumerating new PFx Bricks.")
+        return numBricks                
+
+        
+    def open(self, ser_no=None):
+        """
+        Opens a USB communication session with a PFx Brick. If multiple PFx Bricks are
+        connected, then a serial number must be specified to connect to a unique PFx Brick.
+
+        :param ser_no: optional serial number to specify a particular PFx Brick if multiple connected
+        :returns: boolean indicating open session result
         """
         if not self.is_open:
-            self.hid = hid.device()
-            self.hid.open(PFX_USB_VENDOR_ID, PFX_USB_PRODUCT_ID)
-            self.usb_manu_str = self.hid.get_manufacturer_string()
-            self.usb_prod_str = self.hid.get_product_string()
-            self.usb_serno_str = self.hid.get_serial_number_string()
-            self.is_open = True
+            numBricks = 0
+            serials = []
+            for dev in hid.enumerate():
+                if dev['vendor_id'] == PFX_USB_VENDOR_ID and dev['product_id'] == PFX_USB_PRODUCT_ID:
+                    if dev['serial_number'] not in serials:
+                        numBricks += 1
+                        serials.append(dev['serial_number'])
+            if ser_no is not None and ser_no not in serials:
+                print("The PFx Brick with serial number %s was not found." % (ser_no))
+            else:
+                if numBricks == 0:
+                    print("No PFx Bricks are currently connected.")
+                elif numBricks > 1 and ser_no is None:
+                    print("There are multiple PFx Bricks connected. Therefore a serial number is required to specify which PFx Brick to connect to.")
+                else:
+                    self.hid = hid.device()
+                    self.hid.open(PFX_USB_VENDOR_ID, PFX_USB_PRODUCT_ID, ser_no)
+                    self.usb_manu_str = self.hid.get_manufacturer_string()
+                    self.usb_prod_str = self.hid.get_product_string()
+                    self.usb_serno_str = self.hid.get_serial_number_string()
+                    self.is_open = True
+        return self.is_open
             
     def close(self):
         """
