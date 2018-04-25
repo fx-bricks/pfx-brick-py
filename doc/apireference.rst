@@ -16,9 +16,6 @@ Initialization
     PFxConfig
     PFxAction
     
-.. autoclass:: PFxBrick
-    :members:
-    
     
     
     

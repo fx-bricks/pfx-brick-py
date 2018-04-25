@@ -22,6 +22,7 @@ Table Of Contents
     :maxdepth: 2
     
     apireference.rst
+    classreference.rst
   
 
 Indices and Tables

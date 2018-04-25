@@ -7,7 +7,12 @@ import pfxbrick.pfxdict as pd
 from pfxbrick.pfxhelpers import set_with_bit
  
 class PFxSettings:
- 
+    """
+    General settings container class. A member of PFxConfig
+    
+    This class contains miscellaneous user preference settings such as 
+    power saving modes.
+    """
     def __init__(self):
         self.statusLED = 0
         self.volumeBeep = False
@@ -39,7 +44,11 @@ class PFxSettings:
         return s
  
 class PFxMotor:
- 
+    """
+    Motor settings container class.
+    
+    This class contains motor configuration data for one motor channel.
+    """
     def __init__(self):
         self.invert = False
         self.torqueComp = False
@@ -78,7 +87,11 @@ class PFxMotor:
  
  
 class PFxLights:
- 
+    """
+    Light settings container class.
+
+    This class contains default startup brightness data for every light channel.
+    """
     def __init__(self):
         self.defaultBrightness = 0
         self.startupBrightness = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -104,7 +117,12 @@ class PFxLights:
         return s
          
 class PFxAudio:
-     
+    """
+    Audio settings container class.
+    
+    This class contains audio configuration data such as default volume,
+    bass, treble, etc.
+    """
     def __init__(self):
         self.audioDRC = False
         self.bass = 0
@@ -126,14 +144,23 @@ class PFxAudio:
         return s        
  
 class PFxConfig:
-     
+    """
+    Top level configuration data container class.
+    
+    This class contains sub-classes for settings (PFxSettings), motors (PFxMotor),
+    lighting (PFxLights), and audio (PFxAudio) configuration.
+    """
     def __init__(self):
         self.settings = PFxSettings()
         self.motors = [PFxMotor(), PFxMotor(), PFxMotor(), PFxMotor()]
         self.lights = PFxLights()
         self.audio = PFxAudio()
          
-    def read_from_brick(self, msg):
+    def from_bytes(self, msg):
+        """
+        Converts the message string bytes read from the PFx Brick into
+        the corresponding data members of this class.
+        """
         self.lights.startupBrightness[0] = msg[1]
         self.lights.startupBrightness[1] = msg[2]
         self.lights.startupBrightness[2] = msg[3]

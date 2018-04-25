@@ -17,6 +17,12 @@ class PFxBrick:
     
     This class is used to initialize and maintain a communication session
     with a USB connected PFx Brick.
+    
+    This class contains:
+    
+    * `PFxConfig` child class to store configuration and settings
+    
+    * `PFxDir` child class to store the file system directory
     """
     def __init__(self):
         self.product_id = ""
@@ -159,7 +165,7 @@ class PFxBrick:
         """
         res = cmd_get_config(self.hid)
         if res:
-            self.config.read_from_brick(res)
+            self.config.from_bytes(res)
     
     def print_config(self):
         """
@@ -208,7 +214,7 @@ class PFxBrick:
             res = cmd_get_event_action(self.hid, evtID, ch)
             action = PFxAction()
             if res:
-                action.read_from_brick(res)
+                action.from_bytes(res)
             return action
         
     def set_action(self, evtID, ch, action):
@@ -260,7 +266,7 @@ class PFxBrick:
             for i in range(self.filedir.numFiles):
                 res = cmd_get_dir_entry(self.hid, i+1)
                 d = PFxFile()
-                d.read_from_brick(res)
+                d.from_bytes(res)
                 self.filedir.files.append(d)
 
     def reset_factory_config(self):

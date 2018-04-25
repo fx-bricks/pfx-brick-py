@@ -4,47 +4,17 @@
 
 from pfxbrick.pfx import *
 import pfxbrick.pfxdict as pd
+from pfxbrick.pfxhelpers import *
 
-
-def motor_ch_str(x):
-    s = []
-    if x & EVT_MOTOR_OUTPUT_MASK:
-        s.append('Motor Ch ')
-        if x & EVT_MOTOR_OUTPUT_A:
-            s.append('A ')
-        if x & EVT_MOTOR_OUTPUT_B:
-            s.append('B ')
-        if x & EVT_MOTOR_OUTPUT_C:
-            s.append('C ')
-        if x & EVT_MOTOR_OUTPUT_D:
-            s.append('D ')
-    s = ''.join(s)
-    return s
-
-def light_ch_str(x):
-    s = []
-    if x:
-        s.append('Ch')
-        for i in range(8):
-            m = 1 << i
-            if (x & m):
-                s.append(str(i+1))
-    else:
-        s.append('None')
-    s = ' '.join(s)
-    return s
-
-def ch_to_mask(ch):
-    mask = 0
-    for c in ch:
-        if c < 1 or c > 8:
-            print("Channel out of range")
-        else:
-            mask = mask | (1 << (c-1))
-    return mask
 
 class PFxAction:
-
+    """
+    Action data structure class.
+    
+    This class reflects the 16 byte data structure used internally
+    by the PFx Brick to execute a composite action of motor, lighting,
+    and sound effects.
+    """
     def __init__(self):
         self.command = 0
         self.motorActionId = 0
@@ -64,22 +34,39 @@ class PFxAction:
         self.soundParam2 = 0
 
     def _init_ch(self, ch):
-        self.clear()
         self.lightOutputMask = ch_to_mask(ch)
 
     def light_on(self, ch):
+        """
+        Populates an action to turn on selected light outputs.
+        
+        :param ch: a list of light channels (1-8)
+        :returns: self (PFxAction class)        
+        """
         self._init_ch(ch)
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
         self.lightParam4 = EVT_TRANSITION_ON
         return self
         
     def light_off(self, ch):
+        """
+        Populates an action to turn off selected light outputs.
+        
+        :param ch: a list of light channels (1-8)
+        :returns: self (PFxAction class)        
+        """
         self._init_ch(ch)
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
         self.lightParam4 = EVT_TRANSITION_OFF
         return self
         
     def light_toggle(self, ch):
+        """
+        Populates an action to toggle the state of selected light outputs.
+        
+        :param ch: a list of light channels (1-8)
+        :returns: self (PFxAction class)        
+        """
         self._init_ch(ch)
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
         self.lightParam4 = EVT_TRANSITION_TOGGLE
@@ -89,6 +76,29 @@ class PFxAction:
         return self.light_fx([], fx | EVT_LIGHT_COMBO_MASK, param)
     
     def light_fx(self, ch, fx, param=[0, 0, 0, 0, 0]):
+        """
+        Populates an action with a user specified light effect and
+        associated parameters.
+        
+        :param ch: a list of light channels (1-8)
+        :param fx: desired light effect
+        :param param: a list of up to 5 light parameters
+        :returns: self (PFxAction class)
+        
+        The details of specifying the light *fx* and *param* items
+        is described in detail in the ICD document. The *pfx.py* 
+        file contains convenient pre-defined constants for all of
+        the light effect types and parameter values.
+        
+        An example of using this method is as follows::
+        
+            p = [EVT_PERIOD_1S, EVT_DUTYCY_10, EVT_BURST_COUNT_2, EVT_TRANSITION_TOGGLE]
+            a = PFxAction().light_fx([1,4], EVT_LIGHTFX_STROBE_P, p)
+        
+        This specifies a strobe light effect on channels 1 and 4 with
+        a 1 second period, 10%% duty cycle, two light pulses and with
+        a toggle activation.
+        """
         self._init_ch(ch)
         self.lightFxId = fx
         for i,p in enumerate(param):
@@ -105,6 +115,9 @@ class PFxAction:
         return self            
                 
     def clear(self):
+        """
+        Sets all the action data in this class to zero.
+        """
         self.command = 0
         self.motorActionId = 0
         self.motorParam1 = 0
@@ -151,7 +164,11 @@ class PFxAction:
         s = '\n'.join(sb)
         return s
         
-    def read_from_brick(self, msg):
+    def from_bytes(self, msg):
+        """
+        Converts the message string bytes read from the PFx Brick into
+        the corresponding data members of this class.
+        """
         self.command = msg[1]
         self.motorActionId = msg[2]
         self.motorParam1 = msg[3]
@@ -170,6 +187,10 @@ class PFxAction:
         self.soundParam2 = msg[16]
         
     def to_bytes(self):
+        """
+        Converts the data members of this class to the message 
+        string bytes which can be sent to the PFx Brick.
+        """
         msg = []
         msg.append(self.command)
         msg.append(self.motorActionId)

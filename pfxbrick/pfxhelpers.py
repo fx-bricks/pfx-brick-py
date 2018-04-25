@@ -44,3 +44,40 @@ def uint32_tostr(msb, b1, b2, lsb):
 def uint16_tover(msb, lsb):
     res = '%02X.%02X' % (msb, lsb)
     return res
+    
+def motor_ch_str(x):
+    s = []
+    if x & EVT_MOTOR_OUTPUT_MASK:
+        s.append('Motor Ch ')
+        if x & EVT_MOTOR_OUTPUT_A:
+            s.append('A ')
+        if x & EVT_MOTOR_OUTPUT_B:
+            s.append('B ')
+        if x & EVT_MOTOR_OUTPUT_C:
+            s.append('C ')
+        if x & EVT_MOTOR_OUTPUT_D:
+            s.append('D ')
+    s = ''.join(s)
+    return s
+
+def light_ch_str(x):
+    s = []
+    if x:
+        s.append('Ch')
+        for i in range(8):
+            m = 1 << i
+            if (x & m):
+                s.append(str(i+1))
+    else:
+        s.append('None')
+    s = ' '.join(s)
+    return s
+
+def ch_to_mask(ch):
+    mask = 0
+    for c in ch:
+        if c < 1 or c > 8:
+            print("Channel out of range")
+        else:
+            mask = mask | (1 << (c-1))
+    return mask

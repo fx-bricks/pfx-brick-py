@@ -7,7 +7,11 @@ from pfxbrick.pfx import *
 from pfxbrick.pfxhelpers import *
 
 class PFxFile:
+    """
+    File directory entry container class.
     
+    This class contains directory information for a file on the PFx file system.
+    """
     def __init__(self):
         self.id = 0
         self.size = 0
@@ -24,7 +28,11 @@ class PFxFile:
                 return True
         return False
         
-    def read_from_brick(self, msg):
+    def from_bytes(self, msg):
+        """
+        Converts the message string bytes read from the PFx Brick into
+        the corresponding data members of this class.
+        """
         self.id = msg[3]
         self.size = uint32_toint(msg[4:8])
         self.firstSector = uint16_toint(msg[8:10])
@@ -40,7 +48,11 @@ class PFxFile:
         return s
 
 class PFxDir:
+    """
+    File directory container class.
     
+    This class contains PFx file system directory.
+    """
     def __init__(self):
         self.numFiles = 0
         self.files = []

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# CadQuery documentation build configuration file, created by
-# sphinx-quickstart on Sat Aug 25 21:10:53 2012.
+# PFx Brick documentation build configuration file
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -13,8 +12,8 @@
 
 import sys, os
 import os.path
-#print "working path is %s" % os.getcwd()
-#sys.path.append("../cadquery")
+# print "working path is %s" % os.getcwd()
+# sys.path.append("../pfxbrick")
 import pfxbrick
 
 #settings._target = None
@@ -81,14 +80,14 @@ exclude_patterns = ['_build']
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
-add_module_names = True
+add_module_names = False
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'autumn'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
