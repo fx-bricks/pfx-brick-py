@@ -3,7 +3,7 @@ PFx Brick Python API
 
 .. image:: https://travis-ci.org/fx-bricks/pfx-brick-py.svg?branch=master
     :target: https://travis-ci.org/fx-bricks/pfx-brick-py
-.. image:: https://img.shields.io/pypi/v/ansicolortags.svg
+.. image:: https://img.shields.io/pypi/v/pfxbrick.svg
     :target: https://pypi.org/project/pfxbrick/
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg 
     :target: https://github.com/fx-bricks/pfx-brick-py/blob/master/LICENSE.md
