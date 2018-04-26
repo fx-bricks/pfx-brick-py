@@ -46,6 +46,12 @@ err_dict = {
     PFX_ERR_TRAP_CONFIG_MISMATCH: 'Reset trap due to configuration mismatch'
 }
 
+def get_err_str(err):
+    if err in err_dict:
+        return err_dict[err]
+    else:
+        return 'Unknown error'
+
 status_led_dict = {
     PFX_CFG_STATLED_OFF: 'Normally OFF, blink with activity',
     PFX_CFG_STATLED_ON: 'Normally ON, blink with activity'

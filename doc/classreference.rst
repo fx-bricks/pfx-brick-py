@@ -4,7 +4,7 @@
 Class Reference
 ***************
 
-This page documents all of the methods and functions of the PFxBrick classes organized alphabetically.
+This page documents all of the attributes and functions of the pfxbrick module classes organized hierarchically.
 
 PFxBrick
 ========
@@ -21,18 +21,35 @@ PFxConfig
 .. currentmodule:: pfxbrick.pfxconfig
 
 .. autoclass:: PFxConfig
+    :member-order: bysource
     :members:
+
+PFxSettings
+-----------
 
 .. autoclass:: PFxSettings
+    :member-order: bysource
     :members:
+
+PFxMotor
+--------
 
 .. autoclass:: PFxMotor
+    :member-order: bysource
     :members:
+
+PFxLights
+---------
 
 .. autoclass:: PFxLights
+    :member-order: bysource
     :members:
 
+PFxAudio
+--------
+
 .. autoclass:: PFxAudio
+    :member-order: bysource
     :members:
 
 
@@ -42,10 +59,17 @@ PFxDir
 .. currentmodule:: pfxbrick.pfxfiles
 
 .. autoclass:: PFxDir
+    :member-order: bysource
     :members:
+    :special-members: __str__
+
+PFxFile
+-------
 
 .. autoclass:: PFxFile
+    :member-order: bysource
     :members:
+    :special-members: __str__
     
 PFxAction
 =========
@@ -55,4 +79,5 @@ PFxAction
 .. autoclass:: PFxAction
     :member-order: bysource
     :members:
+    :special-members: __str__
 

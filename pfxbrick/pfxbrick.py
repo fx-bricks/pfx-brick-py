@@ -6,7 +6,7 @@ import hid
 from pfxbrick.pfx import *
 from pfxbrick.pfxconfig import PFxConfig
 from pfxbrick.pfxaction import PFxAction
-from pfxbrick.pfxfiles import PFxDir, PFxFile, copy_file_to_brick, copy_file_from_brick
+from pfxbrick.pfxfiles import PFxDir, PFxFile, fs_copy_file_to, fs_copy_file_from
 from pfxbrick.pfxmsg import *
 from pfxbrick.pfxhelpers import *
 
@@ -16,7 +16,7 @@ def find_bricks(show_list=False):
     Enumerate and optionally print a list PFx Bricks currently connected to the USB bus.
 
     :param boolean show_list: optionally print a list of enumerated PFx Bricks
-    :returns: the number of bricks discovered
+    :returns: [:obj:`str`] a list of PFx Brick serial numbers
     """
     numBricks = 0
     serials = []
@@ -32,7 +32,7 @@ def find_bricks(show_list=False):
                 if show_list == True:
                     print('%d. %s, Serial No: %s' % (numBricks, usb_prod_str, usb_serno_str))
                 h.close()
-    return numBricks     
+    return serials     
 
 
 class PFxBrick:
@@ -40,13 +40,45 @@ class PFxBrick:
     Top level PFx Brick object class.
     
     This class is used to initialize and maintain a communication session
-    with a USB connected PFx Brick.
+    with a USB connected PFx Brick. Many convenient methods are provided
+    to perform tasks such as changing configuration, accessing the file
+    system, initiating actions, and more. 
     
-    This class contains:
+    Attributes:
+        product_id (:obj:`str`): product ID code reported by the PFx Brick (e.g. 'A204')
     
-    * `PFxConfig` child class to store configuration and settings
+        serial_no (:obj:`str`): serial number reported by the PFx Brick, usually 8 digit hexadecimal
     
-    * `PFxDir` child class to store the file system directory
+        product_desc (:obj:`str`): product descriptor reported by the PFx Brick
+    
+        firmware_ver (:obj:`str`): firmware version number reported, 4-digit hex BCD, e.g. '0134' represents v.1.34
+    
+        firmware_build (:obj:`str`): firmware build number reported, 4-digit hex BCD
+
+        icd_rev (:obj:`str`): ICD revision number reported, 4-digit hex BCD, e.g. '0336' represents v.3.36
+        status (:obj:`int`): status code reported, distinguishes normal and service/recovery mode
+
+        error (:obj:`int`): error code reported
+
+        usb_vid (:obj:`int`): fixed to PFX_USB_VENDOR_ID representing the official USB VID assigned to the PFx Brick
+
+        usb_pid (:obj:`int`): fixed to PFX_USB_PRODUCT_ID representing the official USB PID assigned to the PFx Brick
+
+        usb_manu_str (:obj:`str`): the manufacturer string reported to the host USB interface
+
+        usb_prod_str (:obj:`str`): the product descriptor string reported to the host USB interface
+
+        usb_serno_str (:obj:`str`): the product serial number string reported to the host USB interface
+
+        hid (:obj:`device`): a device handle to the HIDAPI cdef class device
+
+        is_open (:obj:`boolean`): a flag indicating connected session status
+
+        name (:obj:`str`): user defined name of the PFx Brick
+
+        config (:obj:`PFxConfig`): child class to store configuration and settings
+
+        filedir (:obj:`PFxDir`): child class to store the file system directory
     """
     def __init__(self):
         self.product_id = ""
@@ -57,12 +89,12 @@ class PFxBrick:
         self.icd_rev = ""
         self.status = 0
         self.error = 0
-        self.hid = None
         self.usb_vid = PFX_USB_VENDOR_ID
         self.usb_pid = PFX_USB_PRODUCT_ID
         self.usb_manu_str = ''
         self.usb_prod_str = ''
         self.usb_serno_str = ''
+        self.hid = None
         self.is_open = False    
         self.name = ''
         
@@ -157,7 +189,7 @@ class PFxBrick:
         """
         Retrieves configuration settings from the PFx Brick using 
         the PFX_CMD_GET_CONFIG ICD message. The configuration data
-        is stored in the PFxConfig class member variable config.
+        is stored in the :obj:`PFxBrick.config` class member variable.
         """
         res = cmd_get_config(self.hid)
         if res:
@@ -188,6 +220,8 @@ class PFxBrick:
         Retrieves the user defined name of the PFx Brick using 
         the PFX_CMD_GET_NAME ICD message. The name is stored in
         the name class variable as a UTF-8 string.
+        
+        :returns: :obj:`str` user defined name
         """
         res = cmd_get_name(self.hid)
         if res:
@@ -198,7 +232,7 @@ class PFxBrick:
         Sets the user defined name of the PFx Brick using the
         PFX_CMD_SET_NAME ICD message.
         
-        :param str name: new name to set
+        :param name: :obj:`str` new name to set
         """
         res = cmd_set_name(self.hid, name)
 
@@ -209,8 +243,8 @@ class PFxBrick:
         [eventID, IR channel] pair and the get_action method is 
         called with this function as a convenient wrapper.
         
-        :param address: event/action LUT address (0 - 0x7F)
-        :returns: a PFxAction class filled with retrieved LUT data
+        :param address: :obj:`int` event/action LUT address (0 - 0x7F)
+        :returns: :obj:`PFxAction` class filled with retrieved LUT data
         """
         if address > EVT_LUT_MAX:
             print("Requested action at address %02X is out of range" % (address))
@@ -229,9 +263,9 @@ class PFxBrick:
         Address[5:2] = event ID
         Address[1:0] = channel
         
-        :param int evtID: event ID LUT address component (0 - 0x20)
-        :param int channel: channel index LUT address component (0 - 3)
-        :returns: a PFxAction class filled with retrieved LUT data
+        :param evtID: :obj:`int` event ID LUT address component (0 - 0x20)
+        :param channel: :obj:`int` channel index LUT address component (0 - 3)
+        :returns: :obj:`PFxAction` class filled with retrieved LUT data
         """
         if ch > 3 or evtID > EVT_ID_MAX:
             print("Requested action (id=%02X, ch=%02X) is out of range" % (evtID, ch))
@@ -250,8 +284,8 @@ class PFxBrick:
         [eventID, IR channel] pair and the set_action method is 
         called with this function as a convenient wrapper.
         
-        :param address: event/action LUT address (0 - 0x7F)
-        :param PFxAction action: action data structure class
+        :param address: :obj:`int` event/action LUT address (0 - 0x7F)
+        :param action: :obj:`PFxAction` action data structure class
         """    
         if address > EVT_LUT_MAX:
             print("Requested action at address %02X is out of range" % (address))
@@ -271,9 +305,9 @@ class PFxBrick:
         Address[5:2] = event ID
         Address[1:0] = channel
         
-        :param int evtID: event ID LUT address component (0 - 0x20)
-        :param int ch: channel index LUT address component (0 - 3)
-        :param PFxAction action: action data structure class
+        :param evtID: :obj:`int` event ID LUT address component (0 - 0x20)
+        :param ch: :obj:`int` channel index LUT address component (0 - 3)
+        :param action: :obj:`PFxAction` action data structure class
         """
         if ch > 3 or evtID > EVT_ID_MAX:
             print("Requested action (id=%02X, ch=%02X) is out of range" % (evtID, ch))
@@ -287,7 +321,7 @@ class PFxBrick:
         used to "test" actions to see how they behave. The passed
         action is not stored in the event/action LUT.
         
-        :param PFxAction action: action data structure class
+        :param action: :obj:`PFxAction` action data structure class
         """
         res = cmd_test_action(self.hid, action.to_bytes())                            
     
@@ -296,7 +330,7 @@ class PFxBrick:
         Reads the PFx Brick file system directory. This includes
         the total storage used as well as the remaining capacity.
         Individual file directory entries are stored in the
-        filedir.files data class.
+        :obj:`PFxBrick.filedir.files` class variable.
         """
         res = cmd_get_free_space(self.hid)
         if res:
@@ -313,25 +347,43 @@ class PFxBrick:
                 d.from_bytes(res)
                 self.filedir.files.append(d)
                 
-    def put_file(self, fileID, fn):
+    def put_file(self, fileID, fn, show_progress=True):
         """
         Copies a file from the host to the PFx Brick. 
         
-        :param fileID: the unique file ID to assign the copied file in the file system
-        :param fn: the filename (optionally including the path) of the file to copy 
+        :param fileID: :obj:`int` the unique file ID to assign the copied file in the file system
+        :param fn: :obj:`str` the filename (optionally including the path) of the file to copy
+        :param show_progress: :obj:`boolean` a flag to show the progress bar indicator during transfer.
         """
-        copy_file_to_brick(self.hid, fileID, fn)
+        fs_copy_file_to(self.hid, fileID, fn, show_progress)
         
-    def get_file(self, fileID, fn=None):
+    def get_file(self, fileID, fn=None, show_progress=True):
         """
         Copies a file from the PFx Brick to the host.
         
-        :param fileID: the file ID of the file to copy
-        :param fn: optional override for the filename when copied into the host 
+        :param fileID: :obj:`int` the file ID of the file to copy
+        :param fn: :obj:`str` optional override for the filename when copied into the host 
+        :param show_progress: :obj:`boolean` a flag to show the progress bar indicator during transfer.
         """
         self.refresh_file_dir()
         f = self.filedir.get_file_dir_entry(fileID)
-        copy_file_from_brick(self.hid, f, fn)
+        fs_copy_file_from(self.hid, f, fn, show_progress)
+
+    def remove_file(self, fileID):
+        """
+        Removes a file from the PFx Brick file system.
+        
+        :param fileID: :obj:`int` the file ID of the file to remove
+        """
+        fs_remove_file(self.hid, fileID)
+
+    def format_fs(self, quick=False):
+        """
+        Formats the PFx Brick file system, erasing all files.
+        
+        :param quick: :obj:`boolean` If True, only occupied sectors are erased. If False, every sector is erased, i.e. a complete format.
+        """
+        fs_format(self.hid, quick)
 
     def reset_factory_config(self):
         """

@@ -19,27 +19,28 @@ Brick Enumeration, Connection, Info Query
   import hid
   from pfxbrick import PFxBrick, find_bricks
 
-  n = find_bricks(True)
-  print('%d PFx Bricks found' % (n))
+  bricks = find_bricks(True)
+  print('%d PFx Bricks found' % (len(bricks)))
 
-  if n > 0:
-      brick = PFxBrick()
-      res = brick.open()
-      if not res:
-          print("Unable to open session to PFx Brick")
-      else:
-          print('PFx Brick Status / Identity')
-          print('===========================')
-          print('PFx Brick ICD version : %s' %(brick.get_icd_rev()))
-          brick.get_name()
-          print('PFx Brick name        : %s' %(brick.name))
-          brick.get_status()
-          brick.print_status()
-          print('PFx Brick Configuration')
-          print('=======================')
-          brick.get_config()
-          brick.print_config()
-          brick.close()
+  if bricks:
+      for b in bricks:
+          brick = PFxBrick()
+          res = brick.open(b)
+          if not res:
+              print("Unable to open session to PFx Brick")
+          else:
+              print('PFx Brick Status / Identity')
+              print('===========================')
+              print('PFx Brick ICD version : %s' %(brick.get_icd_rev()))
+              brick.get_name()
+              print('PFx Brick name        : %s' %(brick.name))
+              brick.get_status()
+              brick.print_status()
+              print('PFx Brick Configuration')
+              print('=======================')
+              brick.get_config()
+              brick.print_config()
+              brick.close()
 
 Changing Configuration
 ----------------------
@@ -55,10 +56,10 @@ Changing Configuration
   from pfxbrick import PFxBrick, find_bricks
   from pfxbrick.pfx import *
 
-  n = find_bricks()
-  print('%d PFx Bricks found' % (n))
+  bricks = find_bricks()
+  print('%d PFx Bricks found' % (len(bricks)))
 
-  if n > 0:
+  if bricks:
       brick = PFxBrick()
       res = brick.open()
       if not res:
@@ -120,3 +121,115 @@ Modifying the Event/Action LUT
   print(brick.get_action(EVT_ID_8879_LEFT_BUTTON, 0))
 
   brick.close()
+
+Copying Audio Files
+-------------------
+
+Copy file to PFx Brick specified by command line arguments:
+
+.. code-block:: python
+
+  #! /usr/bin/env python3
+ 
+  # PFx Brick example script to show copying files to the PFx Brick
+
+  import hid
+  from pfxbrick import PFxBrick
+  from sys import argv
+
+  if len(argv) < 3:
+      print("Usage: ./filecopy.py <filename> <id>")
+      print("  where <filename> is the local file to copy")
+      print("        <id> is the unique file ID to assign the file on the PFx Brick")
+  else:
+      brick = PFxBrick()
+      brick.open()
+
+      fn = argv[1]
+      fid = int(argv[2])
+      print("Copying %s to brick with id %d..." % (fn, fid))
+      brick.put_file(fid, fn)
+      brick.refresh_file_dir()
+      print(brick.filedir)
+
+      brick.close()
+
+Copy a list of files to the PFx Brick:
+
+.. code-block:: python
+
+  #! /usr/bin/env python3
+ 
+  # PFx Brick example script to show copying files to the PFx Brick
+
+  import hid
+  from pfxbrick import PFxBrick
+  from sys import argv
+
+  files = ['beep1.wav', 'beep2.wav', 'siren1.wav', 'anthem.wav']
+
+  brick = PFxBrick()
+  brick.open()
+
+  for i,file in enumerate(files):
+      print("Copying %s to brick with id %d..." % (file, i))
+      brick.put_file(i, file, show_progres=True)
+
+  brick.refresh_file_dir()
+  print(brick.filedir)
+
+  brick.close()
+
+Scripting Actions
+-----------------
+
+A demonstration of scripting multiple actions involving motors, lighting, and sound:
+
+.. code-block:: python
+
+  #! /usr/bin/env python3
+ 
+  # PFx Brick example script to demonstrate multiple scripted actions
+
+  import hid
+  import time
+  import random
+  from pfxbrick import PFxBrick, PFxAction
+  from pfxbrick.pfx import *
+
+  brick = PFxBrick()
+  brick.open()
+
+  audiofile = 2
+  max_speed = 100
+
+  # start looped audio playback and set volume
+  brick.test_action(PFxAction().repeat_audio_file(audiofile))
+  brick.test_action(PFxAction().set_volume(75))
+
+  # ramp up the motor speed gradually to max_speed
+  for x in range(max_speed):
+      brick.test_action(PFxAction().set_motor_speed([1], x))
+      # show a random light pattern
+      y = random.randint(1,8)
+      brick.test_action(PFxAction().light_toggle([y]))
+      time.sleep(0.1)
+
+  # ramp down the motor speed gradually to 0%
+
+  for x in range(max_speed):
+      brick.test_action(PFxAction().set_motor_speed([1], max_speed-x-1))
+      # show a random light pattern
+      y = random.randint(1,8)
+      brick.test_action(PFxAction().light_toggle([y]))
+      time.sleep(0.1)
+
+  # stop motor and turn off audio and lights
+  brick.test_action(PFxAction().stop_motor([1]))
+  brick.test_action(PFxAction().stop_audio_file(audiofile))
+  brick.test_action(PFxAction().light_off(range(1,9))
+
+  brick.close()
+
+
+

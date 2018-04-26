@@ -8,18 +8,65 @@ from pfxbrick.pfx import *
 from pfxbrick.pfxhelpers import *
 from pfxbrick.pfxmsg import usb_transaction
 
-def file_system_error_check(res):
+def fs_error_check(res):
+    """
+    Convenience error status lookup function used by other file system functions.
+    
+    :param res: result status code byte returned by almost all file system ICD messages
+    :returns: True if there is an error, False on success
+    """
     if res > 62:
-        print("File system error: %02X" % res)
+        print("File system error: [%02X] %s" % (res, get_err_str(res)))
         return True
     else:
         return False
 
-def copy_file_to_brick(hdev, id, fn):
+def fs_format(hdev, quick=False):
+    """
+    Sends an ICD message to format the PFx Brick file system.
+    
+    :param hdev: USB HID session handle
+    :param boolean quick: If True, only occupied sectors are erased. If False, every sector is erased, i.e. a complete format.
+    """
+    msg = [PFX_CMD_FILE_FORMAT_FS, PFX_FORMAT_BYTE0, PFX_FORMAT_BYTE1, PFX_FORMAT_BYTE2]
+    if quick:
+        msg.append(0)
+    else:
+        msg.append(1)
+    res = usb_transaction(hdev, msg)
+    fs_error_check(res[1])
+
+def fs_remove_file(hdev, fid):
+    """
+    Sends an ICD message to remove a file from the PFx Brick file system.
+    
+    :param hdev: USB HID session handle
+    :param fid: the file ID of the file to remove
+    """
+    msg = [PFX_CMD_FILE_DIR]
+    msg.append(fid)
+    res = usb_transaction(hdev, msg)
+    fs_error_check(res[1])
+
+def fs_copy_file_to(hdev, fid, fn, show_progress=True):
+    """
+    File copy handler to put a file on the PFx Brick.
+    
+    This function handles the process of opening and transferring
+    file data from the host to the PFx Brick file system. A copy session
+    may involve many message transactions with the PFx Brick and could
+    be time consuming. Therefore, a progress bar can be optionally shown
+    on the console to monitor the transfer.
+    
+    :param hdev: USB HID session handle
+    :param fid: a unique file ID to assign the copied file.
+    :param fn: the host filename (optionally including path) to copy
+    :param boolean show_progress: a flag to show the progress bar indicator during transfer.
+    """
     nBytes = os.path.getsize(fn)
     if nBytes > 0:
         msg = [PFX_CMD_FILE_OPEN]
-        msg.append(id)
+        msg.append(fid)
         msg.append(0x06) # CREATE | WRITE mode
         msg.extend(uint32_to_bytes(nBytes))
         name = os.path.basename(fn)
@@ -31,7 +78,7 @@ def copy_file_to_brick(hdev, id, fn):
         res = usb_transaction(hdev, msg)
         
         if res:
-            if not file_system_error_check(res[1]):
+            if not fs_error_check(res[1]):
                 f = open(fn, 'rb')
                 nCount = 0
                 err = False
@@ -41,27 +88,41 @@ def copy_file_to_brick(hdev, id, fn):
                     nCount += nRead
                     if nRead > 0:
                         msg = [PFX_CMD_FILE_WRITE]
-                        msg.append(id)
+                        msg.append(fid)
                         msg.append(nRead)
                         for b in buf:
                             msg.append(b)
                         res = usb_transaction(hdev, msg)
-                        err = file_system_error_check(res[1])
-                        printProgressBar(nCount, nBytes, prefix = 'Copying:', suffix = 'Complete', length = 50)
+                        err = fs_error_check(res[1])
+                        if show_progress:
+                            printProgressBar(nCount, nBytes, prefix = 'Copying:', suffix = 'Complete', length = 50)
                 f.close()
                 msg = [PFX_CMD_FILE_CLOSE]
-                msg.append(id)
+                msg.append(fid)
                 res = usb_transaction(hdev, msg)
-                file_system_error_check(res[1])
+                fs_error_check(res[1])
 
-def copy_file_from_brick(hdev, pfile, fn=None):
-
+def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True):
+    """
+    File copy handler to get a file from the PFx Brick.
+    
+    This function handles the process of opening and transferring
+    file data from the PFx Brick file system to the host. A copy session
+    may involve many message transactions with the PFx Brick and could
+    be time consuming. Therefore, a progress bar can be optionally shown
+    on the console to monitor the transfer.
+    
+    :param hdev: USB HID session handle
+    :param PFxFile pfile: a PFxFile object specifying the file to copy.
+    :param fn: optional name to override the filename of the host's copy.
+    :param boolean show_progress: a flag to show the progress bar indicator during transfer.
+    """
     msg = [PFX_CMD_FILE_OPEN]
     msg.append(pfile.id)
     msg.append(0x01) # READ mode
     res = usb_transaction(hdev, msg)
     if res:
-        if not file_system_error_check(res[1]):
+        if not fs_error_check(res[1]):
             nf = pfile.name
             if fn is not None:
                 nf = fn
@@ -76,35 +137,58 @@ def copy_file_from_brick(hdev, pfile, fn=None):
                     nToRead = 62
                 msg.append(nToRead)
                 res = usb_transaction(hdev, msg)
-                err = file_system_error_check(res[1])
+                err = fs_error_check(res[1])
                 if not err:
                     nCount += res[1]
                     b = bytes(res[2:2+res[1]])
                     f.write(b)
-                printProgressBar(nCount, pfile.size, prefix = 'Copying:', suffix = 'Complete', length = 50)
+                if show_progress:
+                    printProgressBar(nCount, pfile.size, prefix = 'Copying:', suffix = 'Complete', length = 50)
             f.close()
             msg = [PFX_CMD_FILE_CLOSE]
             msg.append(pfile.id)
             res = usb_transaction(hdev, msg)
-            file_system_error_check(res[1])
+            fs_error_check(res[1])
 
 class PFxFile:
     """
     File directory entry container class.
     
-    This class contains directory information for a file on the PFx file system.
+    This class contains directory entry data for a file on the PFx file system.
+
+    Attributes:
+        id (:obj:`int`): unique file ID
+
+        size (:obj:`int`): size in bytes
+
+        firstSector (:obj:`int`): the first 4k sector index in flash memory
+
+        attributes (:obj:`int`): 16-bit attributes field
+
+        userData1 (:obj:`int`): 32-bit user defined data field
+
+        userData2 (:obj:`int`): 32-bit user defined data field
+
+        crc32 (:obj:`int`): CRC32 hash of the file (auto computed after write)
+
+        name (:obj:`str`): UTF-8 filename up to 32 bytes
     """
     def __init__(self):
-        self.id = 0
-        self.size = 0
+        self.id = 0         
+        self.size = 0       
         self.firstSector = 0
-        self.attributes = 0
-        self.userData1 = 0
-        self.userData2 = 0
-        self.crc32 = 0
-        self.name = ''
+        self.attributes = 0 
+        self.userData1 = 0  
+        self.userData2 = 0  
+        self.crc32 = 0      
+        self.name = ''      
     
     def is_audio_file(self):
+        """
+        Checks the file attributes to see if this file is a valid audio WAV file.
+
+        :returns: True if it is valid audio WAV file
+        """
         if (self.attributes & PFX_FILE_FMT_MASK) == PFX_FILE_FMT_WAV:
             if self.userData1 != 0 and self.userData2 != 0:
                 return True
@@ -126,7 +210,11 @@ class PFxFile:
         self.name = sn.rstrip('\0')
         
     def __str__(self):
-        s = '%02X %-24s %6.1f kB %04X %08X %08X %08X' % (self.id, self.name, float(self.size/1000), self.attributes, self.userData1, self.userData2, self.crc32)
+        """
+        Convenient human readable string of a file directory entry. This allows
+        a :py:class:`PFxFile` object to be used with :obj:`str` and :obj:`print` methods.
+        """
+        s = '%3d %-24s %6.1f kB %04X %08X %08X %08X' % (self.id, self.name, float(self.size/1000), self.attributes, self.userData1, self.userData2, self.crc32)
         return s
 
 class PFxDir:
@@ -134,21 +222,40 @@ class PFxDir:
     File directory container class.
     
     This class contains PFx file system directory.
+    
+    Attributes:
+        numFiles (:obj:`int`): number of files in the file system
+
+        files ([:obj:`PFxFile`]): a list of PFxFile objects corresponding to directory entries
+
+        bytesUsed (:obj:`int`): bytes occupied by files
+
+        bytesLeft (:obj:`int`): remaining space in bytes
     """
     def __init__(self):
-        self.numFiles = 0
-        self.files = []
-        self.bytesUsed = 0
-        self.bytesLeft = 0
+        self.numFiles = 0  
+        self.files = []    
+        self.bytesUsed = 0 
+        self.bytesLeft = 0 
 
-    def get_file_dir_entry(self, id):
+    def get_file_dir_entry(self, fid):
+        """
+        Returns a file directory entry containined in a :py:class:`PFxFile` class.
+        
+        :param int fid: the unique file ID of desired directory entry
+        :returns: :py:class:`PFxFile` directory entry
+        """
         for f in self.files:
-            if f.id == id:
+            if f.id == fid:
                 return f
         
     def __str__(self):
+        """
+        Convenient human readable string of the file directory. This allows
+        a :py:class:`PFxDir` object to be used with :obj:`str` and :obj:`print` methods.
+        """
         sb = []
-        sb.append('%2s %-24s %6s    %4s %8s %8s %8s' % ('ID', 'Name', 'Size', 'Attr', 'User1', 'User2', 'CRC32'))
+        sb.append('%3s %-24s %6s    %4s %8s %8s %8s' % ('ID', 'Name', 'Size', 'Attr', 'User1', 'User2', 'CRC32'))
         for f in self.files:
             sb.append(str(f))
         sb.append('%d files, %.1f kB used, %.1f kB remaining' % (len(self.files), float(self.bytesUsed/1000), float(self.bytesLeft/1000)))

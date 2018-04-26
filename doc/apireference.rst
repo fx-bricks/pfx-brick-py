@@ -4,22 +4,16 @@
 PFx Brick API Reference
 ***********************
 
-The PFx Brick API uses a top level **PFxBrick** object to create and use a communication session.
+The PFx Brick API has a top level :obj:`PFxBrick` class object.  An instance of :obj:`PFxBrick` is used to open, maintain, and close an operating session with a PFx Brick.  This class internally contains several supporting child classes used as convenient containers for related data.  In particular, it contains a :obj:`PFxConfig` and :obj:`PFxDir` class which store configuration and file system data respectively.
 
-Initialization
---------------
+The :obj:`PFxAction` class is used to specify actions the PFx Brick can perform including motor control, lighting effects, and sound effects.  It has many supporting methods to conveniently specify popular actions.  A host application can also directly modify the field attributes of a :obj:`PFxAction` instance to specify a detailed action description.  Details of specifying these fields can be found in the `PFx Brick Interface Control Document (ICD) <https://www.fxbricks.com//downloads/PFxBrickICD-Rev3.36.pdf>`_.
 
-.. currentmodule:: pfxbrick
-
-.. autosummary::
-    PFxBrick
-    PFxConfig
-    PFxDir
-    PFxFile
-    PFxAction
+This page summarizes the main functional groups of functionality contained in this API in sections that follow.
 
 Connection
 ----------
+
+Functions to establish a connected session with a PFx Brick.
 
 .. currentmodule:: pfxbrick
 
@@ -27,9 +21,13 @@ Connection
     find_bricks
     PFxBrick.open
     PFxBrick.close
+
+.. autofunction:: find_bricks
     
 Information
 -----------
+
+Functions to get information and status from the PFx Brick.
 
 .. currentmodule:: pfxbrick
 
@@ -43,6 +41,8 @@ Information
 Configuration
 -------------
 
+Functions which query and modify PFx Brick configuration and settings.
+
 .. currentmodule:: pfxbrick
 
 .. autosummary::
@@ -53,6 +53,8 @@ Configuration
     
 Event/Action LUT
 ----------------
+
+Functions which query and modify the event/action look up table in the PFx Brick.
 
 .. currentmodule:: pfxbrick
 
@@ -65,15 +67,21 @@ Event/Action LUT
 File System
 -----------
 
+Functions which interact with the PFx Brick file system.
+
 .. currentmodule:: pfxbrick
 
 .. autosummary::
     PFxBrick.refresh_file_dir
     PFxBrick.put_file
     PFxBrick.get_file
-    
+    PFxBrick.remove_file
+    PFxBrick.format_fs
+
 Actions
 -------
+
+Functions which specify and perform common actions.
 
 .. currentmodule:: pfxbrick
 
@@ -97,6 +105,7 @@ Light Actions
     PFxAction.light_on
     PFxAction.light_off
     PFxAction.light_toggle
+    PFxAction.set_brightness
     PFxAction.light_fx
     PFxAction.combo_light_fx
     

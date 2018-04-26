@@ -16,14 +16,14 @@ To enumerate available PFx Bricks connected to your system, you can use the :py:
 
 .. code-block:: python
 
-  n = find_bricks()
-  print('%d PFx Bricks found' % (n))
+  bricks = find_bricks()
+  print('%d PFx Bricks found' % (len(bricks)))
 
 A listing of discovered PFx Bricks can be printed by setting the :py:data:`show_list` parameter:
 
 .. code-block:: python
 
-  n = find_bricks(show_list=True)
+  bricks = find_bricks(show_list=True)
 
 .. code-block:: none
 
@@ -194,6 +194,7 @@ Controlling Lights
     * :py:meth:`PFxAction.light_on`
     * :py:meth:`PFxAction.light_off`
     * :py:meth:`PFxAction.light_toggle`
+    * :py:meth:`PFxAction.set_brightness`
     * :py:meth:`PFxAction.light_fx`
     * :py:meth:`PFxAction.combo_light_fx`
 
@@ -260,7 +261,9 @@ Access to the PFx Brick file system is provided by a few convenient methods as f
     * :py:meth:`PFxBrick.put_file`
     * :py:meth:`PFxBrick.get_file`
     * :py:meth:`PFxBrick.remove_file`
-    * :py:meth:`PFxBrick.formatfs`
+    * :py:meth:`PFxBrick.format_fs`
+
+Show the PFx Brick file system directory:
 
 .. code-block:: python
 

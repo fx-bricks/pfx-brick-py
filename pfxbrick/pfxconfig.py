@@ -12,19 +12,42 @@ class PFxSettings:
     
     This class contains miscellaneous user preference settings such as 
     power saving modes.
+    
+    Attributes:
+        statusLED (:obj:`int`): status LED mode
+    
+        volumeBeep (:obj:`int`): volume beep mode
+
+        autoPowerDown (:obj:`int`): auto power down mode
+
+        lockoutMode (:obj:`int`): IR lockout activation mode
+
+        irAutoOff (:obj:`int`): auto IR disable mode
+
+        bleAutoOff (:obj:`int`): auto BLE disable mode
+
+        bleMotorWhenDisconnect (:obj:`int`): behaviour of motors on BLE disconnect
+
+        bleAdvertPower (:obj:`int`): BLE RF power during advertising
+
+        bleSessionPower (:obj:`int`): BLE RF power durring connected session
+
+        notchCount (:obj:`int`): number of motor index speed notches
+
+        notchBounds ([:obj:`int`]): list of monotonic increasing speed notch boundaries
     """
     def __init__(self):
-        self.statusLED = 0
-        self.volumeBeep = 0
-        self.autoPowerDown = 0
-        self.lockoutMode = 0
-        self.irAutoOff = 0
-        self.bleAutoOff = 0
-        self.bleMotorWhenDisconnect = 0
-        self.bleAdvertPower = 0
-        self.bleSessionPower = 0
-        self.notchCount = 0
-        self.notchBounds = [0, 0, 0, 0, 0, 0, 0]    
+        self.statusLED = 0               
+        self.volumeBeep = 0              
+        self.autoPowerDown = 0           
+        self.lockoutMode = 0             
+        self.irAutoOff = 0               
+        self.bleAutoOff = 0              
+        self.bleMotorWhenDisconnect = 0  
+        self.bleAdvertPower = 0          
+        self.bleSessionPower = 0         
+        self.notchCount = 0              
+        self.notchBounds = [0, 0, 0, 0, 0, 0, 0]
  
     def __str__(self):
         sb = []
@@ -48,16 +71,33 @@ class PFxMotor:
     Motor settings container class.
     
     This class contains motor configuration data for one motor channel.
+
+    Attributes:
+        invert (:obj:`boolean`): invert the definition of forward/reverse
+
+        torqueComp (:obj:`boolean`): activate low speed torque compensation with low frequency PWM
+
+        tlgMode (:obj:`boolean`): enable LEGO® Power Functions compatible PWM mode
+    
+        accel (:obj:`int`): acceleration factor (0 - 15 max)
+
+        decel (:obj:`int`): deceleration factor (0 - 15 max)
+
+        vmin (:obj:`int`): speed curve minimum mapped speed (0 -> vmid-1)
+
+        vmid (:obj:`int`): speed curve midpoint speed (vmin+1 -> vmax-1)
+
+        vmax (:obj:`int`): speed curve maximum mapped speed (vmid+1 -> 255)
     """
     def __init__(self):
-        self.invert = False
-        self.torqueComp = False
-        self.tlgMode = False
-        self.accel = 0
-        self.decel = 0
-        self.vmin = 0
-        self.vmid = 128
-        self.vmax = 255
+        self.invert = False     
+        self.torqueComp = False 
+        self.tlgMode = False    
+        self.accel = 0          
+        self.decel = 0          
+        self.vmin = 0           
+        self.vmid = 128         
+        self.vmax = 255         
          
     def from_config_byte(self, byte):
         self.invert = set_with_bit(byte, PFX_CFG_MOTOR_INVERT)
@@ -110,14 +150,28 @@ class PFxLights:
     Light settings container class.
 
     This class contains default startup brightness data for every light channel.
+    All brightness values range from 0 (minimum) to 255 (maximum).
+    
+    Attributes:
+        defaultBrightness (:obj:`int`): default global brightness, if 0, then individual brightness is used
+    
+        startupBrightness ([:obj:`int`]): list of 8 individual startup brightness values for each light output
+    
+        pfBrightnessA (:obj:`int`): startup brightness of PF channel A (when used for lights)
+
+        pfBrightnessB (:obj:`int`): startup brightness of PF channel B
+
+        pfBrightnessC (:obj:`int`): startup brightness of PF channel C
+
+        pfBrightnessD (:obj:`int`): startup brightness of PF channel D
     """
     def __init__(self):
-        self.defaultBrightness = 0
+        self.defaultBrightness = 0 
         self.startupBrightness = [0, 0, 0, 0, 0, 0, 0, 0]
-        self.pfBrightnessA = 0              
-        self.pfBrightnessB = 0              
-        self.pfBrightnessC = 0              
-        self.pfBrightnessD = 0              
+        self.pfBrightnessA = 0        
+        self.pfBrightnessB = 0
+        self.pfBrightnessC = 0
+        self.pfBrightnessD = 0
  
  
     def __repr__(self):
@@ -141,13 +195,22 @@ class PFxAudio:
     
     This class contains audio configuration data such as default volume,
     bass, treble, etc.
+
+    Attributes:
+        audioDRC (:obj:`boolean`): auto Dynamic Range Control (True/False)
+    
+        bass (:obj:`int`): startup bass EQ (-20 to 20 dB)
+    
+        treble (:obj:`int`): startup treble EQ (-20 to 20 dB)
+    
+        defaultVolume (:obj:`int`): startup volume (0 min - 255 max)
     """
     def __init__(self):
-        self.audioDRC = False
-        self.bass = 0
-        self.treble = 0
-        self.defaultVolume = 0   
-         
+        self.audioDRC = False   
+        self.bass = 0           
+        self.treble = 0         
+        self.defaultVolume = 0  
+
     def __repr__(self):
         s = 'drc=%d bass=%d treble=%d' % (self.audioDRC, self.bass, self.treble)
         s = "%s(%s)" % ('PFxAudio.' + self.__class__.__name__, s)
@@ -166,11 +229,21 @@ class PFxConfig:
     """
     Top level configuration data container class.
     
-    This class contains sub-classes for settings (PFxSettings), motors (PFxMotor),
-    lighting (PFxLights), and audio (PFxAudio) configuration.
+    This class contains catergorized container classes for groups of related settings.
+    To change a configuration setting, simply access the setting value using 
+    a dotted path type notation, e.g. config.lights.startupBrightness[2] = 100
+    
+    Attributes:
+        settings (:obj:`PFxSettings`): container for general settings.
+    
+        motors ([:obj:`PFxMotor`]): list of 4 containers for motor settings
+    
+        lights (:obj:`PFxLights`): container for default brightness settings
+    
+        audio (:obj:`PFxAudio`): container for audio related settings
     """
     def __init__(self):
-        self.settings = PFxSettings()
+        self.settings = PFxSettings() 
         self.motors = [PFxMotor(), PFxMotor(), PFxMotor(), PFxMotor()]
         self.lights = PFxLights()
         self.audio = PFxAudio()

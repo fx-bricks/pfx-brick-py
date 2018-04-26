@@ -5,6 +5,7 @@
 
 import hid
 import time
+from math import sin
 from pfxbrick import PFxBrick, PFxAction
 from pfxbrick.pfx import *
 
@@ -14,6 +15,11 @@ print("Set lights 1, 2, 3, 4 ON")
 a = PFxAction().light_on([1, 2, 3, 4])
 brick.test_action(a)
 time.sleep(2)
+
+for x in range(100):
+    b = int(sin(6.28 * x * 0.1) * 127 + 128)
+    brick.test_action(PFxAction().set_brightness([1,2,3,4], b))
+    time.sleep(0.050)
 
 print("Set lights 1, 2, 3, 4 OFF")
 a = PFxAction().light_off([1, 2, 3, 4])

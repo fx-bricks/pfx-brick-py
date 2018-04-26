@@ -14,6 +14,40 @@ class PFxAction:
     This class reflects the 16 byte data structure used internally
     by the PFx Brick to execute a composite action of motor, lighting,
     and sound effects.
+    
+    Attributes:
+        command (:obj:`int`): Command byte
+
+        motorActionId (:obj:`int`): Motor action ID and motor channel mask byte
+
+        motorParam1 (:obj:`int`): Motor parameter 1
+
+        motorParam2 (:obj:`int`): Motor parameter 2
+
+        lightFxId (:obj:`int`): Light Fx ID byte
+
+        lightOutputMask (:obj:`int`): Light channel output mask
+
+        lightPFOutputMask (:obj:`int`): Light channel on PF output mask
+
+        lightParam1 (:obj:`int`): Lighting parameter 1
+
+        lightParam2 (:obj:`int`): Lighting parameter 2
+
+        lightParam3 (:obj:`int`): Lighting parameter 3
+
+        lightParam4 (:obj:`int`): Lighting parameter 4
+
+        lightParam5 (:obj:`int`): Lighting parameter 5
+
+        soundFxId (:obj:`int`): Sound Fx ID byte
+
+        soundFileId (:obj:`int`): Sound file ID 
+
+        soundParam1 (:obj:`int`): Sound parameter 1
+
+        soundParam2 (:obj:`int`): Sound parameter 2
+
     """
     def __init__(self):
         self.command = 0
@@ -40,10 +74,10 @@ class PFxAction:
         values are in the reverse direction and positive values are in
         the forward direction.
         
-        :param ch: a list of motor channels (1-4)
-        :param speed: desired motor speed (-100 to +100)
-        :param duration: optional duration (in seconds) to run motor, runs indefinitely if not specified
-        :returns: self (PFxAction class)        
+        :param ch: [:obj:`int`] a list of motor channels (1-4)
+        :param speed: :obj:`int` desired motor speed (-100 to +100)
+        :param duration: :obj:`float` optional duration (in seconds) to run motor, runs indefinitely if not specified
+        :returns: :obj:`PFxAction` self        
         
         If the duration value is specified, it represents the desired motor
         run time in seconds. Note that this value will be rounded to the 
@@ -75,8 +109,8 @@ class PFxAction:
         """
         Populates an action to stop the specifed motor channel(s).
 
-        :param ch: a list of motor channels (1-4)
-        :returns: self (PFxAction class)        
+        :param ch: [:obj:`int`] a list of motor channels (1-4)
+        :returns: :obj:`PFxAction` self        
         """
         m = (ch_to_mask(ch) & EVT_MOTOR_OUTPUT_MASK)
         m |= EVT_MOTOR_ESTOP
@@ -87,8 +121,8 @@ class PFxAction:
         """
         Populates an action to turn on selected light outputs.
         
-        :param ch: a list of light channels (1-8)
-        :returns: self (PFxAction class)        
+        :param ch: [:obj:`int`] a list of light channels (1-8)
+        :returns: :obj:`PFxAction` self        
         """
         self.lightOutputMask = ch_to_mask(ch)
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
@@ -99,8 +133,8 @@ class PFxAction:
         """
         Populates an action to turn off selected light outputs.
         
-        :param ch: a list of light channels (1-8)
-        :returns: self (PFxAction class)        
+        :param ch: [:obj:`int`] a list of light channels (1-8)
+        :returns: :obj:`PFxAction` self        
         """
         self.lightOutputMask = ch_to_mask(ch)
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
@@ -111,12 +145,30 @@ class PFxAction:
         """
         Populates an action to toggle the state of selected light outputs.
         
-        :param ch: a list of light channels (1-8)
-        :returns: self (PFxAction class)        
+        :param ch: [:obj:`int`] a list of light channels (1-8)
+        :returns: :obj:`PFxAction` self        
         """
         self.lightOutputMask = ch_to_mask(ch)
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
         self.lightParam4 = EVT_TRANSITION_TOGGLE
+        return self
+        
+    def set_brightness(self, ch, brightness):
+        """
+        Populates an action to set the brightness of selected light outputs.
+        
+        :param ch: [:obj:`int`] a list of light channels (1-8)
+        :param brightness: :obj:`int` brightness (0 - 255 max)
+        :returns: :obj:`PFxAction` self        
+        """
+        x = brightness
+        if x > 255:
+            x = 255
+        if x < 0:
+            x = 0
+        self.lightOutputMask = ch_to_mask(ch)
+        self.lightFxId = EVT_LIGHTFX_SET_BRIGHT
+        self.lightParam1 = x
         return self
         
     def combo_light_fx(self, fx, param=[0, 0, 0, 0, 0]):
@@ -124,9 +176,9 @@ class PFxAction:
         Populates an action with a user specified combination light effect
         and associated parameters.
         
-        :param fx: desired light effect
-        :param param: a list of up to 5 light parameters
-        :returns: self (PFxAction class)
+        :param fx: :obj:`int` desired light effect
+        :param param: [:obj:`int`] a list of up to 5 light parameters
+        :returns: :obj:`PFxAction` self        
         """
         return self.light_fx([], fx | EVT_LIGHT_COMBO_MASK, param)
     
@@ -135,13 +187,13 @@ class PFxAction:
         Populates an action with a user specified light effect and
         associated parameters.
         
-        :param ch: a list of light channels (1-8)
-        :param fx: desired light effect
-        :param param: a list of up to 5 light parameters
-        :returns: self (PFxAction class)
+        :param ch: [:obj:`int`] a list of light channels (1-8)
+        :param fx: :obj:`int` desired light effect
+        :param param: [:obj:`int`] a list of up to 5 light parameters
+        :returns: :obj:`PFxAction` self        
         
-        The details of specifying the light *fx* and *param* items
-        is described in detail in the ICD document. The *pfx.py* 
+        The details of specifying the light **fx** and **param** items
+        is described in detail in the ICD document. The **pfx.py** 
         file contains convenient pre-defined constants for all of
         the light effect types and parameter values.
         
@@ -151,7 +203,7 @@ class PFxAction:
             a = PFxAction().light_fx([1,4], EVT_LIGHTFX_STROBE_P, p)
         
         This specifies a strobe light effect on channels 1 and 4 with
-        a 1 second period, 10%% duty cycle, two light pulses and with
+        a 1 second period, 10% duty cycle, two light pulses and with
         a toggle activation.
         """
         self.lightOutputMask = ch_to_mask(ch)
@@ -174,13 +226,13 @@ class PFxAction:
         Populates an action with a user specified sound effect and
         associated parameters.
         
-        :param fx: desired sound action
-        :param param: a list of up to 2 sound parameters
-        :param fileID: file ID of an audio file in the file system
-        :returns: self (PFxAction class)
+        :param fx: :obj:`int` desired sound action
+        :param param: [:obj:`int`] a list of up to 2 sound parameters
+        :param fileID: :obj:`int` file ID of an audio file in the file system
+        :returns: :obj:`PFxAction` self        
         
-        The details of specifying the sound *fx* and *param* items
-        is described in detail in the ICD document. The *pfx.py* 
+        The details of specifying the sound **fx** and **param** items
+        is described in detail in the ICD document. The **pfx.py** 
         file contains convenient pre-defined constants for all of
         the sound effect types and parameter values.
         
@@ -206,8 +258,8 @@ class PFxAction:
         """
         Populates an action to play an audio file once.
         
-        :param fileID: file ID of an audio file in the file system
-        :returns: self (PFxAction class)
+        :param fileID: :obj:`int` file ID of an audio file in the file system
+        :returns: :obj:`PFxAction` self        
         
         This is a convenience wrapper for the sound_fx method.
         """
@@ -217,8 +269,8 @@ class PFxAction:
         """
         Populates an action to stop playback of an audio file.
         
-        :param fileID: file ID of an audio file in the file system
-        :returns: self (PFxAction class)
+        :param fileID: :obj:`int` file ID of an audio file in the file system
+        :returns: :obj:`PFxAction` self        
         
         This is a convenience wrapper for the sound_fx method.
         """
@@ -228,8 +280,8 @@ class PFxAction:
         """
         Populates an action for repeated playback of an audio file.
         
-        :param fileID: file ID of an audio file in the file system
-        :returns: self (PFxAction class)
+        :param fileID: :obj:`int` file ID of an audio file in the file system
+        :returns: :obj:`PFxAction` self        
         
         This is a convenience wrapper for the sound_fx method.
         """
@@ -239,8 +291,8 @@ class PFxAction:
         """
         Populates an action to set the audio volume.
         
-        :param volume: desired audio volume (0 - 100%)
-        :returns: self (PFxAction class)
+        :param volume: :obj:`int` desired audio volume (0 - 100%)
+        :returns: :obj:`PFxAction` self        
         
         This is a convenience wrapper for the sound_fx method.
         """
@@ -274,35 +326,6 @@ class PFxAction:
         self.soundParam1 = 0
         self.soundParam2 = 0        
 
-    def __str__(self):
-        sb = []
-        sb.append('Command           : [%02X] %s' % (self.command, pd.command_dict[self.command]))
-        if self.motorActionId & EVT_MOTOR_OUTPUT_MASK == 0:
-            sb.append('Motor Action ID   : [%02X] None' % (self.motorActionId))
-        else:
-            sb.append('Motor Action ID   : [%02X] %s %s' % (self.motorActionId, pd.motor_action_dict[self.motorActionId & EVT_MOTOR_ACTION_ID_MASK], motor_ch_str(self.motorActionId)))
-        sb.append('Motor Param 1     : [%02X]' % (self.motorParam1))
-        sb.append('Motor Param 2     : [%02X]' % (self.motorParam1))
-        sf = ''
-        if self.lightFxId & EVT_LIGHT_COMBO_MASK:
-            sf = pd.combo_lightfx_dict[self.lightFxId & EVT_LIGHT_ID_MASK]
-        else:
-            sf = pd.ind_lightfx_dict[self.lightFxId & EVT_LIGHT_ID_MASK]
-        sb.append('Light Fx ID       : [%02X] %s' % (self.lightFxId, sf))
-        sb.append('Light Output Mask : [%02X] %s' % (self.lightOutputMask, light_ch_str(self.lightOutputMask)))
-        sb.append('Light PF Out Mask : [%02X]' % (self.lightPFOutputMask))
-        sb.append('Light Param 1     : [%02X]' % (self.lightParam1))
-        sb.append('Light Param 2     : [%02X]' % (self.lightParam2))
-        sb.append('Light Param 3     : [%02X]' % (self.lightParam3))
-        sb.append('Light Param 4     : [%02X]' % (self.lightParam4))
-        sb.append('Light Param 5     : [%02X]' % (self.lightParam5))
-        sb.append('Sound Fx ID       : [%02X]' % (self.soundFxId))
-        sb.append('Sound File ID     : [%02X]' % (self.soundFileId))
-        sb.append('Sound Param 1     : [%02X]' % (self.soundParam1))
-        sb.append('Sound Param 2     : [%02X]' % (self.soundParam2))
-        s = '\n'.join(sb)
-        return s
-        
     def from_bytes(self, msg):
         """
         Converts the message string bytes read from the PFx Brick into
@@ -348,3 +371,38 @@ class PFxAction:
         msg.append(self.soundParam1)
         msg.append(self.soundParam2)
         return msg
+        
+    def __str__(self):
+        """
+        Convenient human readable string of the action data structure. This allows
+        a :py:class:`PFxAction` object to be used with :obj:`str` and :obj:`print` methods.
+        """
+        sb = []
+        sb.append('Command           : [%02X] %s' % (self.command, pd.command_dict[self.command]))
+        if self.motorActionId & EVT_MOTOR_OUTPUT_MASK == 0:
+            sb.append('Motor Action ID   : [%02X] None' % (self.motorActionId))
+        else:
+            sb.append('Motor Action ID   : [%02X] %s %s' % (self.motorActionId, pd.motor_action_dict[self.motorActionId & EVT_MOTOR_ACTION_ID_MASK], motor_ch_str(self.motorActionId)))
+        sb.append('Motor Param 1     : [%02X]' % (self.motorParam1))
+        sb.append('Motor Param 2     : [%02X]' % (self.motorParam1))
+        sf = ''
+        if self.lightFxId & EVT_LIGHT_COMBO_MASK:
+            sf = pd.combo_lightfx_dict[self.lightFxId & EVT_LIGHT_ID_MASK]
+        else:
+            sf = pd.ind_lightfx_dict[self.lightFxId & EVT_LIGHT_ID_MASK]
+        sb.append('Light Fx ID       : [%02X] %s' % (self.lightFxId, sf))
+        sb.append('Light Output Mask : [%02X] %s' % (self.lightOutputMask, light_ch_str(self.lightOutputMask)))
+        sb.append('Light PF Out Mask : [%02X]' % (self.lightPFOutputMask))
+        sb.append('Light Param 1     : [%02X]' % (self.lightParam1))
+        sb.append('Light Param 2     : [%02X]' % (self.lightParam2))
+        sb.append('Light Param 3     : [%02X]' % (self.lightParam3))
+        sb.append('Light Param 4     : [%02X]' % (self.lightParam4))
+        sb.append('Light Param 5     : [%02X]' % (self.lightParam5))
+        sb.append('Sound Fx ID       : [%02X]' % (self.soundFxId))
+        sb.append('Sound File ID     : [%02X]' % (self.soundFileId))
+        sb.append('Sound Param 1     : [%02X]' % (self.soundParam1))
+        sb.append('Sound Param 2     : [%02X]' % (self.soundParam2))
+        s = '\n'.join(sb)
+        return s
+        
+        

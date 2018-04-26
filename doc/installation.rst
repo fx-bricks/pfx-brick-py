@@ -34,7 +34,7 @@ or directly from the source code:
 Linux
 -----
 
-pfx-brick-py uses the hidapi module which depends on libusb.  Since libusb might not be installed by default in your Linux distribution, you can install it using your favorite package manager:
+**pfxbrick** uses the hidapi module which depends on libusb.  Since libusb might not be installed by default in your Linux distribution, you can install it using your favorite package manager:
 
 .. code-block:: shell
 
