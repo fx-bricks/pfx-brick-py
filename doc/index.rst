@@ -21,8 +21,11 @@ Table Of Contents
 .. toctree::
     :maxdepth: 2
     
+    installation.rst
+    quickstart.rst
     apireference.rst
     classreference.rst
+    examples.rst
   
 
 Indices and Tables

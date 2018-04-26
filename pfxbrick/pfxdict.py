@@ -159,3 +159,26 @@ combo_lightfx_dict = {
     EVT_COMBOFX_LASER_CANNON: 'Laser Cannon'
 }
 
+evtid_dict = {
+    EVT_ID_8879_TWO_BUTTONS: 'Left + Right Button',
+    EVT_ID_8879_LEFT_BUTTON: 'Left Button',
+    EVT_ID_8879_RIGHT_BUTTON: 'Right Button',
+    EVT_ID_8879_LEFT_INC: 'Left Wheel Inc',
+    EVT_ID_8879_LEFT_DEC: 'Left Wheel Dec',
+    EVT_ID_8879_RIGHT_INC: 'Right Wheel Inc',
+    EVT_ID_8879_RIGHT_DEC: 'Rigth Wheel Dec',
+    EVT_ID_8885_LEFT_FWD: 'Left Joystick Fwd',
+    EVT_ID_8885_LEFT_REV: 'Left Joystick Rev',
+    EVT_ID_8885_RIGHT_FWD: 'Right Joystick Fwd',
+    EVT_ID_8885_RIGHT_REV: 'Right Joystick Rev',
+    EVT_ID_8885_LEFT_CTROFF: 'Left Joystick Centre',
+    EVT_ID_8885_RIGHT_CTROFF: 'Right Joystick Centre',
+    EVT_ID_EV3_BEACON: 'EV3 Beacon',
+    EVT_ID_TEST_EVENT: 'Test Event',
+    EVT_ID_STARTUP_EVENT: 'Startup Events 1-4',
+    EVT_ID_STARTUP_EVENT2: 'Startup Events 5-8',
+    EVT_ID_RCTRAIN_UP: 'RC Train Up',
+    EVT_ID_RCTRAIN_DOWN: 'RC Train Down',
+    EVT_ID_RCTRAIN_STOP: 'RC Train Stop',
+    EVT_ID_RCTRAIN_HORN: 'RC Train Horn'
+}

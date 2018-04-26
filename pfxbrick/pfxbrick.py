@@ -6,9 +6,33 @@ import hid
 from pfxbrick.pfx import *
 from pfxbrick.pfxconfig import PFxConfig
 from pfxbrick.pfxaction import PFxAction
-from pfxbrick.pfxfiles import PFxDir, PFxFile
+from pfxbrick.pfxfiles import PFxDir, PFxFile, copy_file_to_brick, copy_file_from_brick
 from pfxbrick.pfxmsg import *
 from pfxbrick.pfxhelpers import *
+
+
+def find_bricks(show_list=False):
+    """
+    Enumerate and optionally print a list PFx Bricks currently connected to the USB bus.
+
+    :param boolean show_list: optionally print a list of enumerated PFx Bricks
+    :returns: the number of bricks discovered
+    """
+    numBricks = 0
+    serials = []
+    for dev in hid.enumerate():
+        if dev['vendor_id'] == PFX_USB_VENDOR_ID and dev['product_id'] == PFX_USB_PRODUCT_ID:
+            if dev['serial_number'] not in serials:
+                numBricks += 1
+                serials.append(dev['serial_number'])
+                h = hid.device()
+                h.open(PFX_USB_VENDOR_ID, PFX_USB_PRODUCT_ID, dev['serial_number'])
+                usb_prod_str = h.get_product_string()
+                usb_serno_str = h.get_serial_number_string()
+                if show_list == True:
+                    print('%d. %s, Serial No: %s' % (numBricks, usb_prod_str, usb_serno_str))
+                h.close()
+    return numBricks     
 
 
 class PFxBrick:
@@ -33,7 +57,7 @@ class PFxBrick:
         self.icd_rev = ""
         self.status = 0
         self.error = 0
-        self.hid = ''
+        self.hid = None
         self.usb_vid = PFX_USB_VENDOR_ID
         self.usb_pid = PFX_USB_PRODUCT_ID
         self.usb_manu_str = ''
@@ -44,34 +68,6 @@ class PFxBrick:
         
         self.config = PFxConfig()
         self.filedir = PFxDir()
-
-    def find_bricks(self, show_list=False):
-        """
-        Enumerate and optionally print a list PFx Bricks currently connected to the USB bus.
-
-        :param boolean show_list: optionally print a list of enumerated PFx Bricks
-        :returns: the number of bricks discovered
-        """
-        numBricks = 0
-        serials = []
-        if not self.is_open:
-            for dev in hid.enumerate():
-                if dev['vendor_id'] == PFX_USB_VENDOR_ID and dev['product_id'] == PFX_USB_PRODUCT_ID:
-                    if dev['serial_number'] not in serials:
-                        numBricks += 1
-                        serials.append(dev['serial_number'])
-                        self.hid = hid.device()
-                        self.hid.open(PFX_USB_VENDOR_ID, PFX_USB_PRODUCT_ID, dev['serial_number'])
-                        self.usb_manu_str = self.hid.get_manufacturer_string()
-                        self.usb_prod_str = self.hid.get_product_string()
-                        self.usb_serno_str = self.hid.get_serial_number_string()
-                        if show_list == True:
-                            print('%d. %s, Serial No: %s' % (numBricks, self.usb_prod_str, self.usb_serno_str))
-                        self.hid.close()
-        else:
-            print("A PFx Brick session is currently open. Close the session before enumerating new PFx Bricks.")
-        return numBricks                
-
         
     def open(self, ser_no=None):
         """
@@ -174,6 +170,19 @@ class PFxBrick:
         """
         print(str(self.config))
         
+    def set_config(self):
+        """
+        Writes the contents of the PFxConfig data structure class to
+        the PFx Brick using the PFX_CMD_SET_CONFIG ICD message.
+        
+        It is recommended that the configuration be read from the
+        PFx Brick (using get_config) before any changes are made to
+        the configuration and written back. This ensures that any
+        configuration settings which are not desired to be changed
+        are left in the same state.
+        """
+        res = cmd_set_config(self.hid, self.config.to_bytes())
+        
     def get_name(self):
         """
         Retrieves the user defined name of the PFx Brick using 
@@ -192,11 +201,28 @@ class PFxBrick:
         :param str name: new name to set
         """
         res = cmd_set_name(self.hid, name)
+
+    def get_action_by_address(self, address):
+        """
+        Retrieves a stored action indexed by address rather than a
+        combination of eventID and IR channel.  The address is converted into a 
+        [eventID, IR channel] pair and the get_action method is 
+        called with this function as a convenient wrapper.
+        
+        :param address: event/action LUT address (0 - 0x7F)
+        :returns: a PFxAction class filled with retrieved LUT data
+        """
+        if address > EVT_LUT_MAX:
+            print("Requested action at address %02X is out of range" % (address))
+            return None
+        else:
+            evt, ch = address_to_evtch(address)
+            return self.get_action(evt, ch)
             
     def get_action(self, evtID, ch):
         """
         Retrieves the stored action associated with a particular
-        [eventID / IR] channel event. The eventID and channel value
+        [eventID / IR channel] event. The eventID and channel value
         form a composite address pointer into the event/action LUT
         in the PFx Brick. The address to the LUT is formed as:
         
@@ -217,10 +243,28 @@ class PFxBrick:
                 action.from_bytes(res)
             return action
         
+    def set_action_by_address(self, address, action):
+        """
+        Sets a new stored action in the event/action LUT at the
+        address specified. The address is converted into a 
+        [eventID, IR channel] pair and the set_action method is 
+        called with this function as a convenient wrapper.
+        
+        :param address: event/action LUT address (0 - 0x7F)
+        :param PFxAction action: action data structure class
+        """    
+        if address > EVT_LUT_MAX:
+            print("Requested action at address %02X is out of range" % (address))
+            return None
+        else:
+            evt, ch = address_to_evtch(address)
+            self.set_action(evt, ch, action)
+        
+        
     def set_action(self, evtID, ch, action):
         """
         Sets a new stored action associated with a particular
-        [eventID / IR] channel event. The eventID and channel value
+        [eventID / IR channel] event. The eventID and channel value
         form a composite address pointer into the event/action LUT
         in the PFx Brick. The address to the LUT is formed as:
         
@@ -235,7 +279,7 @@ class PFxBrick:
             print("Requested action (id=%02X, ch=%02X) is out of range" % (evtID, ch))
             return None
         else:
-            res = cmd_set_event_action(self.hid, evtID, ch, action)
+            res = cmd_set_event_action(self.hid, evtID, ch, action.to_bytes())
 
     def test_action(self, action):
         """
@@ -268,6 +312,26 @@ class PFxBrick:
                 d = PFxFile()
                 d.from_bytes(res)
                 self.filedir.files.append(d)
+                
+    def put_file(self, fileID, fn):
+        """
+        Copies a file from the host to the PFx Brick. 
+        
+        :param fileID: the unique file ID to assign the copied file in the file system
+        :param fn: the filename (optionally including the path) of the file to copy 
+        """
+        copy_file_to_brick(self.hid, fileID, fn)
+        
+    def get_file(self, fileID, fn=None):
+        """
+        Copies a file from the PFx Brick to the host.
+        
+        :param fileID: the file ID of the file to copy
+        :param fn: optional override for the filename when copied into the host 
+        """
+        self.refresh_file_dir()
+        f = self.filedir.get_file_dir_entry(fileID)
+        copy_file_from_brick(self.hid, f, fn)
 
     def reset_factory_config(self):
         """

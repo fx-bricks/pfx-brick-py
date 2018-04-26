@@ -4,12 +4,13 @@
 # brick including its identity and configuration settings.
 
 import hid
-from pfxbrick import PFxBrick
+from pfxbrick import PFxBrick, find_bricks
 
-brick = PFxBrick()
-n = brick.find_bricks()
+n = find_bricks(True)
 print('%d PFx Bricks found' % (n))
+
 if n > 0:
+    brick = PFxBrick()
     res = brick.open()
     if not res:
         print("Unable to open session to PFx Brick")

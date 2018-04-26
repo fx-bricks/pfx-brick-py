@@ -5,11 +5,11 @@
 import hid
 from pfxbrick.pfx import *
 
-def usb_transaction(hdev, send):
-    hdev.write(send)
+def usb_transaction(hdev, msg):
+    hdev.write(msg)
     res = hdev.read(64)
     if res:
-        if res[0] == send[0] | 0x80:
+        if res[0] == msg[0] | 0x80:
             return res
         else:
             print("Error reading valid response from PFx Brick")
@@ -27,6 +27,11 @@ def cmd_get_config(hdev):
     msg = [PFX_CMD_GET_CONFIG]        
     return usb_transaction(hdev, msg)
 
+def cmd_set_config(hdev, cfgbytes):
+    msg = [PFX_CMD_SET_CONFIG]
+    msg.extend(cfgbytes)
+    return usb_transaction(hdev, msg)
+
 def cmd_get_name(hdev):
     msg = [PFX_CMD_GET_NAME]
     return usb_transaction(hdev, msg)
@@ -40,6 +45,11 @@ def cmd_set_name(hdev, name):
 
 def cmd_get_event_action(hdev, evtID, ch):
     msg = [PFX_CMD_GET_EVENT_ACTION, evtID, ch]
+    return usb_transaction(hdev, msg)
+
+def cmd_set_event_action(hdev, evtID, ch, action):
+    msg = [PFX_CMD_SET_EVENT_ACTION, evtID, ch]
+    msg.extend(action)
     return usb_transaction(hdev, msg)
 
 def cmd_test_action(hdev, action):

@@ -15,7 +15,7 @@ class PFxSettings:
     """
     def __init__(self):
         self.statusLED = 0
-        self.volumeBeep = False
+        self.volumeBeep = 0
         self.autoPowerDown = 0
         self.lockoutMode = 0
         self.irAutoOff = 0
@@ -59,17 +59,36 @@ class PFxMotor:
         self.vmid = 128
         self.vmax = 255
          
-    def parse_config_byte(self, byte):
+    def from_config_byte(self, byte):
         self.invert = set_with_bit(byte, PFX_CFG_MOTOR_INVERT)
         self.torqueComp = set_with_bit(byte, PFX_CFG_MOTOR_TRQCOMP)
         self.tlgMode = set_with_bit(byte, PFX_CFG_MOTOR_TLGMODE)
  
-    def parse_speed_bytes(self, msg):
+    def from_speed_bytes(self, msg):
         self.vmin = int(msg[0])
         self.vmid = int(msg[1])
         self.vmax = int(msg[2])
         self.accel = int(msg[3])
         self.decel = int(msg[4])
+ 
+    def to_config_byte(self):
+        v = 0
+        if self.invert:
+            v |= PFX_CFG_MOTOR_INVERT
+        if self.torqueComp:
+            v |= PFX_CFG_MOTOR_TRQCOMP
+        if self.tlgMode:
+            v |= PFX_CFG_MOTOR_TLGMODE
+        return v
+        
+    def to_speed_bytes(self):
+        v = []
+        v.append(self.vmin)
+        v.append(self.vmid)
+        v.append(self.vmax)
+        v.append(self.accel)
+        v.append(self.decel)
+        return v
  
     def __repr__(self):
         s = 'invert=%02X torqueComp=%02X tlgMode=%02X' % (self.invert, self.torqueComp, self.tlgMode)
@@ -155,7 +174,7 @@ class PFxConfig:
         self.motors = [PFxMotor(), PFxMotor(), PFxMotor(), PFxMotor()]
         self.lights = PFxLights()
         self.audio = PFxAudio()
-         
+        
     def from_bytes(self, msg):
         """
         Converts the message string bytes read from the PFx Brick into
@@ -187,20 +206,80 @@ class PFxConfig:
         self.audio.bass = msg[35]
         self.audio.treble = msg[36]
         self.settings.statusLED = int(msg[37] & PFX_CFG_STATLED_MASK)
-        self.settings.volumeBeep = set_with_bit(msg[37], PFX_CFG_VOLBEEP_MASK)
+        self.settings.volumeBeep = int(msg[37] & PFX_CFG_VOLBEEP_MASK)
         self.settings.autoPowerDown = int(msg[37] & PFX_CFG_POWERSAVE_MASK)
         self.settings.lockoutMode = int(msg[37] & PFX_CFG_LOCK_MODE_MASK)
-        self.audio.audioDRC = set_with_bit(msg[37], PFX_CFG_AUDIO_DRC_MASK)
-        self.motors[0].parse_config_byte(msg[38])
-        self.motors[0].parse_speed_bytes(msg[39:44])
-        self.motors[1].parse_config_byte(msg[44])
-        self.motors[1].parse_speed_bytes(msg[45:50])
-        self.motors[2].parse_config_byte(msg[50])
-        self.motors[2].parse_speed_bytes(msg[51:56])
-        self.motors[3].parse_config_byte(msg[56])
-        self.motors[3].parse_speed_bytes(msg[57:62])
+        self.audio.audioDRC = int(msg[37] & PFX_CFG_AUDIO_DRC_MASK)
+        self.motors[0].from_config_byte(msg[38])
+        self.motors[0].from_speed_bytes(msg[39:44])
+        self.motors[1].from_config_byte(msg[44])
+        self.motors[1].from_speed_bytes(msg[45:50])
+        self.motors[2].from_config_byte(msg[50])
+        self.motors[2].from_speed_bytes(msg[51:56])
+        self.motors[3].from_config_byte(msg[56])
+        self.motors[3].from_speed_bytes(msg[57:62])
         self.audio.defaultVolume = msg[62]
         self.lights.defaultBrightness = msg[63]
+
+    def to_bytes(self):
+        """
+        Converts the data members of this class to the message 
+        string bytes which can be sent to the PFx Brick.
+        """
+        msg = []
+        msg.append(self.settings.notchCount)  
+        msg.append(self.settings.notchBounds[0])
+        msg.append(self.settings.notchBounds[1])
+        msg.append(self.settings.notchBounds[2])
+        msg.append(self.settings.notchBounds[3])
+        msg.append(self.settings.notchBounds[4])
+        msg.append(self.settings.notchBounds[5])
+        msg.append(self.settings.notchBounds[6])
+        msg.extend([0] * 11)
+        msg.append(self.settings.irAutoOff)
+        msg.append(self.settings.btAutoOff)
+        msg.append(self.settings.btMotorWhenDisconnect)
+        msg.append(self.settings.btAdvertPower)
+        msg.append(self.settings.btSessionPower)
+        msg.append(self.audio.bass)
+        msg.append(self.audio.treble)
+        v = 0
+        if self.settings.statusLED == PFX_CFG_STATLED_OFF:
+            v |= PFX_CFG_STATLED_OFF
+        else:
+            v |= PFX_CFG_STATLED_ON
+        if self.settings.volumeBeep == PFX_CFG_VOLBEEP_ON:
+            v |= PFX_CFG_VOLBEEP_ON
+        else:
+            v |= PFX_CFG_VOLBEEP_OFF
+        v |= self.settings.autoPowerDown
+        v |= self.settings.lockoutMode
+        if self.audio.audioDRC == PFX_CFG_AUDIO_DRC_ON:
+            v |= PFX_CFG_AUDIO_DRC_ON
+        else:
+            v |= PFX_CFG_AUDIO_DRC_OFF
+        msg.append(v)
+        msg.append(self.motors[0].to_config_byte())
+        msg.extend(self.motors[0].to_speed_bytes())
+        msg.append(self.motors[1].to_config_byte())
+        msg.extend(self.motors[1].to_speed_bytes())
+        msg.append(self.motors[2].to_config_byte())
+        msg.extend(self.motors[2].to_speed_bytes())
+        msg.append(self.motors[3].to_config_byte())
+        msg.extend(self.motors[3].to_speed_bytes())
+        msg.append(self.audio.defaultVolume)
+        msg.append(self.lights.defaultBrightness)
+        msg.append(self.lights.startupBrightness[0])
+        msg.append(self.lights.startupBrightness[1])
+        msg.append(self.lights.startupBrightness[2])
+        msg.append(self.lights.startupBrightness[3])
+        msg.append(self.lights.startupBrightness[4])
+        msg.append(self.lights.startupBrightness[5])
+        msg.append(self.lights.startupBrightness[6])
+        msg.append(self.lights.startupBrightness[7])
+        msg.append(self.lights.pfBrightnessA)
+        msg.append(self.lights.pfBrightnessB)
+        return msg
          
     def __str__(self):
         sb = []
