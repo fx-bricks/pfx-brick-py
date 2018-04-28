@@ -165,7 +165,7 @@ class PFxBrick:
     def get_icd_rev(self, silent=False):
         """
         Requests the version of Interface Control Document (ICD)
-        the connected PFx Brick supports using the CMD_PFX_GET_ICD_REV
+        the connected PFx Brick supports using the PFX_CMD_GET_ICD_REV
         ICD message.  The resulting version number is stored in
         this class and also returned.
         
@@ -178,7 +178,7 @@ class PFxBrick:
     def get_status(self):
         """
         Requests the top level operational status of the PFx Brick
-        using the CMD_PFX_GET_STATUS ICD message.  The resulting
+        using the PFX_CMD_GET_STATUS ICD message.  The resulting
         status data is stored in this class and can be queried
         with typical class member access methods or the print_status method.
         """
@@ -254,7 +254,7 @@ class PFxBrick:
         Sets the user defined name of the PFx Brick using the
         PFX_CMD_SET_NAME ICD message.
         
-        :param name: :obj:`str` new name to set
+        :param name: :obj:`str` new name to set (up to 24 character bytes, UTF-8)
         """
         res = cmd_set_name(self.hid, name)
 

@@ -43,15 +43,11 @@ check_python_version()
 setuptools.setup(
     name=read_package_variable('__project__'),
     version=read_package_variable('__version__'),
-
     description="A python API for host control of USB connected PFx Bricks.",
     url='https://github.com/fx-bricks/pfx-brick-py',
     author='Fx Bricks Inc.',
     author_email='info@fxbricks.com',
-
     packages=setuptools.find_packages(),
-    entry_points={'console_scripts': []},
-
     long_description=build_description(),
     license='MIT',
     classifiers=[

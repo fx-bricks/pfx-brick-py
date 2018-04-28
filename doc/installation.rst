@@ -31,6 +31,20 @@ or directly from the source code:
     $ cd pfx-brick-py
     $ python setup.py install
 
+Anaconda / miniconda based environments
+---------------------------------------
+
+You can use `Anaconda <https://www.anaconda.com/download/>`_ or `miniconda <https://conda.io/miniconda.html>`_ to create a virtual python environment as a "sandbox" to try the pfxbrick API modules. On most unix platforms (macOS, linux, etc.) you can use the following commands to create a new conda environment called "pfxplay" and install the pfxbrick package (assuming conda is already installed):
+
+.. code-block:: shell
+
+    $ conda create --name pfxplay python=3.6
+    $ source activate pfxplay
+    $ pip install --upgrade pip
+    $ pip install hidapi
+    $ pip install pfxbrick
+
+
 Linux
 -----
 
@@ -53,5 +67,15 @@ After installation, verify the package can imported:
     $ python
     >>> import pfxbrick
     >>> pfxbrick.__version__
+    '0.6.0'
+    >>>
 
+If you have a PFx Brick connected, you can try the following command to see if your python installation can find your connected PFx Brick(s):
 
+.. code-block:: shell
+    
+    >>> pfxbrick.find_bricks()
+    ['89000001', '89000002']
+    >>>
+
+This returns a list of PFx Brick serial numbers that were found.
