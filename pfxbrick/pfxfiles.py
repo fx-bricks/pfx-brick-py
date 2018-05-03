@@ -37,7 +37,7 @@ def fs_error_check(res):
     :returns: True if there is an error, False on success
     """
     if res > 62:
-        print("File system error: [%02X] %s" % (res, get_err_str(res)))
+        print("File system error: [%02X] %s" % (res, get_error_str(res)))
         return True
     else:
         return False
