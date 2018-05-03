@@ -2,6 +2,11 @@
 Change Log
 ==========
 
+v.0.6.1
+-------
+
+* changed the USB write function to ensure consistent cross-platform compatibility
+
 v.0.6.0
 -------
 
