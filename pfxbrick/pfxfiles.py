@@ -64,7 +64,7 @@ def fs_remove_file(hdev, fid):
     :param hdev: USB HID session handle
     :param fid: the file ID of the file to remove
     """
-    msg = [PFX_CMD_FILE_DIR]
+    msg = [PFX_CMD_FILE_REMOVE]
     msg.append(fid)
     res = usb_transaction(hdev, msg)
     fs_error_check(res[1])

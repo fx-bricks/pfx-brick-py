@@ -24,10 +24,19 @@
 # PFx Brick message helpers
 
 import hid
+import platform
 from pfxbrick.pfx import *
 
 def usb_transaction(hdev, msg):
-    hdev.write(msg)
+    # enforce non-numbered report pre-pending and report length
+    # This ensures consistent operation on Windows, macOS, etc.
+    # since Windows insists on matched report length/buffer size
+    # and for all non-numbered reports to start with 0
+    msglen = len(msg)
+    buf = [0]
+    buf.extend(msg)
+    buf.extend([0] * (64 - msglen))
+    hdev.write(buf)
     res = hdev.read(64)
     if res:
         if res[0] == msg[0] | 0x80:

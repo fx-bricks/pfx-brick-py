@@ -51,7 +51,7 @@ class PFxSettings:
 
         bleAdvertPower (:obj:`int`): BLE RF power during advertising
 
-        bleSessionPower (:obj:`int`): BLE RF power durring connected session
+        bleSessionPower (:obj:`int`): BLE RF power during connected session
 
         notchCount (:obj:`int`): number of motor index speed notches
 
@@ -289,10 +289,10 @@ class PFxConfig:
         self.settings.notchBounds[5] = msg[13]
         self.settings.notchBounds[6] = msg[14]
         self.settings.irAutoOff = msg[26]
-        self.settings.btAutoOff = msg[27]
-        self.settings.btMotorWhenDisconnect = msg[28]
-        self.settings.btAdvertPower = msg[29]
-        self.settings.btSessionPower = msg[30]
+        self.settings.bleAutoOff = msg[27]
+        self.settings.bleMotorWhenDisconnect = msg[28]
+        self.settings.bleAdvertPower = msg[29]
+        self.settings.bleSessionPower = msg[30]
         self.lights.startupBrightness[6] = msg[31]
         self.lights.startupBrightness[7] = msg[32]
         self.lights.pfBrightnessA = msg[33]
@@ -331,10 +331,10 @@ class PFxConfig:
         msg.append(self.settings.notchBounds[6])
         msg.extend([0] * 11)
         msg.append(self.settings.irAutoOff)
-        msg.append(self.settings.btAutoOff)
-        msg.append(self.settings.btMotorWhenDisconnect)
-        msg.append(self.settings.btAdvertPower)
-        msg.append(self.settings.btSessionPower)
+        msg.append(self.settings.bleAutoOff)
+        msg.append(self.settings.bleMotorWhenDisconnect)
+        msg.append(self.settings.bleAdvertPower)
+        msg.append(self.settings.bleSessionPower)
         msg.append(self.audio.bass)
         msg.append(self.audio.treble)
         v = 0
