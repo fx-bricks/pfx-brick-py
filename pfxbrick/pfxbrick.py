@@ -363,11 +363,12 @@ class PFxBrick:
         if res:
             self.filedir.files = []
             self.filedir.numFiles = uint16_toint(res[3:5])
-            for i in range(self.filedir.numFiles):
+            for i in range(64):
                 res = cmd_get_dir_entry(self.hid, i+1)
                 d = PFxFile()
                 d.from_bytes(res)
-                self.filedir.files.append(d)
+                if d.id < 0xFF:
+                    self.filedir.files.append(d)
                 
     def put_file(self, fileID, fn, show_progress=True):
         """
