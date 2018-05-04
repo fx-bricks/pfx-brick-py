@@ -2,6 +2,12 @@
 Change Log
 ==========
 
+v.0.6.2
+-------
+
+* fixed error reporting for file system access methods
+* fixed file directory refresh to ignore empty directory entries
+
 v.0.6.1
 -------
 

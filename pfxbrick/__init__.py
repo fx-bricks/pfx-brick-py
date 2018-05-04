@@ -3,7 +3,7 @@
 import os
 
 __project__ = 'pfxbrick'
-__version__ = '0.6.1'
+__version__ = '0.6.2'
 
 VERSION = __project__ + '-' + __version__
 
