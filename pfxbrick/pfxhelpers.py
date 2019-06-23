@@ -61,7 +61,7 @@ def uint32_to_bytes(v):
 def uint32_toint(bytes):
     res = (int(bytes[0] & 0xFF) << 24) | (int(bytes[1] & 0xFF) << 16) | (int(bytes[2] & 0xFF) << 8) | (int(bytes[3]) & 0xFF)
     return res
-    
+
 def uint16_tostr(msb, lsb):
     res = "".join("{:02X}".format(x) for x in [msb, lsb])
     return res
@@ -73,7 +73,7 @@ def uint32_tostr(msb, b1, b2, lsb):
 def uint16_tover(msb, lsb):
     res = '%02X.%02X' % (msb, lsb)
     return res
-    
+
 def motor_ch_str(x):
     s = []
     if x & EVT_MOTOR_OUTPUT_MASK:
@@ -110,18 +110,131 @@ def ch_to_mask(ch):
         else:
             mask = mask | (1 << (c-1))
     return mask
-    
+
 
 def address_to_evtch(address):
     evt = (address & EVT_EVENT_ID_MASK) >> 2
     ch = address & EVT_EVENT_CH_MASK
     return evt, ch
-    
+
 def evtch_to_address(evt, ch):
     address = ch & EVT_EVENT_CH_MASK
     address |= (evt << 2) & EVT_EVENT_ID_MASK
     return address
-    
+
+def period_param(period):
+    x = float(period)
+    if x < 0.250:
+        return EVT_PERIOD_100MS
+    elif x < 0.50:
+        return EVT_PERIOD_250MS
+    elif x < 0.75:
+        return EVT_PERIOD_500MS
+    elif x < 1.0:
+        return EVT_PERIOD_750MS
+    elif x < 1.25:
+        return EVT_PERIOD_1S
+    elif x < 1.50:
+        return EVT_PERIOD_1_25S
+    elif x < 1.75:
+        return EVT_PERIOD_1_5S
+    elif x < 2.0:
+        return EVT_PERIOD_1_75S
+    elif x < 2.5:
+        return EVT_PERIOD_2S
+    elif x < 3.0:
+        return EVT_PERIOD_2_5S
+    elif x < 4.0:
+        return EVT_PERIOD_3S
+    elif x < 5.0:
+        return EVT_PERIOD_4S
+    elif x < 8.0:
+        return EVT_PERIOD_5S
+    elif x < 10.0:
+        return EVT_PERIOD_8S
+    elif x < 20.0:
+        return EVT_PERIOD_10S
+    else:
+        return EVT_PERIOD_20S
+
+
+def period2_param(period):
+    x = float(period)
+    if x < 0.1:
+        return EVT_PERIOD2_50MS
+    elif x < 0.2:
+        return EVT_PERIOD2_100MS
+    elif x < 0.3:
+        return EVT_PERIOD2_200MS
+    elif x < 0.4:
+        return EVT_PERIOD2_300MS
+    elif x < 0.5:
+        return EVT_PERIOD2_400MS
+    elif x < 0.6:
+        return EVT_PERIOD2_500MS
+    elif x < 0.7:
+        return EVT_PERIOD2_600MS
+    elif x < 0.8:
+        return EVT_PERIOD2_700MS
+    elif x < 0.9:
+        return EVT_PERIOD2_800MS
+    elif x < 1.0:
+        return EVT_PERIOD2_900MS
+    elif x < 1.25:
+        return EVT_PERIOD2_1S
+    elif x < 1.5:
+        return EVT_PERIOD2_1_25S
+    elif x < 1.75:
+        return EVT_PERIOD2_1_5S
+    elif x < 2.0:
+        return EVT_PERIOD2_1_75S
+    elif x < 3.0:
+        return EVT_PERIOD2_2S
+    else:
+        return EVT_PERIOD2_3S
+
+
+def duty_cycle_param(duty_cycle):
+    x = float(duty_cycle)
+    if x < 0.02:
+        return EVT_DUTYCY_1
+    elif x < 0.05:
+        return EVT_DUTYCY_2
+    elif x < 0.1:
+        return EVT_DUTYCY_5
+    elif x < 0.15:
+        return EVT_DUTYCY_10
+    elif x < 0.2:
+        return EVT_DUTYCY_15
+    elif x < 0.25:
+        return EVT_DUTYCY_20
+    elif x < 0.3:
+        return EVT_DUTYCY_25
+    elif x < 0.4:
+        return EVT_DUTYCY_30
+    elif x < 0.5:
+        return EVT_DUTYCY_40
+    elif x < 0.6:
+        return EVT_DUTYCY_50
+    elif x < 0.7:
+        return EVT_DUTYCY_60
+    elif x < 0.75:
+        return EVT_DUTYCY_70
+    elif x < 0.8:
+        return EVT_DUTYCY_75
+    elif x < 0.85:
+        return EVT_DUTYCY_80
+    elif x < 0.9:
+        return EVT_DUTYCY_85
+    elif x < 0.95:
+        return EVT_DUTYCY_90
+    elif x < 0.98:
+        return EVT_DUTYCY_95
+    elif x < 0.99:
+        return EVT_DUTYCY_98
+    else:
+        return EVT_DUTYCY_99
+
 def duration_to_fixed_value(duration):
     x = float(duration)
     if x < 1.0:
@@ -174,5 +287,5 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     bar = fill * filledLength + '-' * (length - filledLength)
     print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
     # Print New Line on Complete
-    if iteration == total: 
+    if iteration == total:
         print()

@@ -31,11 +31,11 @@ from pfxbrick.pfxhelpers import *
 class PFxAction:
     """
     Action data structure class.
-    
+
     This class reflects the 16 byte data structure used internally
     by the PFx Brick to execute a composite action of motor, lighting,
     and sound effects.
-    
+
     Attributes:
         command (:obj:`int`): Command byte
 
@@ -63,7 +63,7 @@ class PFxAction:
 
         soundFxId (:obj:`int`): Sound Fx ID byte
 
-        soundFileId (:obj:`int`): Sound file ID 
+        soundFileId (:obj:`int`): Sound file ID
 
         soundParam1 (:obj:`int`): Sound parameter 1
 
@@ -94,14 +94,14 @@ class PFxAction:
         The motor speed is specified between -100% and +100% where negative
         values are in the reverse direction and positive values are in
         the forward direction.
-        
+
         :param ch: [:obj:`int`] a list of motor channels (1-4)
         :param speed: :obj:`int` desired motor speed (-100 to +100)
         :param duration: :obj:`float` optional duration (in seconds) to run motor, runs indefinitely if not specified
-        :returns: :obj:`PFxAction` self        
-        
+        :returns: :obj:`PFxAction` self
+
         If the duration value is specified, it represents the desired motor
-        run time in seconds. Note that this value will be rounded to the 
+        run time in seconds. Note that this value will be rounded to the
         nearest fixed interval of the DURATION parameter as defined in the ICD
         ranging between 16 fixed values from 0.5 sec to 5 min.
         """
@@ -116,7 +116,7 @@ class PFxAction:
         if speed < 0:
             s |= EVT_MOTOR_SPEED_HIRES_REV
         self.motorParam1 = s
-        
+
         m = (ch_to_mask(ch) & EVT_MOTOR_OUTPUT_MASK)
         if duration is not None:
             m |= EVT_MOTOR_SET_SPD_TIMED
@@ -131,56 +131,56 @@ class PFxAction:
         Populates an action to stop the specifed motor channel(s).
 
         :param ch: [:obj:`int`] a list of motor channels (1-4)
-        :returns: :obj:`PFxAction` self        
+        :returns: :obj:`PFxAction` self
         """
         m = (ch_to_mask(ch) & EVT_MOTOR_OUTPUT_MASK)
         m |= EVT_MOTOR_ESTOP
         self.motorActionId = m
         return self
-        
+
     def light_on(self, ch):
         """
         Populates an action to turn on selected light outputs.
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
-        :returns: :obj:`PFxAction` self        
+        :returns: :obj:`PFxAction` self
         """
         self.lightOutputMask = ch_to_mask(ch)
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
         self.lightParam4 = EVT_TRANSITION_ON
         return self
-        
+
     def light_off(self, ch):
         """
         Populates an action to turn off selected light outputs.
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
-        :returns: :obj:`PFxAction` self        
+        :returns: :obj:`PFxAction` self
         """
         self.lightOutputMask = ch_to_mask(ch)
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
         self.lightParam4 = EVT_TRANSITION_OFF
         return self
-        
+
     def light_toggle(self, ch):
         """
         Populates an action to toggle the state of selected light outputs.
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
-        :returns: :obj:`PFxAction` self        
+        :returns: :obj:`PFxAction` self
         """
         self.lightOutputMask = ch_to_mask(ch)
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
         self.lightParam4 = EVT_TRANSITION_TOGGLE
         return self
-        
+
     def set_brightness(self, ch, brightness):
         """
         Populates an action to set the brightness of selected light outputs.
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
         :param brightness: :obj:`int` brightness (0 - 255 max)
-        :returns: :obj:`PFxAction` self        
+        :returns: :obj:`PFxAction` self
         """
         x = brightness
         if x > 255:
@@ -191,38 +191,44 @@ class PFxAction:
         self.lightFxId = EVT_LIGHTFX_SET_BRIGHT
         self.lightParam1 = x
         return self
-        
+
     def combo_light_fx(self, fx, param=[0, 0, 0, 0, 0]):
         """
         Populates an action with a user specified combination light effect
         and associated parameters.
-        
+
         :param fx: :obj:`int` desired light effect
         :param param: [:obj:`int`] a list of up to 5 light parameters
-        :returns: :obj:`PFxAction` self        
+        :returns: :obj:`PFxAction` self
         """
         return self.light_fx([], fx | EVT_LIGHT_COMBO_MASK, param)
-    
+
+    def light_flash(self, ch, period=1.0, fade=0.1):
+        """
+        A convenience method to prepare an flashing light action
+        """
+        
+
     def light_fx(self, ch, fx, param=[0, 0, 0, 0, 0]):
         """
         Populates an action with a user specified light effect and
         associated parameters.
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
         :param fx: :obj:`int` desired light effect
         :param param: [:obj:`int`] a list of up to 5 light parameters
-        :returns: :obj:`PFxAction` self        
-        
+        :returns: :obj:`PFxAction` self
+
         The details of specifying the light **fx** and **param** items
-        is described in detail in the ICD document. The **pfx.py** 
+        is described in detail in the ICD document. The **pfx.py**
         file contains convenient pre-defined constants for all of
         the light effect types and parameter values.
-        
+
         An example of using this method is as follows::
-        
+
             p = [EVT_PERIOD_1S, EVT_DUTYCY_10, EVT_BURST_COUNT_2, EVT_TRANSITION_TOGGLE]
             a = PFxAction().light_fx([1,4], EVT_LIGHTFX_STROBE_P, p)
-        
+
         This specifies a strobe light effect on channels 1 and 4 with
         a 1 second period, 10% duty cycle, two light pulses and with
         a toggle activation.
@@ -240,29 +246,29 @@ class PFxAction:
                 self.lightParam4 = p
             elif i==4:
                 self.lightParam5 = p
-        return self            
-        
+        return self
+
     def sound_fx(self, fx, param=[0, 0], fileID=None):
         """
         Populates an action with a user specified sound effect and
         associated parameters.
-        
+
         :param fx: :obj:`int` desired sound action
         :param param: [:obj:`int`] a list of up to 2 sound parameters
         :param fileID: :obj:`int` file ID of an audio file in the file system
-        :returns: :obj:`PFxAction` self        
-        
+        :returns: :obj:`PFxAction` self
+
         The details of specifying the sound **fx** and **param** items
-        is described in detail in the ICD document. The **pfx.py** 
+        is described in detail in the ICD document. The **pfx.py**
         file contains convenient pre-defined constants for all of
         the sound effect types and parameter values.
-        
+
         An example of using this method is as follows::
-        
+
             p = [EVT_SOUND_DUR_10S]
             a = PFxAction().sound_fx(EVT_SOUND_PLAY_DUR, p, 5)
-        
-        This specifies an action to playback an audio file with ID=5 
+
+        This specifies an action to playback an audio file with ID=5
         for a fixed duration of 10 seconds.
         """
         self.soundFxId = fx
@@ -278,10 +284,10 @@ class PFxAction:
     def play_audio_file(self, fileID):
         """
         Populates an action to play an audio file once.
-        
+
         :param fileID: :obj:`int` file ID of an audio file in the file system
-        :returns: :obj:`PFxAction` self        
-        
+        :returns: :obj:`PFxAction` self
+
         This is a convenience wrapper for the sound_fx method.
         """
         return self.sound_fx(EVT_SOUND_PLAY_ONCE, [EVT_SOUND_TOGGLE], fileID)
@@ -289,10 +295,10 @@ class PFxAction:
     def stop_audio_file(self, fileID):
         """
         Populates an action to stop playback of an audio file.
-        
+
         :param fileID: :obj:`int` file ID of an audio file in the file system
-        :returns: :obj:`PFxAction` self        
-        
+        :returns: :obj:`PFxAction` self
+
         This is a convenience wrapper for the sound_fx method.
         """
         return self.sound_fx(EVT_SOUND_STOP, [], fileID)
@@ -300,10 +306,10 @@ class PFxAction:
     def repeat_audio_file(self, fileID):
         """
         Populates an action for repeated playback of an audio file.
-        
+
         :param fileID: :obj:`int` file ID of an audio file in the file system
-        :returns: :obj:`PFxAction` self        
-        
+        :returns: :obj:`PFxAction` self
+
         This is a convenience wrapper for the sound_fx method.
         """
         return self.sound_fx(EVT_SOUND_PLAY_CONT, [], fileID)
@@ -311,10 +317,10 @@ class PFxAction:
     def set_volume(self, volume):
         """
         Populates an action to set the audio volume.
-        
+
         :param volume: :obj:`int` desired audio volume (0 - 100%)
-        :returns: :obj:`PFxAction` self        
-        
+        :returns: :obj:`PFxAction` self
+
         This is a convenience wrapper for the sound_fx method.
         """
         vf = float(volume)
@@ -324,7 +330,7 @@ class PFxAction:
             vf = 0.0
         vf = (vf / 100.0) * 255.0
         v = int(vf)
-        return self.sound_fx(EVT_SOUND_SET_VOL, [0, v])        
+        return self.sound_fx(EVT_SOUND_SET_VOL, [0, v])
 
     def clear(self):
         """
@@ -345,7 +351,7 @@ class PFxAction:
         self.soundFxId = 0
         self.soundFileId = 0
         self.soundParam1 = 0
-        self.soundParam2 = 0        
+        self.soundParam2 = 0
 
     def from_bytes(self, msg):
         """
@@ -368,10 +374,10 @@ class PFxAction:
         self.soundFileId = msg[14]
         self.soundParam1 = msg[15]
         self.soundParam2 = msg[16]
-        
+
     def to_bytes(self):
         """
-        Converts the data members of this class to the message 
+        Converts the data members of this class to the message
         string bytes which can be sent to the PFx Brick.
         """
         msg = []
@@ -392,7 +398,7 @@ class PFxAction:
         msg.append(self.soundParam1)
         msg.append(self.soundParam2)
         return msg
-        
+
     def __str__(self):
         """
         Convenient human readable string of the action data structure. This allows
@@ -425,5 +431,3 @@ class PFxAction:
         sb.append('Sound Param 2     : [%02X]' % (self.soundParam2))
         s = '\n'.join(sb)
         return s
-        
-        
