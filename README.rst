@@ -1,3 +1,6 @@
+.. image:: images/sitelogo.png
+
+
 PFx Brick Python API
 ====================
 
