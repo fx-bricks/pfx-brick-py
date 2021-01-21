@@ -81,12 +81,12 @@ class PFxState:
     ICD command.  This internal state data can be useful for monitoring, debugging, and
     for building apps which can use this data for enhanced feedback of the PFx Brick runtime
     state and behaviour.
-    
+
     Attributes:
         brightness (:obj:`int`): current global brightness value
-    
+
         volume (:obj:`int`): current audio volume level
-    
+
         millisec_count (:obj:`int`): PFx Brick millisecond counter value
 
         slow_count (:obj:`int`): PFx Brick 1 second counter value

@@ -64,21 +64,21 @@ def find_bricks(show_list=False):
 class PFxBrick:
     """
     Top level PFx Brick object class.
-    
+
     This class is used to initialize and maintain a communication session
     with a USB connected PFx Brick. Many convenient methods are provided
     to perform tasks such as changing configuration, accessing the file
-    system, initiating actions, and more. 
-    
+    system, initiating actions, and more.
+
     Attributes:
         product_id (:obj:`str`): product ID code reported by the PFx Brick (e.g. 'A204')
-    
+
         serial_no (:obj:`str`): serial number reported by the PFx Brick, usually 8 digit hexadecimal
-    
+
         product_desc (:obj:`str`): product descriptor reported by the PFx Brick
-    
+
         firmware_ver (:obj:`str`): firmware version number reported, 4-digit hex BCD, e.g. '0134' represents v.1.34
-    
+
         firmware_build (:obj:`str`): firmware build number reported, 4-digit hex BCD
 
         icd_rev (:obj:`str`): ICD revision number reported, 4-digit hex BCD, e.g. '0336' represents v.3.36
@@ -184,7 +184,7 @@ class PFxBrick:
         the connected PFx Brick supports using the PFX_CMD_GET_ICD_REV
         ICD message.  The resulting version number is stored in
         this class and also returned.
-        
+
         :param boolean silent: flag to optionally silence the status LED blink
         """
         res = cmd_get_icd_rev(self.dev, silent)
@@ -233,7 +233,7 @@ class PFxBrick:
 
     def get_config(self):
         """
-        Retrieves configuration settings from the PFx Brick using 
+        Retrieves configuration settings from the PFx Brick using
         the PFX_CMD_GET_CONFIG ICD message. The configuration data
         is stored in the :obj:`PFxBrick.config` class member variable.
         """
@@ -252,7 +252,7 @@ class PFxBrick:
         """
         Writes the contents of the PFxConfig data structure class to
         the PFx Brick using the PFX_CMD_SET_CONFIG ICD message.
-        
+
         It is recommended that the configuration be read from the
         PFx Brick (using get_config) before any changes are made to
         the configuration and written back. This ensures that any
@@ -263,10 +263,10 @@ class PFxBrick:
 
     def get_name(self):
         """
-        Retrieves the user defined name of the PFx Brick using 
+        Retrieves the user defined name of the PFx Brick using
         the PFX_CMD_GET_NAME ICD message. The name is stored in
         the name class variable as a UTF-8 string.
-        
+
         :returns: :obj:`str` user defined name
         """
         res = cmd_get_name(self.dev)
@@ -277,7 +277,7 @@ class PFxBrick:
         """
         Sets the user defined name of the PFx Brick using the
         PFX_CMD_SET_NAME ICD message.
-        
+
         :param name: :obj:`str` new name to set (up to 24 character bytes, UTF-8)
         """
         res = cmd_set_name(self.dev, name)
@@ -285,10 +285,10 @@ class PFxBrick:
     def get_action_by_address(self, address):
         """
         Retrieves a stored action indexed by address rather than a
-        combination of eventID and IR channel.  The address is converted into a 
-        [eventID, IR channel] pair and the get_action method is 
+        combination of eventID and IR channel.  The address is converted into a
+        [eventID, IR channel] pair and the get_action method is
         called with this function as a convenient wrapper.
-        
+
         :param address: :obj:`int` event/action LUT address (0 - 0x7F)
         :returns: :obj:`PFxAction` class filled with retrieved LUT data
         """
@@ -305,10 +305,10 @@ class PFxBrick:
         [eventID / IR channel] event. The eventID and channel value
         form a composite address pointer into the event/action LUT
         in the PFx Brick. The address to the LUT is formed as:
-        
+
         Address[5:2] = event ID
         Address[1:0] = channel
-        
+
         :param evtID: :obj:`int` event ID LUT address component (0 - 0x20)
         :param channel: :obj:`int` channel index LUT address component (0 - 3)
         :returns: :obj:`PFxAction` class filled with retrieved LUT data
@@ -326,10 +326,10 @@ class PFxBrick:
     def set_action_by_address(self, address, action):
         """
         Sets a new stored action in the event/action LUT at the
-        address specified. The address is converted into a 
-        [eventID, IR channel] pair and the set_action method is 
+        address specified. The address is converted into a
+        [eventID, IR channel] pair and the set_action method is
         called with this function as a convenient wrapper.
-        
+
         :param address: :obj:`int` event/action LUT address (0 - 0x7F)
         :param action: :obj:`PFxAction` action data structure class
         """
@@ -346,10 +346,10 @@ class PFxBrick:
         [eventID / IR channel] event. The eventID and channel value
         form a composite address pointer into the event/action LUT
         in the PFx Brick. The address to the LUT is formed as:
-        
+
         Address[5:2] = event ID
         Address[1:0] = channel
-        
+
         :param evtID: :obj:`int` event ID LUT address component (0 - 0x20)
         :param ch: :obj:`int` channel index LUT address component (0 - 3)
         :param action: :obj:`PFxAction` action data structure class
@@ -365,7 +365,7 @@ class PFxBrick:
         Executes a passed action data structure. This function is
         used to "test" actions to see how they behave. The passed
         action is not stored in the event/action LUT.
-        
+
         :param action: :obj:`PFxAction` action data structure class
         """
         res = cmd_test_action(self.dev, action.to_bytes())
@@ -388,7 +388,7 @@ class PFxBrick:
     def stop_motor(self, ch):
         """
         A convenience wrapper for PFxAction().stop_motor
-        
+
         :param ch: [:obj:`int`] a list of motor channels (1-4)
         """
         self.test_action(PFxAction().stop_motor(ch))
@@ -396,7 +396,7 @@ class PFxBrick:
     def light_on(self, ch):
         """
         A convenience wrapper for PFxAction().light_on
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
         self.test_action(PFxAction().light_on(ch))
@@ -404,7 +404,7 @@ class PFxBrick:
     def light_off(self, ch):
         """
         A convenience wrapper for PFxAction().light_off
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
         self.test_action(PFxAction().light_off(ch))
@@ -412,7 +412,7 @@ class PFxBrick:
     def light_toggle(self, ch):
         """
         A convenience wrapper for PFxAction().light_toggle
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
         self.test_action(PFxAction().light_toggle(ch))
@@ -420,7 +420,7 @@ class PFxBrick:
     def set_brightness(self, ch, brightness):
         """
         A convenience wrapper for PFxAction().set_brightness
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
         :param brightness: :obj:`int` brightness (0 - 255 max)
         """
@@ -429,7 +429,7 @@ class PFxBrick:
     def combo_light_fx(self, fx, param=[0, 0, 0, 0, 0]):
         """
         A convenience wrapper for PFxAction().combo_light_fx
-        
+
         :param fx: :obj:`int` desired light effect
         :param param: [:obj:`int`] a list of up to 5 light parameters
         """
@@ -461,7 +461,7 @@ class PFxBrick:
         """
         A convenience wrapper for PFxAction().sound_fx
 
-        :param fileID: :obj:`int` file ID of an audio file in the file system
+        :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
         fileID = self.file_id_from_str_or_int(fileID)
         self.test_action(PFxAction().play_audio_file(fileID=fileID))
@@ -470,7 +470,7 @@ class PFxBrick:
         """
         A convenience wrapper for PFxAction().stop_audio_file
 
-        :param fileID: :obj:`int` file ID of an audio file in the file system
+        :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
         fileID = self.file_id_from_str_or_int(fileID)
         self.test_action(PFxAction().stop_audio_file(fileID=fileID))
@@ -479,7 +479,7 @@ class PFxBrick:
         """
         A convenience wrapper for PFxAction().repeat_audio_file
 
-        :param fileID: :obj:`int` file ID of an audio file in the file system
+        :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
         fileID = self.file_id_from_str_or_int(fileID)
         self.test_action(PFxAction().repeat_audio_file(fileID=fileID))
@@ -519,40 +519,46 @@ class PFxBrick:
                 if file_count >= self.filedir.numFiles:
                     break
 
-    def put_file(self, fileID, fn, show_progress=True):
+    def put_file(self, fn, fileID=None, show_progress=True):
         """
-        Copies a file from the host to the PFx Brick. 
-        
-        :param fileID: :obj:`int` the unique file ID to assign the copied file in the file system
+        Copies a file from the host to the PFx Brick.
+
         :param fn: :obj:`str` the filename (optionally including the path) of the file to copy
+        :param fileID: :obj:`int` the unique file ID to assign the copied file in the file system, can be None for automatic assignment
         :param show_progress: :obj:`boolean` a flag to show the progress bar indicator during transfer.
         """
-        fs_copy_file_to(self.dev, fileID, fn, show_progress)
+        if fileID is None:
+            self.refresh_file_dir()
+            fileID = self.filedir.find_available_file_id()
+        if fileID is not None:
+            fs_copy_file_to(self.dev, fileID, fn, show_progress)
 
     def get_file(self, fileID, fn=None, show_progress=True):
         """
         Copies a file from the PFx Brick to the host.
-        
-        :param fileID: :obj:`int` the file ID of the file to copy
-        :param fn: :obj:`str` optional override for the filename when copied into the host 
+
+        :param fileID: :obj:`int` or :obj:`str` the file ID or filename of the file to copy
+        :param fn: :obj:`str` optional override for the filename when copied into the host
         :param show_progress: :obj:`boolean` a flag to show the progress bar indicator during transfer.
         """
         self.refresh_file_dir()
+        fileID = self.file_id_from_str_or_int(fileID)
         f = self.filedir.get_file_dir_entry(fileID)
         fs_copy_file_from(self.dev, f, fn, show_progress)
 
     def remove_file(self, fileID):
         """
         Removes a file from the PFx Brick file system.
-        
-        :param fileID: :obj:`int` the file ID of the file to remove
+
+        :param fileID: :obj:`int` or :obj:`str` the file ID or filename of the file to remove
         """
+        fileID = self.file_id_from_str_or_int(fileID)
         fs_remove_file(self.dev, fileID)
 
     def format_fs(self, quick=False):
         """
         Formats the PFx Brick file system, erasing all files.
-        
+
         :param quick: :obj:`boolean` If True, only occupied sectors are erased. If False, every sector is erased, i.e. a complete format.
         """
         fs_format(self.dev, quick)

@@ -31,13 +31,13 @@ from pfxbrick.pfxhelpers import set_with_bit
 class PFxSettings:
     """
     General settings container class. A member of PFxConfig
-    
-    This class contains miscellaneous user preference settings such as 
+
+    This class contains miscellaneous user preference settings such as
     power saving modes.
-    
+
     Attributes:
         statusLED (:obj:`int`): status LED mode
-    
+
         volumeBeep (:obj:`int`): volume beep mode
 
         autoPowerDown (:obj:`int`): auto power down mode
@@ -98,7 +98,7 @@ class PFxSettings:
 class PFxMotor:
     """
     Motor settings container class.
-    
+
     This class contains motor configuration data for one motor channel.
 
     Attributes:
@@ -107,7 +107,7 @@ class PFxMotor:
         torqueComp (:obj:`boolean`): activate low speed torque compensation with low frequency PWM
 
         tlgMode (:obj:`boolean`): enable LEGO® Power Functions compatible PWM mode
-    
+
         accel (:obj:`int`): acceleration factor (0 - 15 max)
 
         decel (:obj:`int`): deceleration factor (0 - 15 max)
@@ -190,12 +190,12 @@ class PFxLights:
 
     This class contains default startup brightness data for every light channel.
     All brightness values range from 0 (minimum) to 255 (maximum).
-    
+
     Attributes:
         defaultBrightness (:obj:`int`): default global brightness, if 0, then individual brightness is used
-    
+
         startupBrightness ([:obj:`int`]): list of 8 individual startup brightness values for each light output
-    
+
         pfBrightnessA (:obj:`int`): startup brightness of PF channel A (when used for lights)
 
         pfBrightnessB (:obj:`int`): startup brightness of PF channel B
@@ -258,17 +258,17 @@ class PFxLights:
 class PFxAudio:
     """
     Audio settings container class.
-    
+
     This class contains audio configuration data such as default volume,
     bass, treble, etc.
 
     Attributes:
         audioDRC (:obj:`boolean`): auto Dynamic Range Control (True/False)
-    
+
         bass (:obj:`int`): startup bass EQ (-20 to 20 dB)
-    
+
         treble (:obj:`int`): startup treble EQ (-20 to 20 dB)
-    
+
         defaultVolume (:obj:`int`): startup volume (0 min - 255 max)
     """
 
@@ -296,18 +296,18 @@ class PFxAudio:
 class PFxConfig:
     """
     Top level configuration data container class.
-    
+
     This class contains catergorized container classes for groups of related settings.
-    To change a configuration setting, simply access the setting value using 
+    To change a configuration setting, simply access the setting value using
     a dotted path type notation, e.g. config.lights.startupBrightness[2] = 100
-    
+
     Attributes:
         settings (:obj:`PFxSettings`): container for general settings.
-    
+
         motors ([:obj:`PFxMotor`]): list of 4 containers for motor settings
-    
+
         lights (:obj:`PFxLights`): container for default brightness settings
-    
+
         audio (:obj:`PFxAudio`): container for audio related settings
     """
 
@@ -365,7 +365,7 @@ class PFxConfig:
 
     def to_bytes(self):
         """
-        Converts the data members of this class to the message 
+        Converts the data members of this class to the message
         string bytes which can be sent to the PFx Brick.
         """
         msg = []

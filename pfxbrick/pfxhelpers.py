@@ -87,6 +87,12 @@ def uint16_tover(msb, lsb):
     return res
 
 
+def int8_toint(val):
+    if val & 0x80:
+        return -((~val & 0x7F) + 1)
+    return val & 0x7F
+
+
 def motor_ch_str(x):
     s = []
     if x & EVT_MOTOR_OUTPUT_MASK:

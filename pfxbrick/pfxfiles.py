@@ -30,6 +30,12 @@ from pfxbrick.pfxhelpers import *
 
 
 def fs_get_fileid_from_name(hdev, name):
+    """
+    Resolves a text string filename into a numeric file ID.
+
+    :param hdev: device I/O handle
+    :returns: integer file ID or 0xFF if not found
+    """
     fileid = 0xFF
     fb = bytes(name, "utf-8")
     p = [len(fb)]
@@ -43,7 +49,7 @@ def fs_get_fileid_from_name(hdev, name):
 def fs_error_check(res):
     """
     Convenience error status lookup function used by other file system functions.
-    
+
     :param res: result status code byte returned by almost all file system ICD messages
     :returns: True if there is an error, False on success
     """
@@ -57,7 +63,7 @@ def fs_error_check(res):
 def fs_format(hdev, quick=False):
     """
     Sends an ICD message to format the PFx Brick file system.
-    
+
     :param hdev: USB HID session handle
     :param boolean quick: If True, only occupied sectors are erased. If False, every sector is erased, i.e. a complete format.
     """
@@ -73,7 +79,7 @@ def fs_format(hdev, quick=False):
 def fs_remove_file(hdev, fid):
     """
     Sends an ICD message to remove a file from the PFx Brick file system.
-    
+
     :param hdev: USB HID session handle
     :param fid: the file ID of the file to remove
     """
@@ -86,13 +92,13 @@ def fs_remove_file(hdev, fid):
 def fs_copy_file_to(hdev, fid, fn, show_progress=True):
     """
     File copy handler to put a file on the PFx Brick.
-    
+
     This function handles the process of opening and transferring
     file data from the host to the PFx Brick file system. A copy session
     may involve many message transactions with the PFx Brick and could
     be time consuming. Therefore, a progress bar can be optionally shown
     on the console to monitor the transfer.
-    
+
     :param hdev: USB HID session handle
     :param fid: a unique file ID to assign the copied file.
     :param fn: the host filename (optionally including path) to copy
@@ -147,13 +153,13 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
 def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True):
     """
     File copy handler to get a file from the PFx Brick.
-    
+
     This function handles the process of opening and transferring
     file data from the PFx Brick file system to the host. A copy session
     may involve many message transactions with the PFx Brick and could
     be time consuming. Therefore, a progress bar can be optionally shown
     on the console to monitor the transfer.
-    
+
     :param hdev: USB HID session handle
     :param PFxFile pfile: a PFxFile object specifying the file to copy.
     :param fn: optional name to override the filename of the host's copy.
@@ -202,7 +208,7 @@ def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True):
 class PFxFile:
     """
     File directory entry container class.
-    
+
     This class contains directory entry data for a file on the PFx file system.
 
     Attributes:
@@ -291,9 +297,9 @@ class PFxFile:
 class PFxDir:
     """
     File directory container class.
-    
+
     This class contains PFx file system directory.
-    
+
     Attributes:
         numFiles (:obj:`int`): number of files in the file system
 
@@ -313,7 +319,7 @@ class PFxDir:
     def get_file_dir_entry(self, fid):
         """
         Returns a file directory entry containined in a :py:class:`PFxFile` class.
-        
+
         :param int fid: the unique file ID of desired directory entry
         :returns: :py:class:`PFxFile` directory entry
         """
@@ -323,18 +329,17 @@ class PFxDir:
 
     def find_available_file_id(self):
         """
-        Returns the next available unique file ID from the file system.  
+        Returns the next available unique file ID from the file system.
 
-        The directory is scanned for all currently used file ID values and 
+        The directory is scanned for all currently used file ID values and
         returns an un-used/available file ID value.
-        
+
         :returns: :obj:`int` next available file ID value, or None
         """
         used_ids = [x.id for x in self.files]
-        for f in self.files:
-            next_id = f.id + 1
-            if next_id not in used_ids:
-                return next_id
+        for x in range(255):
+            if x not in used_ids:
+                return x
         return None
 
     def __str__(self):

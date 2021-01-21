@@ -42,12 +42,12 @@ MAX_RETRIES = 100
 async def ble_device_scanner(scan_time=2.0, min_devices=1, scan_timeout=30.0):
     """
     Performs a Bluetooth scan for available peripheral devices which advertise
-    themselves as PFx Bricks. 
+    themselves as PFx Bricks.
 
     This coroutine will search for the required number of devices in scan_time
     chunks up until the scan_timeout interval has elapsed.
 
-    :param scan_time: :obj:`float` scan time interval to look for devices 
+    :param scan_time: :obj:`float` scan time interval to look for devices
     :param min_devices: :obj:`int` minimum number of devices to look for before returning
     :param scan_timeout: :obj:`float` timeout interval for finding the required min_devices
 
@@ -119,10 +119,10 @@ class PFxBrickBLE(PFxBrick):
     based on the Bleak python module, it runs in an asynchronous context using
     python's async/await mechanisms.  Since this requires co-routines instead
     of conventional function methods, this sub-class reimplements many of
-    the parent :obj:`PFxBrick` class methods as asyncronous co-routines.  
-    
+    the parent :obj:`PFxBrick` class methods as asyncronous co-routines.
+
     Almost all class functionality is more or less the same as the USB based
-    PFxBrick class and fortunately some of the utility methods can be 
+    PFxBrick class and fortunately some of the utility methods can be
     reused.
 
     This class is initialized with a dictionary describing the desired
@@ -136,12 +136,34 @@ class PFxBrickBLE(PFxBrick):
 
     Unless the Bluetooth hardware address of the PFx Brick is known in advance,
     then it must be obtained by performing a Bluetooth peripheral device scan to
-    see which Bluetooth devices are currently advertising availability.  The 
+    see which Bluetooth devices are currently advertising availability.  The
     Bluetooth hardware address is operating system dependent and must be provided
     in a UUID form that is compatible with your OS.
 
     for Windows and Linux this is typically in the form of "24:71:89:cc:09:05"
     and on macOS it is in the form of "B9EA5233-37EF-4DD6-87A8-2A875E821C46"
+
+    Attributes:
+        dev (:obj:`device`): a device handle which is reference to self
+
+        is_open (:obj:`boolean`): a flag indicating connected session status
+
+        client (:obj:`BleakClient`): Bleak BLE client object reference
+
+        callback_audio_done (:obj:`func`): a function callback reference in response to a `PFX_NOTIFICATION_AUDIO_PLAY_DONE` notification. Must have the call signature `func(fileid, filename)`
+
+        callback_audio_play (:obj:`func`): a function callback reference in response to a `PFX_NOTIFICATION_AUDIO_PLAY` notification. Must have the call signature `func(fileid, filename)`
+
+        callback_motora_stop (:obj:`func`): a function callback reference in response to a `PFX_NOTIFICATION_MOTORA_STOP` notification. Must have the call signature `func()`
+
+        callback_motora_speed (:obj:`func`): a function callback reference in response to a `PFX_NOTIFICATION_MOTORA_CURR_SPD` notification. Must have the call signature `func(speed)`
+
+        callback_motorb_stop (:obj:`func`): a function callback reference in response to a `PFX_NOTIFICATION_MOTORB_STOP` notification. Must have the call signature `func()`
+
+        callback_motorb_speed (:obj:`func`): a function callback reference in response to a `PFX_NOTIFICATION_MOTORB_CURR_SPD` notification. Must have the call signature `func(speed)`
+
+    :param dev_dict: :obj:`dict` a dictionary describing the PFx Brick device to connect. Must have the key "address" with the Bluetooth MAC address of the PFx Brick. Optional keys "name" and "serial_no" can be provided.
+    :param debug: :obj:`boolean` a flag to enable low level debug logging of Bluetooth session activity
     """
 
     def __init__(self, dev_dict, debug=False):
@@ -157,20 +179,20 @@ class PFxBrickBLE(PFxBrick):
         self.client = None
         self.is_open = False
         self.dev = None
-        self.rxbuff = None
-        self.log = logging.getLogger(str(self.__class__))
-        self.disconnect_flag = False
         self.callback_audio_done = None
         self.callback_audio_play = None
         self.callback_motora_stop = None
         self.callback_motora_speed = None
         self.callback_motorb_stop = None
         self.callback_motorb_speed = None
+        self._disconnect_flag = False
+        self._rxbuff = None
+        self._log = logging.getLogger(str(self.__class__))
         if debug:
-            self.log.setLevel(logging.DEBUG)
+            self._log.setLevel(logging.DEBUG)
             h = logging.StreamHandler(sys.stdout)
             h.setLevel(logging.DEBUG)
-            self.log.addHandler(h)
+            self._log.addHandler(h)
 
     async def open(self):
         """
@@ -180,16 +202,16 @@ class PFxBrickBLE(PFxBrick):
         Bluetooth address.
         """
         self.client = BleakClient(
-            self.ble_address, disconnected_callback=self.disconnected_callback
+            self.ble_address, disconnected_callback=self._disconnected_callback
         )
         self.is_open = await self.client.connect(timeout=10)
         if self.is_open:
-            self.log.info("Connected to PFx Brick %s" % (self.ble_address))
+            self._log.info("Connected to PFx Brick %s" % (self.ble_address))
             await self.client.start_notify(PFX_BLE_GATT_UART_RX_UUID, self._rx_callback)
             self.dev = self
             self.usb_manu_str = "Fx Bricks"
         else:
-            self.log.error("Timeout connecting to %s" % (self.ble_address))
+            self._log.error("Timeout connecting to %s" % (self.ble_address))
             raise BLEConnectTimeoutException()
 
     async def close(self):
@@ -197,18 +219,18 @@ class PFxBrickBLE(PFxBrick):
         Closes a BLE communication session with a PFx Brick.
         """
         if self.is_open and self.client is not None:
-            self.disconnect_flag = True
+            self._disconnect_flag = True
             await self.client.disconnect()
-            self.log.info("Connection closed with PFx Brick %s" % (self.ble_address))
+            self._log.info("Connection closed with PFx Brick %s" % (self.ble_address))
 
-    def disconnected_callback(self, client):
+    def _disconnected_callback(self, client):
         """
         BLE disconnection event handler.
         This is always called by the Bleak BLE API since this callback is registered
         in the :obj:`open` method.
         """
-        if not self.disconnect_flag:
-            self.log.warning(
+        if not self._disconnect_flag:
+            self._log.warning(
                 "Unexpected disconnection from PFx Brick %s" % (self.ble_address)
             )
             raise BLEDeviceDisconnectedException()
@@ -217,52 +239,56 @@ class PFxBrickBLE(PFxBrick):
         if msg[0] == PFX_MSG_NOTIFICATION:
             if msg[1] == PFX_NOTIFICATION_AUDIO_PLAY_DONE:
                 if self.callback_audio_done is not None:
-                    self.callback_audio_done(msg[2])
+                    fn = self.filedir.get_file_dir_entry(msg[2])
+                    self.callback_audio_done(msg[2], fn.name)
             if msg[1] == PFX_NOTIFICATION_AUDIO_PLAY:
                 if self.callback_audio_play is not None:
-                    self.callback_audio_play(msg[2])
+                    fn = self.filedir.get_file_dir_entry(msg[2])
+                    self.callback_audio_play(msg[2], fn.name)
             if msg[1] == PFX_NOTIFICATION_MOTORA_CURR_SPD:
                 if self.callback_motora_speed is not None:
-                    self.callback_motora_speed(msg[2])
+                    self.callback_motora_speed(int8_toint(msg[2]))
             if msg[1] == PFX_NOTIFICATION_MOTORA_STOP:
                 if self.callback_motora_stop is not None:
                     self.callback_motora_stop()
             if msg[1] == PFX_NOTIFICATION_MOTORB_CURR_SPD:
                 if self.callback_motorb_speed is not None:
-                    self.callback_motorb_speed(msg[2])
+                    self.callback_motorb_speed(int8_toint(msg[2]))
             if msg[1] == PFX_NOTIFICATION_MOTORB_STOP:
                 if self.callback_motorb_stop is not None:
                     self.callback_motorb_stop()
 
     def _rx_callback(self, sender, data):
-        self.log.info("Rx Data: %s" % (data))
-        self.rxbuff = data
-        # if the received message is a notification, call a handler if
-        # it has been defined
-        if self.rxbuff[0] == PFX_MSG_NOTIFICATION:
-            self._process_notification(self.rxbuff[0:3])
-            if len(self.rxbuff) > 5:
-                self._process_notification(self.rxbuff[3:6])
+        self._log.info("Rx Data: %s" % (data))
+        self._rxbuff = data
+        # look for notificaitons in the received buffer
+        # and activate callbacks if required
+        last_idx = -3
+        for i, b in enumerate(self._rxbuff):
+            if b == PFX_MSG_NOTIFICATION and i > last_idx + 2:
+                if (i + 2) < len(self._rxbuff):
+                    self._process_notification(self._rxbuff[i : i + 3])
+                    last_idx = i
 
     async def _tx_msg(self, msg):
-        self.rxbuff = []
+        self._rxbuff = []
         msg_type = int(0x80 | msg[3])
         chunks = [msg[i : i + 20] for i in range(0, len(msg), 20)]
         for chunk in chunks:
             await self.client.write_gatt_char(PFX_BLE_GATT_UART_TX_UUID, chunk)
-            self.log.info("Tx Data: %s" % (chunk))
+            self._log.info("Tx Data: %s" % (chunk))
         retries = 0
-        while len(self.rxbuff) == 0 and retries < MAX_RETRIES:
+        while len(self._rxbuff) == 0 and retries < MAX_RETRIES:
             await asyncio.sleep(0.01)
             retries += 1
         if retries >= MAX_RETRIES:
-            self.log.error(
+            self._log.error(
                 "Timeout waiting for response from PFx Brick %s" % (self.ble_address)
             )
             raise ResponseTimeoutException()
-        if len(self.rxbuff) > 0:
-            if self.rxbuff[0] != msg_type and self.rxbuff[0] != PFX_MSG_NOTIFICATION:
-                self.log.error(
+        if len(self._rxbuff) > 0:
+            if self._rxbuff[0] != msg_type and self._rxbuff[0] != PFX_MSG_NOTIFICATION:
+                self._log.error(
                     "Invalid response from PFx Brick %s" % (self.ble_address)
                 )
                 raise InvalidResponseException()
@@ -281,11 +307,11 @@ class PFxBrickBLE(PFxBrick):
         tx.extend(msg)
         tx.extend([0x5D, 0x5D, 0x5D])
         await self._tx_msg(tx)
-        return self.rxbuff
+        return self._rxbuff
 
     async def get_config(self):
         """
-        Retrieves configuration settings from the PFx Brick using 
+        Retrieves configuration settings from the PFx Brick using
         the PFX_CMD_GET_CONFIG ICD message. The configuration data
         is stored in the :obj:`PFxBrick.config` class member variable.
         """
@@ -297,7 +323,7 @@ class PFxBrickBLE(PFxBrick):
         """
         Writes the contents of the PFxConfig data structure class to
         the PFx Brick using the PFX_CMD_SET_CONFIG ICD message.
-        
+
         It is recommended that the configuration be read from the
         PFx Brick (using get_config) before any changes are made to
         the configuration and written back. This ensures that any
@@ -312,7 +338,7 @@ class PFxBrickBLE(PFxBrick):
         the connected PFx Brick supports using the PFX_CMD_GET_ICD_REV
         ICD message.  The resulting version number is stored in
         this class and also returned.
-        
+
         :param boolean silent: flag to optionally silence the status LED blink
         """
         res = await cmd_get_icd_rev(self.dev, silent)
@@ -338,10 +364,10 @@ class PFxBrickBLE(PFxBrick):
 
     async def get_name(self):
         """
-        Retrieves the user defined name of the PFx Brick using 
+        Retrieves the user defined name of the PFx Brick using
         the PFX_CMD_GET_NAME ICD message. The name is stored in
         the name class variable as a UTF-8 string.
-        
+
         :returns: :obj:`str` user defined name
         """
         res = await cmd_get_name(self.dev)
@@ -352,7 +378,7 @@ class PFxBrickBLE(PFxBrick):
         """
         Sets the user defined name of the PFx Brick using the
         PFX_CMD_SET_NAME ICD message.
-        
+
         :param name: :obj:`str` new name to set (up to 24 character bytes, UTF-8)
         """
         res = await cmd_set_name(self.dev, name)
@@ -360,15 +386,15 @@ class PFxBrickBLE(PFxBrick):
     async def get_action_by_address(self, address):
         """
         Retrieves a stored action indexed by address rather than a
-        combination of eventID and IR channel.  The address is converted into a 
-        [eventID, IR channel] pair and the get_action method is 
+        combination of eventID and IR channel.  The address is converted into a
+        [eventID, IR channel] pair and the get_action method is
         called with this function as a convenient wrapper.
-        
+
         :param address: :obj:`int` event/action LUT address (0 - 0x7F)
         :returns: :obj:`PFxAction` class filled with retrieved LUT data
         """
         if address > EVT_LUT_MAX:
-            self.log.warning(
+            self._log.warning(
                 "Requested action at address %02X is out of range" % (address)
             )
             return None
@@ -383,16 +409,16 @@ class PFxBrickBLE(PFxBrick):
         [eventID / IR channel] event. The eventID and channel value
         form a composite address pointer into the event/action LUT
         in the PFx Brick. The address to the LUT is formed as:
-        
+
         Address[5:2] = event ID
         Address[1:0] = channel
-        
+
         :param evtID: :obj:`int` event ID LUT address component (0 - 0x20)
         :param channel: :obj:`int` channel index LUT address component (0 - 3)
         :returns: :obj:`PFxAction` class filled with retrieved LUT data
         """
         if ch > 3 or evtID > EVT_ID_MAX:
-            self.log.warning(
+            self._log.warning(
                 "Requested action (id=%02X, ch=%02X) is out of range" % (evtID, ch)
             )
             return None
@@ -406,15 +432,15 @@ class PFxBrickBLE(PFxBrick):
     async def set_action_by_address(self, address, action):
         """
         Sets a new stored action in the event/action LUT at the
-        address specified. The address is converted into a 
-        [eventID, IR channel] pair and the set_action method is 
+        address specified. The address is converted into a
+        [eventID, IR channel] pair and the set_action method is
         called with this function as a convenient wrapper.
-        
+
         :param address: :obj:`int` event/action LUT address (0 - 0x7F)
         :param action: :obj:`PFxAction` action data structure class
         """
         if address > EVT_LUT_MAX:
-            self.log.warning(
+            self._log.warning(
                 "Requested action at address %02X is out of range" % (address)
             )
             return None
@@ -428,16 +454,16 @@ class PFxBrickBLE(PFxBrick):
         [eventID / IR channel] event. The eventID and channel value
         form a composite address pointer into the event/action LUT
         in the PFx Brick. The address to the LUT is formed as:
-        
+
         Address[5:2] = event ID
         Address[1:0] = channel
-        
+
         :param evtID: :obj:`int` event ID LUT address component (0 - 0x20)
         :param ch: :obj:`int` channel index LUT address component (0 - 3)
         :param action: :obj:`PFxAction` action data structure class
         """
         if ch > 3 or evtID > EVT_ID_MAX:
-            self.log.warning(
+            self._log.warning(
                 "Requested action (id=%02X, ch=%02X) is out of range" % (evtID, ch)
             )
             return None
@@ -449,7 +475,7 @@ class PFxBrickBLE(PFxBrick):
         Executes a passed action data structure. This function is
         used to "test" actions to see how they behave. The passed
         action is not stored in the event/action LUT.
-        
+
         :param action: :obj:`PFxAction` action data structure class
         """
         res = await cmd_test_action(self.dev, action.to_bytes())
@@ -474,7 +500,7 @@ class PFxBrickBLE(PFxBrick):
     async def stop_motor(self, ch):
         """
         A convenience wrapper for PFxAction().stop_motor
-        
+
         :param ch: [:obj:`int`] a list of motor channels (1-4)
         """
         await self.test_action(PFxAction().stop_motor(ch))
@@ -482,7 +508,7 @@ class PFxBrickBLE(PFxBrick):
     async def light_on(self, ch):
         """
         A convenience wrapper for PFxAction().light_on
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
         await self.test_action(PFxAction().light_on(ch))
@@ -490,7 +516,7 @@ class PFxBrickBLE(PFxBrick):
     async def light_off(self, ch):
         """
         A convenience wrapper for PFxAction().light_off
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
         await self.test_action(PFxAction().light_off(ch))
@@ -498,7 +524,7 @@ class PFxBrickBLE(PFxBrick):
     async def light_toggle(self, ch):
         """
         A convenience wrapper for PFxAction().light_toggle
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
         await self.test_action(PFxAction().light_toggle(ch))
@@ -506,7 +532,7 @@ class PFxBrickBLE(PFxBrick):
     async def set_brightness(self, ch, brightness):
         """
         A convenience wrapper for PFxAction().set_brightness
-        
+
         :param ch: [:obj:`int`] a list of light channels (1-8)
         :param brightness: :obj:`int` brightness (0 - 255 max)
         """
@@ -515,7 +541,7 @@ class PFxBrickBLE(PFxBrick):
     async def combo_light_fx(self, fx, param=[0, 0, 0, 0, 0]):
         """
         A convenience wrapper for PFxAction().combo_light_fx
-        
+
         :param fx: :obj:`int` desired light effect
         :param param: [:obj:`int`] a list of up to 5 light parameters
         """
@@ -547,7 +573,7 @@ class PFxBrickBLE(PFxBrick):
         """
         A convenience wrapper for PFxAction().sound_fx
 
-        :param fileID: :obj:`int` file ID of an audio file in the file system
+        :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
         fileID = await self.file_id_from_str_or_int(fileID)
         await self.test_action(PFxAction().play_audio_file(fileID=fileID))
@@ -556,7 +582,7 @@ class PFxBrickBLE(PFxBrick):
         """
         A convenience wrapper for PFxAction().stop_audio_file
 
-        :param fileID: :obj:`int` file ID of an audio file in the file system
+        :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
         fileID = await self.file_id_from_str_or_int(fileID)
         await self.test_action(PFxAction().stop_audio_file(fileID=fileID))
@@ -565,7 +591,7 @@ class PFxBrickBLE(PFxBrick):
         """
         A convenience wrapper for PFxAction().repeat_audio_file
 
-        :param fileID: :obj:`int` file ID of an audio file in the file system
+        :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
         fileID = await self.file_id_from_str_or_int(fileID)
         await self.test_action(PFxAction().repeat_audio_file(fileID=fileID))
@@ -612,27 +638,70 @@ class PFxBrickBLE(PFxBrick):
         res = await cmd_set_factory_defaults(self.dev)
 
     async def set_notifications(self, events):
+        """
+        Enables user selected notifications to be sent asynchronously from the PFx Brick.
+
+        :param events: :obj:`int` a bitwise OR of notification flags:
+
+        - :obj:`PFX_NOTIFICATION_AUDIO_PLAY_DONE = 0x01`
+        - :obj:`PFX_NOTIFICATION_AUDIO_PLAY = 0x02`
+        - :obj:`PFX_NOTIFICATION_MOTORA_CURR_SPD = 0x04`
+        - :obj:`PFX_NOTIFICATION_MOTORA_STOP = 0x08`
+        - :obj:`PFX_NOTIFICATION_MOTORB_CURR_SPD = 0x10`
+        - :obj:`PFX_NOTIFICATION_MOTORB_STOP = 0x20`
+        - :obj:`PFX_NOTIFICATION_TO_USB = 0x80`
+        - :obj:`PFX_NOTIFICATION_TO_BLE = 0x40`
+
+        Note that :obj:`PFX_NOTIFICATION_TO_BLE` is automatically set and does not need to be specified.
+        """
+
+        # if notifications are configured for audio events, refresh file directory
+        # so that we can resolve file ID numbers to filenames
+        if (
+            events & PFX_NOTIFICATION_AUDIO_PLAY
+            or events & PFX_NOTIFICATION_AUDIO_PLAY_DONE
+        ):
+            await self.refresh_file_dir()
         res = await cmd_set_notifications(self.dev, PFX_NOTIFICATION_TO_BLE | events)
 
     async def disable_notifications(self):
+        """
+        Disables asynchronous notifications sent from the PFx Brick.
+        """
         res = await cmd_set_notifications(self.dev, 0)
 
     def put_file(self, fileID, fn, show_progress=True):
+        """
+        PFx Brick file system operations not supported over Bluetooth
+        raises :obj:`NotImplementedError`
+        """
         raise NotImplementedError(
             "PFx Brick file system operations not supported over Bluetooth"
         )
 
     def get_file(self, fileID, fn=None, show_progress=True):
+        """
+        PFx Brick file system operations not supported over Bluetooth
+        raises :obj:`NotImplementedError`
+        """
         raise NotImplementedError(
             "PFx Brick file system operations not supported over Bluetooth"
         )
 
     def remove_file(self, fileID):
+        """
+        PFx Brick file system operations not supported over Bluetooth
+        raises :obj:`NotImplementedError`
+        """
         raise NotImplementedError(
             "PFx Brick file system operations not supported over Bluetooth"
         )
 
     def format_fs(self, quick=False):
+        """
+        PFx Brick file system operations not supported over Bluetooth
+        raises :obj:`NotImplementedError`
+        """
         raise NotImplementedError(
             "PFx Brick file system operations not supported over Bluetooth"
         )

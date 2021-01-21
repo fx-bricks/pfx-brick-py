@@ -174,4 +174,11 @@ Running scripts
     PFxBrick.run_script
     PFxBrick.stop_script
 
+BLE Notifications
+-----------------
 
+.. currentmodule:: pfxbrick.pfxble
+
+.. autosummary::
+    PFxBrickBLE.set_notifications
+    PFxBrickBLE.disable_notifications

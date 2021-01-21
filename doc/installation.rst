@@ -8,7 +8,7 @@ The PFx Brick python API has very few dependencies and should be relatively stra
 Dependencies
 ------------
 
-* Python 3.6
+* Python 3.6+
 
 * `HIDAPI <https://github.com/signal11/hidapi>`_
 

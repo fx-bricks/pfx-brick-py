@@ -2,6 +2,12 @@
 Change Log
 ==========
 
+v.0.7.1
+-------
+
+* revised documentation
+* improved BLE notifcation callbacks
+
 v.0.7.0
 -------
 
