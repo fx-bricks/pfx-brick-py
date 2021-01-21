@@ -12,7 +12,7 @@ PFx Brick Python API
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://img.shields.io/badge/code%20style-black-000000.svg
     
-This repository contains the API for developing python scripts and applications which communicate with the PFx Brick.
+This repository contains a python package API for developing python scripts and applications which communicate with the PFx Brick.  This package supports both USB and Bluetooth LE connections to the PFx Brick and is supported for Windows, macOS and linux.
 
 Getting Started
 ===============
