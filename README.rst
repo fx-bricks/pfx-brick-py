@@ -60,16 +60,11 @@ An example of the package can be seen below
 
 .. code-block:: python
 
-    from pfxbrick import PFxBrick
+    from pfxbrick import *
 
     # Open a PFx Brick session instance
     brick = PFxBrick()
     brick.open()
-
-    # Get the status and identity of the PFx Brick
-    print('PFx Brick ICD version : %s' %(brick.get_icd_rev()))
-    brick.get_status()
-    brick.print_status()
 
     # Get the PFx Brick configuration settings
     brick.get_config()
@@ -81,6 +76,22 @@ An example of the package can be seen below
 
     # Change the user defined name
     brick.set_name('My Cool Brick')
+
+    # Turn on some lights for 5 sec
+    brick.light_on([1, 2, 7, 8])
+    time.sleep(5)
+    brick.light_off([1, 2, 7, 8])
+
+    # Set motor channel A to 50% speed gradually
+    for speed in range(50):
+        brick.set_motor_speed([1], speed)
+        time.sleep(0.1)
+    brick.stop_motor([1])
+
+    # Play an audio file
+    brick.repeat_audio_file("LongBeep1")
+    time.sleep(5)
+    brick.stop_audio_file("LongBeep1")
 
     # End the session
     brick.close()
