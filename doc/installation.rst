@@ -12,6 +12,8 @@ Dependencies
 
 * `HIDAPI <https://github.com/signal11/hidapi>`_
 
+* `Bleak <https://github.com/hbldh/bleak>`_
+
 * sphinx (for documentation)
 
 Installation (most platforms)
@@ -67,7 +69,7 @@ After installation, verify the package can imported:
     $ python
     >>> import pfxbrick
     >>> pfxbrick.__version__
-    '0.6.0'
+    '0.7.0'
     >>>
 
 If you have a PFx Brick connected, you can try the following command to see if your python installation can find your connected PFx Brick(s):

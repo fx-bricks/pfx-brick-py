@@ -6,8 +6,8 @@ Examples
 
 This page shows some examples of using the PFx Brick API.
 
-Brick Enumeration, Connection, Info Query
------------------------------------------
+Brick Enumeration, Connection, Info Query USB
+---------------------------------------------
 
 .. code-block:: python
 
@@ -41,6 +41,46 @@ Brick Enumeration, Connection, Info Query
               brick.get_config()
               brick.print_config()
               brick.close()
+
+Brick Enumeration, Connection, Info Query BLE
+---------------------------------------------
+
+.. code-block:: python
+
+    #! /usr/bin/env python3
+
+    # PFx Brick example script to retrieve basic information about the
+    # brick including its identity and configuration settings.
+
+    import asyncio
+
+    from pfxbrick import *
+
+
+    async def brick_session(brickdev):
+        brick = PFxBrickBLE(dev_dict=brickdev)
+        await brick.open()
+        print("PFx Brick Status / Identity")
+        print("===========================")
+        print("PFx Brick ICD version : %s" % (await brick.get_icd_rev()))
+        await brick.get_name()
+        print("PFx Brick name        : %s" % (brick.name))
+        await brick.get_status()
+        brick.print_status()
+        print("PFx Brick Configuration")
+        print("=======================")
+        await brick.get_config()
+        brick.print_config()
+        await brick.close()
+
+
+    loop = asyncio.get_event_loop()
+    pfxdevs = loop.run_until_complete(ble_device_scanner())
+    print("Found %d PFx Bricks" % (len(pfxdevs)))
+    if len(pfxdevs) > 0:
+        bricks = loop.run_until_complete(find_ble_pfxbricks(pfxdevs))
+        loop.run_until_complete(brick_session(bricks[0]))
+
 
 Changing Configuration
 ----------------------
@@ -187,49 +227,98 @@ A demonstration of scripting multiple actions involving motors, lighting, and so
 
 .. code-block:: python
 
-  #! /usr/bin/env python3
- 
-  # PFx Brick example script to demonstrate multiple scripted actions
+    #! /usr/bin/env python3
+    
+    # PFx Brick example script to demonstrate multiple scripted actions
 
-  import hid
-  import time
-  import random
-  from pfxbrick import PFxBrick, PFxAction
-  from pfxbrick.pfx import *
+    import time
+    import random
+    from pfxbrick import *
 
-  brick = PFxBrick()
-  brick.open()
+    brick = PFxBrick()
+    brick.open()
 
-  audiofile = 2
-  max_speed = 100
+    max_speed = 100
+    audiofile = "yamanote16pcm22k"
 
-  # start looped audio playback and set volume
-  brick.test_action(PFxAction().repeat_audio_file(audiofile))
-  brick.test_action(PFxAction().set_volume(75))
+    # start looped audio playback and set volume
+    brick.repeat_audio_file(audiofile)
+    brick.set_volume(75)
 
-  # ramp up the motor speed gradually to max_speed
-  for x in range(max_speed):
-      brick.test_action(PFxAction().set_motor_speed([1], x))
-      # show a random light pattern
-      y = random.randint(1,8)
-      brick.test_action(PFxAction().light_toggle([y]))
-      time.sleep(0.1)
+    # ramp up the motor speed gradually to max_speed
+    for x in range(max_speed):
+        brick.set_motor_speed([1], x)
+        # show a random light pattern
+        y = random.randint(1, 8)
+        brick.light_toggle([y])
+        time.sleep(0.1)
 
-  # ramp down the motor speed gradually to 0%
+    # ramp down the motor speed gradually to 0%
 
-  for x in range(max_speed):
-      brick.test_action(PFxAction().set_motor_speed([1], max_speed-x-1))
-      # show a random light pattern
-      y = random.randint(1,8)
-      brick.test_action(PFxAction().light_toggle([y]))
-      time.sleep(0.1)
+    for x in range(max_speed):
+        brick.set_motor_speed([1], max_speed - x - 1)
+        # show a random light pattern
+        y = random.randint(1, 8)
+        brick.light_toggle([y])
+        time.sleep(0.1)
 
-  # stop motor and turn off audio and lights
-  brick.test_action(PFxAction().stop_motor([1]))
-  brick.test_action(PFxAction().stop_audio_file(audiofile))
-  brick.test_action(PFxAction().light_off(range(1,9))
+    # stop motor and turn off audio and lights
+    brick.stop_motor([1])
+    brick.stop_audio_file(audiofile)
+    brick.light_off([ch for ch in range(1, 9)])
 
-  brick.close()
+    brick.close()
+
+The same script but implemented for a BLE connected PFx Brick:
+
+.. code-block:: python
+
+    #! /usr/bin/env python3
+
+    # PFx Brick example script to demonstrate multiple scripted actions
+
+    import asyncio
+    import random
+    from pfxbrick import *
 
 
+    async def brick_session(brickdev):
+        brick = PFxBrickBLE(dev_dict=brickdev, debug=False)
+        await brick.open()
+        max_speed = 50
+        audiofile = "yamanote16pcm22k"
 
+        # start looped audio playback and set volume
+        await brick.repeat_audio_file(audiofile)
+        await brick.set_volume(75)
+
+        # ramp up the motor speed gradually to max_speed
+        for x in range(max_speed):
+            await brick.set_motor_speed([1], x)
+            # show a random light pattern
+            y = random.randint(1, 8)
+            await brick.light_toggle([y])
+            await asyncio.sleep(0.1)
+
+        # ramp down the motor speed gradually to 0%
+
+        for x in range(max_speed):
+            await brick.set_motor_speed([1], max_speed - x - 1)
+            # show a random light pattern
+            y = random.randint(1, 8)
+            await brick.light_toggle([y])
+            await asyncio.sleep(0.1)
+
+        # stop motor and turn off audio and lights
+        await brick.stop_motor([1])
+        await brick.stop_audio_file(audiofile)
+        await brick.light_off([ch for ch in range(1, 9)])
+
+        await brick.close()
+
+    loop = asyncio.get_event_loop()
+    pfxdevs = loop.run_until_complete(ble_device_scanner())
+    print("Found %d PFx Bricks" % (len(pfxdevs)))
+    if len(pfxdevs) > 0:
+        bricks = loop.run_until_complete(find_ble_pfxbricks(pfxdevs))
+        loop.run_until_complete(brick_session(bricks[0]))

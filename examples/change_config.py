@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
- 
+
 # PFx Brick example script to showing modification to the
 # brick configuration settings.
 
@@ -8,7 +8,7 @@ from pfxbrick import PFxBrick, find_bricks
 from pfxbrick.pfx import *
 
 bricks = find_bricks()
-print('%d PFx Bricks found' % (len(bricks)))
+print("%d PFx Bricks found" % (len(bricks)))
 
 if bricks:
     brick = PFxBrick()
@@ -16,8 +16,8 @@ if bricks:
     if not res:
         print("Unable to open session to PFx Brick")
     else:
-        print('PFx Brick Configuration')
-        print('=======================')
+        print("PFx Brick Configuration")
+        print("=======================")
         brick.get_config()
         brick.print_config()
 
@@ -28,8 +28,8 @@ if bricks:
             brick.config.settings.volumeBeep = PFX_CFG_VOLBEEP_ON
         brick.set_config()
 
-        print('PFx Brick Updated Configuration')
-        print('===============================')
+        print("PFx Brick Updated Configuration")
+        print("===============================")
         brick.get_config()
         brick.print_config()
 

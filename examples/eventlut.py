@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
- 
+
 # PFx Brick example script to show access to the event/action LUT
 
 import hid
@@ -17,7 +17,7 @@ print(left_button_ch1)
 
 print("Add a light effect to this action...")
 new_left_action = copy.copy(left_button_ch1)
-new_left_action.light_on([1,2,3,4])
+new_left_action.light_on([1, 2, 3, 4])
 print(new_left_action)
 
 print("Save new action back to brick...")

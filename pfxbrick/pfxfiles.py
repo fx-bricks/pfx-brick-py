@@ -25,9 +25,20 @@
 
 import hid
 import os
-from pfxbrick.pfx import *
+from pfxbrick import *
 from pfxbrick.pfxhelpers import *
-from pfxbrick.pfxmsg import usb_transaction
+
+
+def fs_get_fileid_from_name(hdev, name):
+    fileid = 0xFF
+    fb = bytes(name, "utf-8")
+    p = [len(fb)]
+    p.extend(fb)
+    res = cmd_file_dir(hdev, PFX_DIR_REQ_GET_NAMED_FILE_ID, p)
+    if len(res) >= 3:
+        fileid = int(res[2])
+    return fileid
+
 
 def fs_error_check(res):
     """
@@ -41,6 +52,7 @@ def fs_error_check(res):
         return True
     else:
         return False
+
 
 def fs_format(hdev, quick=False):
     """
@@ -57,6 +69,7 @@ def fs_format(hdev, quick=False):
     res = usb_transaction(hdev, msg)
     fs_error_check(res[1])
 
+
 def fs_remove_file(hdev, fid):
     """
     Sends an ICD message to remove a file from the PFx Brick file system.
@@ -68,6 +81,7 @@ def fs_remove_file(hdev, fid):
     msg.append(fid)
     res = usb_transaction(hdev, msg)
     fs_error_check(res[1])
+
 
 def fs_copy_file_to(hdev, fid, fn, show_progress=True):
     """
@@ -88,19 +102,19 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
     if nBytes > 0:
         msg = [PFX_CMD_FILE_OPEN]
         msg.append(fid)
-        msg.append(0x06) # CREATE | WRITE mode
+        msg.append(0x06)  # CREATE | WRITE mode
         msg.extend(uint32_to_bytes(nBytes))
         name = os.path.basename(fn)
         nd = bytes(name, "utf-8")
         for b in nd:
             msg.append(b)
-        for i in range(32-len(nd)):
+        for i in range(32 - len(nd)):
             msg.append(0)
         res = usb_transaction(hdev, msg)
-        
+
         if res:
             if not fs_error_check(res[1]):
-                f = open(fn, 'rb')
+                f = open(fn, "rb")
                 nCount = 0
                 err = False
                 while (nCount < nBytes) and not err:
@@ -116,12 +130,19 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
                         res = usb_transaction(hdev, msg)
                         err = fs_error_check(res[1])
                         if show_progress:
-                            printProgressBar(nCount, nBytes, prefix = 'Copying:', suffix = 'Complete', length = 50)
+                            printProgressBar(
+                                nCount,
+                                nBytes,
+                                prefix="Copying:",
+                                suffix="Complete",
+                                length=50,
+                            )
                 f.close()
                 msg = [PFX_CMD_FILE_CLOSE]
                 msg.append(fid)
                 res = usb_transaction(hdev, msg)
                 fs_error_check(res[1])
+
 
 def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True):
     """
@@ -140,14 +161,14 @@ def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True):
     """
     msg = [PFX_CMD_FILE_OPEN]
     msg.append(pfile.id)
-    msg.append(0x01) # READ mode
+    msg.append(0x01)  # READ mode
     res = usb_transaction(hdev, msg)
     if res:
         if not fs_error_check(res[1]):
             nf = pfile.name
             if fn is not None:
                 nf = fn
-            f = open(nf, 'wb')
+            f = open(nf, "wb")
             nCount = 0
             err = False
             while (nCount < pfile.size) and not err:
@@ -161,15 +182,22 @@ def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True):
                 err = fs_error_check(res[1])
                 if not err:
                     nCount += res[1]
-                    b = bytes(res[2:2+res[1]])
+                    b = bytes(res[2 : 2 + res[1]])
                     f.write(b)
                 if show_progress:
-                    printProgressBar(nCount, pfile.size, prefix = 'Copying:', suffix = 'Complete', length = 50)
+                    printProgressBar(
+                        nCount,
+                        pfile.size,
+                        prefix="Copying:",
+                        suffix="Complete",
+                        length=50,
+                    )
             f.close()
             msg = [PFX_CMD_FILE_CLOSE]
             msg.append(pfile.id)
             res = usb_transaction(hdev, msg)
             fs_error_check(res[1])
+
 
 class PFxFile:
     """
@@ -194,16 +222,17 @@ class PFxFile:
 
         name (:obj:`str`): UTF-8 filename up to 32 bytes
     """
+
     def __init__(self):
-        self.id = 0         
-        self.size = 0       
+        self.id = 0
+        self.size = 0
         self.firstSector = 0
-        self.attributes = 0 
-        self.userData1 = 0  
-        self.userData2 = 0  
-        self.crc32 = 0      
-        self.name = ''      
-    
+        self.attributes = 0
+        self.userData1 = 0
+        self.userData2 = 0
+        self.crc32 = 0
+        self.name = ""
+
     def is_audio_file(self):
         """
         Checks the file attributes to see if this file is a valid audio WAV file.
@@ -214,7 +243,19 @@ class PFxFile:
             if self.userData1 != 0 and self.userData2 != 0:
                 return True
         return False
-        
+
+    def is_script_file(self):
+        """
+        Checks the file attributes to see if this file is a valid script file.
+
+        :returns: True if it is valid script file
+        """
+        if (self.attributes & PFX_FILE_ATTR_MASK) == PFX_FILE_ATTR_SCRIPT:
+            return True
+        if (self.attributes & PFX_FILE_FMT_MASK) == PFX_FILE_FMT_PFX:
+            return True
+        return False
+
     def from_bytes(self, msg):
         """
         Converts the message string bytes read from the PFx Brick into
@@ -228,15 +269,24 @@ class PFxFile:
         self.userData2 = uint32_toint(msg[16:20])
         self.crc32 = uint32_toint(msg[20:24])
         sn = bytes(msg[24:56]).decode("utf-8")
-        self.name = sn.rstrip('\0')
-        
+        self.name = sn.rstrip("\0")
+
     def __str__(self):
         """
         Convenient human readable string of a file directory entry. This allows
         a :py:class:`PFxFile` object to be used with :obj:`str` and :obj:`print` methods.
         """
-        s = '%3d %-24s %6.1f kB %04X %08X %08X %08X' % (self.id, self.name, float(self.size/1000), self.attributes, self.userData1, self.userData2, self.crc32)
+        s = "%3d %-24s %6.1f kB %04X %08X %08X %08X" % (
+            self.id,
+            self.name,
+            float(self.size / 1000),
+            self.attributes,
+            self.userData1,
+            self.userData2,
+            self.crc32,
+        )
         return s
+
 
 class PFxDir:
     """
@@ -253,11 +303,12 @@ class PFxDir:
 
         bytesLeft (:obj:`int`): remaining space in bytes
     """
+
     def __init__(self):
-        self.numFiles = 0  
-        self.files = []    
-        self.bytesUsed = 0 
-        self.bytesLeft = 0 
+        self.numFiles = 0
+        self.files = []
+        self.bytesUsed = 0
+        self.bytesLeft = 0
 
     def get_file_dir_entry(self, fid):
         """
@@ -269,17 +320,42 @@ class PFxDir:
         for f in self.files:
             if f.id == fid:
                 return f
+
+    def find_available_file_id(self):
+        """
+        Returns the next available unique file ID from the file system.  
+
+        The directory is scanned for all currently used file ID values and 
+        returns an un-used/available file ID value.
         
+        :returns: :obj:`int` next available file ID value, or None
+        """
+        used_ids = [x.id for x in self.files]
+        for f in self.files:
+            next_id = f.id + 1
+            if next_id not in used_ids:
+                return next_id
+        return None
+
     def __str__(self):
         """
         Convenient human readable string of the file directory. This allows
         a :py:class:`PFxDir` object to be used with :obj:`str` and :obj:`print` methods.
         """
         sb = []
-        sb.append('%3s %-24s %6s    %4s %8s %8s %8s' % ('ID', 'Name', 'Size', 'Attr', 'User1', 'User2', 'CRC32'))
+        sb.append(
+            "%3s %-24s %6s    %4s %8s %8s %8s"
+            % ("ID", "Name", "Size", "Attr", "User1", "User2", "CRC32")
+        )
         for f in self.files:
             sb.append(str(f))
-        sb.append('%d files, %.1f kB used, %.1f kB remaining' % (len(self.files), float(self.bytesUsed/1000), float(self.bytesLeft/1000)))
-        s = '\n'.join(sb)
-        return s    
-        
+        sb.append(
+            "%d files, %.1f kB used, %.1f kB remaining"
+            % (
+                len(self.files),
+                float(self.bytesUsed / 1000),
+                float(self.bytesLeft / 1000),
+            )
+        )
+        s = "\n".join(sb)
+        return s

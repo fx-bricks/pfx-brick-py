@@ -15,6 +15,15 @@ PFxBrick
     :member-order: bysource
     :members:
 
+PFxBrickBLE
+===========
+
+.. currentmodule::  pfxbrick.pfxble
+
+.. autoclass:: PFxBrickBLE
+    :member-order: bysource
+    :members:
+
 PFxConfig
 =========
 
@@ -77,6 +86,17 @@ PFxAction
 .. currentmodule:: pfxbrick.pfxaction
 
 .. autoclass:: PFxAction
+    :member-order: bysource
+    :members:
+    :special-members: __str__
+
+
+PFxState
+========
+
+.. currentmodule:: pfxbrick.pfxstate
+
+.. autoclass:: PFxState
     :member-order: bysource
     :members:
     :special-members: __str__

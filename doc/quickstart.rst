@@ -7,10 +7,10 @@ To start using the **pfxbrick** package, import the following modules into your 
 
 .. code-block:: python
 
-  from pfxbrick import PFxBrick, find_bricks
+  from pfxbrick import *
   
-Enumerating PFx Bricks and Connecting
--------------------------------------
+Enumerating USB PFx Bricks and Connecting
+-----------------------------------------
 
 To enumerate available PFx Bricks connected to your system, you can use the :py:func:`find_bricks` function:
 
@@ -31,6 +31,8 @@ A listing of discovered PFx Bricks can be printed by setting the :py:data:`show_
   2. PFx Brick 4 MB, Serial No: 897C933B
   3. PFx Brick 4 MB, Serial No: 8951E33B
   
+
+
 Connecting/Disconnecting a PFx Brick
 ------------------------------------
 
@@ -53,6 +55,33 @@ A connected session to a PFx Brick should be closed with the :py:meth:`close` me
 .. code-block:: python
 
   brick.close()
+
+Enumerating BLE PFx Bricks and Connecting
+-----------------------------------------
+
+BLE connections to the PFx Brick use the **Bleak** python module which provides the Bluetooth communications stack.  This communication API uses python's **asyncio** runtime context and therefore accessing the PFx Brick using the **pfxbrick** module is somewhat different than with USB.  All of the same access methods and functionality are supported, however scripts written to connect via BLE must use **asyncio** runtime call mechanisms using **async/await**.
+
+The following code scans for advertising PFx Bricks and using the :py:meth:`ble_device_scanner` and returns a list of **Bleak** :py:class:`BLEDevice` peripheral devices.  The list of :py:class:`BLEDevice` is processed with the :py:meth:`find_ble_pfxbricks` function to validate each device as a PFx Brick and returns a list of dictionaries describing each PFx Brick found.  This is necessary in order to obtain the Bluetooth MAC address/UUID of each PFx Brick.  Finally, a communication session with a desired PFx Brick must be run within an asynio event loop shown below in the :py:meth:`brick_session` asynchronous function.  
+
+Similar to a USB communication session, an instance to :py:class:`PFxBrickBLE` is created and the :py:meth:`open` method is called to start the communication session.  All methods which result in a communication transaction with the PFx Brick must by **awaited** with the :py:obj:`await` keyword.  
+
+.. code-block:: python
+
+  async def brick_session(brickdev):
+      brick = PFxBrickBLE(dev_dict=brickdev)
+      await brick.open()
+      await brick.get_name()
+      print("PFx Brick name : %s" % (brick.name))
+      await brick.get_status()
+      brick.print_status()
+
+  loop = asyncio.get_event_loop()
+  pfxdevs = loop.run_until_complete(ble_device_scanner())
+  print("Found %d PFx Bricks" % (len(pfxdevs)))
+  if len(pfxdevs) > 0:
+      bricks = loop.run_until_complete(find_ble_pfxbricks(pfxdevs))
+      loop.run_until_complete(brick_session(bricks[0]))
+
 
   
 Getting PFx Brick Information
@@ -159,44 +188,45 @@ Actions involving motors, lighting, and sound can be easily initiated by passing
 Controlling Motors
 ******************
 
-The following methods can be used to configure a :py:class:`PFxAction` for controlling motor outputs:
+The following methods can be used for controlling motor outputs:
 
 .. hlist::
     :columns: 2
 
-    * :py:meth:`PFxAction.set_motor_speed`
-    * :py:meth:`PFxAction.stop_motor`
+    * :py:meth:`PFxBrick.set_motor_speed`
+    * :py:meth:`PFxBrick.stop_motor`
 
 .. code-block:: python
 
   from pfxbrick import PFxAction
-  
+
   # Motor channel A forward 50% speed
-  a = PFxAction().set_motor_speed([1], 50)
-  brick.test_action(a)
+  brick.set_motor_speed([1], 50)
+  print("Waiting 3 seconds...")
+  time.sleep(3)
 
-  # Stop motor channel B
-  a = PFxAction().stop_motor([2])
-  brick.test_action(a)
+  # Stop motor A"
+  brick.stop_motor([1])
+  time.sleep(1)
 
-  # Motor channel A & B reverse 33% speed for 2 sec self-timed
-  a = PFxAction().set_motor_speed([1, 2], -33, 2)
-  brick.test_action(a)
+  # Motor channel A reverse 33% speed for 2 sec self-timed
+  brick.set_motor_speed([1], -33, 2)
+
 
 Controlling Lights
 ******************
 
-:py:class:`PFxAction` methods for configuring light effects include:
+Methods for configuring light effects include:
 
 .. hlist::
     :columns: 2
 
-    * :py:meth:`PFxAction.light_on`
-    * :py:meth:`PFxAction.light_off`
-    * :py:meth:`PFxAction.light_toggle`
-    * :py:meth:`PFxAction.set_brightness`
-    * :py:meth:`PFxAction.light_fx`
-    * :py:meth:`PFxAction.combo_light_fx`
+    * :py:meth:`PFxBrick.light_on`
+    * :py:meth:`PFxBrick.light_off`
+    * :py:meth:`PFxBrick.light_toggle`
+    * :py:meth:`PFxBrick.set_brightness`
+    * :py:meth:`PFxBrick.light_fx`
+    * :py:meth:`PFxBrick.combo_light_fx`
 
 .. code-block:: python
 
@@ -204,50 +234,50 @@ Controlling Lights
   from pfxbrick.pfx import *
 
   # Set lights 1, 2, 3, 4 ON
-  brick.test_action(PFxAction().light_on([1, 2, 3, 4]))
+  brick.light_on([1, 2, 3, 4])
 
   # Set strobe lights 1, 4 ON, 1 sec period, 10% duty cycle, 2 flashes
-  a = PFxAction().light_fx([1,4], EVT_LIGHTFX_STROBE_P, \
+  brick.light_fx([1,4], EVT_LIGHTFX_STROBE_P, \
       [EVT_PERIOD_1S, EVT_DUTYCY_10, EVT_BURST_COUNT_2, EVT_TRANSITION_ON])
-  brick.test_action(a)
 
   # Toggle linear sweep with 8 lights
-  a = PFxAction().combo_light_fx(EVT_COMBOFX_LIN_SWEEP, \
+  brick.combo_light_fx(EVT_COMBOFX_LIN_SWEEP, \
       [EVT_PERIOD_1S, EVT_FADE_FACTOR_30, EVT_SIZE_8_LIGHTS])
-  brick.test_action(a)
+
 
 In order to use convenient parameter constants such as :py:const:`EVT_PERIOD_1S`, the :py:mod:`pfxbrick.pfx` module needs to be imported as shown above.
 
 Controlling Audio
 *****************
 
-:py:class:`PFxAction` methods for configuring sound effects include:
+Methods for configuring sound effects include:
 
 .. hlist::
     :columns: 2
 
-    * :py:meth:`PFxAction.play_audio_file`
-    * :py:meth:`PFxAction.repeat_audio_file`
-    * :py:meth:`PFxAction.stop_audio_file`
-    * :py:meth:`PFxAction.set_volume`
-    * :py:meth:`PFxAction.sound_fx`
+    * :py:meth:`PFxBrick.play_audio_file`
+    * :py:meth:`PFxBrick.repeat_audio_file`
+    * :py:meth:`PFxBrick.stop_audio_file`
+    * :py:meth:`PFxBrick.set_volume`
+    * :py:meth:`PFxBrick.sound_fx`
+
+Note that it is possible to specify an audio file by either its numeric file ID or filename. 
 
 .. code-block:: python
 
-  from pfxbrick import PFxAction
-  from pfxbrick.pfx import *
+  from pfxbrick import *
 
   # Play sound file 1
-  brick.test_action(PFxAction().play_audio_file(1))
+  brick.play_audio_file(1)
 
-  # Play audio file 2 continuously
-  brick.test_action(PFxAction().repeat_audio_file(2))
+  # Play audio file "LongBeep.wav" continuously
+  brick.repeat_audio_file("LongBeep.wav")
 
   # Set audio volume to 30%
-  brick.test_action(PFxAction().set_volume(30))
+  brick.set_volume(30)
 
   #  Stop playback of audio file 2
-  brick.test_action(PFxAction().stop_audio_file(2))
+  brick.stop_audio_file(2)
 
 PFx Brick File System
 ---------------------
@@ -301,3 +331,15 @@ Removing a file from the PFx Brick:
   # delete file ID 10
   brick.remove_file(10)
 
+Running Scripts
+---------------
+
+Script files on the PFx Brick can be started and stopped with these methods:
+
+.. hlist::
+    :columns: 2
+
+    * :py:meth:`PFxBrick.run_script`
+    * :py:meth:`PFxBrick.stop_script`
+
+Note that it is possible to specify a script file by either its unique numeric file ID or filename.

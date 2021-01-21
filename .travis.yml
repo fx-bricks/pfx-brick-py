@@ -1,7 +1,22 @@
 language: python
 
-python: 
-  - "3.6"
+branches:
+  only:
+  - master
+
+matrix:
+  include:
+  - name: "Python 3.6 - linux"
+    env: PYTHON_VERSION=3.6
+    os: linux
+  - name: "Python 3.7 - linux"
+    env: PYTHON_VERSION=3.7
+    os: linux
+  - name: "Lint"
+    env: PYTHON_VERSION=3.7
+    os: linux
+    script:
+    - black . --diff --check
 
 addons:
     apt:

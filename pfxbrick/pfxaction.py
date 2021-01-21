@@ -70,6 +70,7 @@ class PFxAction:
         soundParam2 (:obj:`int`): Sound parameter 2
 
     """
+
     def __init__(self):
         self.command = 0
         self.motorActionId = 0
@@ -117,7 +118,7 @@ class PFxAction:
             s |= EVT_MOTOR_SPEED_HIRES_REV
         self.motorParam1 = s
 
-        m = (ch_to_mask(ch) & EVT_MOTOR_OUTPUT_MASK)
+        m = ch_to_mask(ch) & EVT_MOTOR_OUTPUT_MASK
         if duration is not None:
             m |= EVT_MOTOR_SET_SPD_TIMED
             self.motorParam2 = duration_to_fixed_value(duration)
@@ -133,7 +134,7 @@ class PFxAction:
         :param ch: [:obj:`int`] a list of motor channels (1-4)
         :returns: :obj:`PFxAction` self
         """
-        m = (ch_to_mask(ch) & EVT_MOTOR_OUTPUT_MASK)
+        m = ch_to_mask(ch) & EVT_MOTOR_OUTPUT_MASK
         m |= EVT_MOTOR_ESTOP
         self.motorActionId = m
         return self
@@ -203,12 +204,6 @@ class PFxAction:
         """
         return self.light_fx([], fx | EVT_LIGHT_COMBO_MASK, param)
 
-    def light_flash(self, ch, period=1.0, fade=0.1):
-        """
-        A convenience method to prepare an flashing light action
-        """
-        
-
     def light_fx(self, ch, fx, param=[0, 0, 0, 0, 0]):
         """
         Populates an action with a user specified light effect and
@@ -235,16 +230,16 @@ class PFxAction:
         """
         self.lightOutputMask = ch_to_mask(ch)
         self.lightFxId = fx
-        for i,p in enumerate(param):
-            if i==0:
+        for i, p in enumerate(param):
+            if i == 0:
                 self.lightParam1 = p
-            elif i==1:
+            elif i == 1:
                 self.lightParam2 = p
-            elif i==2:
+            elif i == 2:
                 self.lightParam3 = p
-            elif i==3:
+            elif i == 3:
                 self.lightParam4 = p
-            elif i==4:
+            elif i == 4:
                 self.lightParam5 = p
         return self
 
@@ -274,10 +269,10 @@ class PFxAction:
         self.soundFxId = fx
         if fileID is not None:
             self.soundFileId = fileID
-        for i,p in enumerate(param):
-            if i==0:
+        for i, p in enumerate(param):
+            if i == 0:
                 self.soundParam1 = p
-            elif i==1:
+            elif i == 1:
                 self.soundParam2 = p
         return self
 
@@ -405,29 +400,42 @@ class PFxAction:
         a :py:class:`PFxAction` object to be used with :obj:`str` and :obj:`print` methods.
         """
         sb = []
-        sb.append('Command           : [%02X] %s' % (self.command, pd.command_dict[self.command]))
+        sb.append(
+            "Command           : [%02X] %s"
+            % (self.command, pd.command_dict[self.command])
+        )
         if self.motorActionId & EVT_MOTOR_OUTPUT_MASK == 0:
-            sb.append('Motor Action ID   : [%02X] None' % (self.motorActionId))
+            sb.append("Motor Action ID   : [%02X] None" % (self.motorActionId))
         else:
-            sb.append('Motor Action ID   : [%02X] %s %s' % (self.motorActionId, pd.motor_action_dict[self.motorActionId & EVT_MOTOR_ACTION_ID_MASK], motor_ch_str(self.motorActionId)))
-        sb.append('Motor Param 1     : [%02X]' % (self.motorParam1))
-        sb.append('Motor Param 2     : [%02X]' % (self.motorParam1))
-        sf = ''
+            sb.append(
+                "Motor Action ID   : [%02X] %s %s"
+                % (
+                    self.motorActionId,
+                    pd.motor_action_dict[self.motorActionId & EVT_MOTOR_ACTION_ID_MASK],
+                    motor_ch_str(self.motorActionId),
+                )
+            )
+        sb.append("Motor Param 1     : [%02X]" % (self.motorParam1))
+        sb.append("Motor Param 2     : [%02X]" % (self.motorParam1))
+        sf = ""
         if self.lightFxId & EVT_LIGHT_COMBO_MASK:
             sf = pd.combo_lightfx_dict[self.lightFxId & EVT_LIGHT_ID_MASK]
         else:
             sf = pd.ind_lightfx_dict[self.lightFxId & EVT_LIGHT_ID_MASK]
-        sb.append('Light Fx ID       : [%02X] %s' % (self.lightFxId, sf))
-        sb.append('Light Output Mask : [%02X] %s' % (self.lightOutputMask, light_ch_str(self.lightOutputMask)))
-        sb.append('Light PF Out Mask : [%02X]' % (self.lightPFOutputMask))
-        sb.append('Light Param 1     : [%02X]' % (self.lightParam1))
-        sb.append('Light Param 2     : [%02X]' % (self.lightParam2))
-        sb.append('Light Param 3     : [%02X]' % (self.lightParam3))
-        sb.append('Light Param 4     : [%02X]' % (self.lightParam4))
-        sb.append('Light Param 5     : [%02X]' % (self.lightParam5))
-        sb.append('Sound Fx ID       : [%02X]' % (self.soundFxId))
-        sb.append('Sound File ID     : [%02X]' % (self.soundFileId))
-        sb.append('Sound Param 1     : [%02X]' % (self.soundParam1))
-        sb.append('Sound Param 2     : [%02X]' % (self.soundParam2))
-        s = '\n'.join(sb)
+        sb.append("Light Fx ID       : [%02X] %s" % (self.lightFxId, sf))
+        sb.append(
+            "Light Output Mask : [%02X] %s"
+            % (self.lightOutputMask, light_ch_str(self.lightOutputMask))
+        )
+        sb.append("Light PF Out Mask : [%02X]" % (self.lightPFOutputMask))
+        sb.append("Light Param 1     : [%02X]" % (self.lightParam1))
+        sb.append("Light Param 2     : [%02X]" % (self.lightParam2))
+        sb.append("Light Param 3     : [%02X]" % (self.lightParam3))
+        sb.append("Light Param 4     : [%02X]" % (self.lightParam4))
+        sb.append("Light Param 5     : [%02X]" % (self.lightParam5))
+        sb.append("Sound Fx ID       : [%02X]" % (self.soundFxId))
+        sb.append("Sound File ID     : [%02X]" % (self.soundFileId))
+        sb.append("Sound Param 1     : [%02X]" % (self.soundParam1))
+        sb.append("Sound Param 2     : [%02X]" % (self.soundParam2))
+        s = "\n".join(sb)
         return s

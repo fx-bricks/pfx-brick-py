@@ -9,6 +9,8 @@ PFx Brick Python API
     :target: https://github.com/fx-bricks/pfx-brick-py/blob/master/LICENSE.md
 .. image:: https://img.shields.io/github/issues/fx-bricks/pfx-brick-py.svg?style=flat
     :target: https://img.shields.io/github/issues/fx-bricks/pfx-brick-py.svg?style=flat
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://img.shields.io/badge/code%20style-black-000000.svg
     
 This repository contains the API for developing python scripts and applications which communicate with the PFx Brick.
 
@@ -19,7 +21,8 @@ Requirements
 ------------
 
 * Python 3.6+
-* hidapi
+* `HIDAPI <https://github.com/signal11/hidapi>`_
+* `Bleak <https://github.com/hbldh/bleak>`_
 * sphinx (for documentation)
 
 Installation

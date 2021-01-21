@@ -33,22 +33,25 @@ def set_with_bit(byte, mask):
     else:
         return False
 
+
 def get_status_str(x):
-    s = ''
+    s = ""
     if x in pd.status_dict:
         s = pd.status_dict[x]
     return s
 
 
 def get_error_str(x):
-    s = 'None'
+    s = "None"
     if x in pd.err_dict:
         s = pd.err_dict[x]
     return s
 
+
 def uint16_toint(bytes):
     res = (int(bytes[0] & 0xFF) << 8) | (int(bytes[1]) & 0xFF)
     return res
+
 
 def uint32_to_bytes(v):
     x = []
@@ -58,57 +61,73 @@ def uint32_to_bytes(v):
     x.append(v & 0xFF)
     return x
 
+
 def uint32_toint(bytes):
-    res = (int(bytes[0] & 0xFF) << 24) | (int(bytes[1] & 0xFF) << 16) | (int(bytes[2] & 0xFF) << 8) | (int(bytes[3]) & 0xFF)
+    res = (
+        (int(bytes[0] & 0xFF) << 24)
+        | (int(bytes[1] & 0xFF) << 16)
+        | (int(bytes[2] & 0xFF) << 8)
+        | (int(bytes[3]) & 0xFF)
+    )
     return res
+
 
 def uint16_tostr(msb, lsb):
     res = "".join("{:02X}".format(x) for x in [msb, lsb])
     return res
 
+
 def uint32_tostr(msb, b1, b2, lsb):
     res = "".join("{:02X}".format(x) for x in [msb, b1, b2, lsb])
     return res
 
+
 def uint16_tover(msb, lsb):
-    res = '%02X.%02X' % (msb, lsb)
+    res = "%02X.%02X" % (msb, lsb)
     return res
+
 
 def motor_ch_str(x):
     s = []
     if x & EVT_MOTOR_OUTPUT_MASK:
-        s.append('Motor Ch ')
+        s.append("Motor Ch ")
         if x & EVT_MOTOR_OUTPUT_A:
-            s.append('A ')
+            s.append("A ")
         if x & EVT_MOTOR_OUTPUT_B:
-            s.append('B ')
+            s.append("B ")
         if x & EVT_MOTOR_OUTPUT_C:
-            s.append('C ')
+            s.append("C ")
         if x & EVT_MOTOR_OUTPUT_D:
-            s.append('D ')
-    s = ''.join(s)
+            s.append("D ")
+    s = "".join(s)
     return s
+
 
 def light_ch_str(x):
     s = []
     if x:
-        s.append('Ch')
+        s.append("Ch")
         for i in range(8):
             m = 1 << i
-            if (x & m):
-                s.append(str(i+1))
+            if x & m:
+                s.append(str(i + 1))
     else:
-        s.append('None')
-    s = ' '.join(s)
+        s.append("None")
+    s = " ".join(s)
     return s
+
 
 def ch_to_mask(ch):
     mask = 0
-    for c in ch:
+    if isinstance(ch, list):
+        channels = ch
+    else:
+        channels = [ch]
+    for c in channels:
         if c < 1 or c > 8:
             print("Channel out of range")
         else:
-            mask = mask | (1 << (c-1))
+            mask = mask | (1 << (c - 1))
     return mask
 
 
@@ -117,10 +136,12 @@ def address_to_evtch(address):
     ch = address & EVT_EVENT_CH_MASK
     return evt, ch
 
+
 def evtch_to_address(evt, ch):
     address = ch & EVT_EVENT_CH_MASK
     address |= (evt << 2) & EVT_EVENT_ID_MASK
     return address
+
 
 def period_param(period):
     x = float(period)
@@ -235,6 +256,7 @@ def duty_cycle_param(duty_cycle):
     else:
         return EVT_DUTYCY_99
 
+
 def duration_to_fixed_value(duration):
     x = float(duration)
     if x < 1.0:
@@ -270,7 +292,10 @@ def duration_to_fixed_value(duration):
     else:
         return EVT_SOUND_DUR_5M
 
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
+
+def printProgressBar(
+    iteration, total, prefix="", suffix="", decimals=1, length=100, fill="█"
+):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -284,8 +309,8 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     """
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
+    bar = fill * filledLength + "-" * (length - filledLength)
+    print("\r%s |%s| %s%% %s" % (prefix, bar, percent, suffix), end="\r")
     # Print New Line on Complete
     if iteration == total:
         print()
