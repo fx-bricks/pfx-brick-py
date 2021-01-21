@@ -2,6 +2,13 @@
 Change Log
 ==========
 
+v.0.7.0
+-------
+
+* added Bluetooth LE connection access with same functionality as USB
+* added convenience methods to PFxBrick class to execute actions directly
+* added support for running scripts on PFx Brick
+
 v.0.6.2
 -------
 
