@@ -24,6 +24,7 @@ from .pfxfiles import (
     fs_copy_file_to,
     fs_copy_file_from,
     fs_get_fileid_from_name,
+    fs_remove_file,
 )
 from .pfxbrick import PFxBrick, find_bricks
 from .pfxble import PFxBrickBLE, ble_device_scanner, find_ble_pfxbricks

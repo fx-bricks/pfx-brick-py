@@ -60,6 +60,7 @@ An example of the package can be seen below
 
 .. code-block:: python
 
+    import time
     from pfxbrick import *
 
     # Open a PFx Brick session instance
@@ -88,7 +89,7 @@ An example of the package can be seen below
         time.sleep(0.1)
     brick.stop_motor([1])
 
-    # Play an audio file
+    # Play an audio file with indefinite repeat
     brick.repeat_audio_file("LongBeep1")
     time.sleep(5)
     brick.stop_audio_file("LongBeep1")

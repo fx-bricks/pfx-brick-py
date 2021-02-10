@@ -609,6 +609,9 @@ class PFxBrick:
 
     def get_current_state(self):
         res = cmd_get_current_state(self.dev)
-        print(res)
         self.state.from_bytes(res)
         return self.state
+
+    def send_raw_icd_command(self, msg):
+        res = cmd_raw(self.dev, msg)
+        return res

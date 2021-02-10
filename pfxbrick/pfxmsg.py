@@ -172,3 +172,8 @@ def cmd_file_dir(hdev, req, params=None):
 def cmd_get_current_state(hdev):
     msg = [PFX_CMD_GET_CURRENT_STATE]
     return msg_transaction(hdev, msg)
+
+
+def cmd_raw(hdev, msg):
+    return msg_transaction(hdev, msg)
+    

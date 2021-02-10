@@ -41,7 +41,7 @@ def fs_get_fileid_from_name(hdev, name):
     p = [len(fb)]
     p.extend(fb)
     res = cmd_file_dir(hdev, PFX_DIR_REQ_GET_NAMED_FILE_ID, p)
-    if len(res) >= 3:
+    if len(res) >= 3 and not res[2] == PFX_ERR_FILE_NOT_FOUND:
         fileid = int(res[2])
     return fileid
 
@@ -150,7 +150,7 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
                 fs_error_check(res[1])
 
 
-def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True):
+def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True, as_bytes=False, to_console=False):
     """
     File copy handler to get a file from the PFx Brick.
 
@@ -169,12 +169,12 @@ def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True):
     msg.append(pfile.id)
     msg.append(0x01)  # READ mode
     res = usb_transaction(hdev, msg)
+    rbytes = bytearray()
     if res:
         if not fs_error_check(res[1]):
             nf = pfile.name
             if fn is not None:
                 nf = fn
-            f = open(nf, "wb")
             nCount = 0
             err = False
             while (nCount < pfile.size) and not err:
@@ -189,7 +189,15 @@ def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True):
                 if not err:
                     nCount += res[1]
                     b = bytes(res[2 : 2 + res[1]])
-                    f.write(b)
+                    rbytes.extend(b)
+                    if to_console and not show_progress:
+                        if as_bytes:
+                            pprint_bytes(b)
+                        else:
+                            s = []
+                            for bc in b:
+                                s.append("%c" % (bc))
+                            print("".join(s), end="")
                 if show_progress:
                     printProgressBar(
                         nCount,
@@ -198,12 +206,15 @@ def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True):
                         suffix="Complete",
                         length=50,
                     )
-            f.close()
             msg = [PFX_CMD_FILE_CLOSE]
             msg.append(pfile.id)
             res = usb_transaction(hdev, msg)
             fs_error_check(res[1])
-
+            if not as_bytes:
+                with open(nf, "wb") as f:
+                    f.write(rbytes)
+            return rbytes
+    return None
 
 class PFxFile:
     """

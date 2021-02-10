@@ -118,7 +118,7 @@ class PFxAction:
             s |= EVT_MOTOR_SPEED_HIRES_REV
         self.motorParam1 = s
 
-        m = ch_to_mask(ch) & EVT_MOTOR_OUTPUT_MASK
+        m = ch_to_mask(listify(ch)) & EVT_MOTOR_OUTPUT_MASK
         if duration is not None:
             m |= EVT_MOTOR_SET_SPD_TIMED
             self.motorParam2 = duration_to_fixed_value(duration)
@@ -134,7 +134,7 @@ class PFxAction:
         :param ch: [:obj:`int`] a list of motor channels (1-4)
         :returns: :obj:`PFxAction` self
         """
-        m = ch_to_mask(ch) & EVT_MOTOR_OUTPUT_MASK
+        m = ch_to_mask(listify(ch)) & EVT_MOTOR_OUTPUT_MASK
         m |= EVT_MOTOR_ESTOP
         self.motorActionId = m
         return self
@@ -146,7 +146,7 @@ class PFxAction:
         :param ch: [:obj:`int`] a list of light channels (1-8)
         :returns: :obj:`PFxAction` self
         """
-        self.lightOutputMask = ch_to_mask(ch)
+        self.lightOutputMask = ch_to_mask(listify(ch))
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
         self.lightParam4 = EVT_TRANSITION_ON
         return self
@@ -158,7 +158,7 @@ class PFxAction:
         :param ch: [:obj:`int`] a list of light channels (1-8)
         :returns: :obj:`PFxAction` self
         """
-        self.lightOutputMask = ch_to_mask(ch)
+        self.lightOutputMask = ch_to_mask(listify(ch))
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
         self.lightParam4 = EVT_TRANSITION_OFF
         return self
@@ -170,7 +170,7 @@ class PFxAction:
         :param ch: [:obj:`int`] a list of light channels (1-8)
         :returns: :obj:`PFxAction` self
         """
-        self.lightOutputMask = ch_to_mask(ch)
+        self.lightOutputMask = ch_to_mask(listify(ch))
         self.lightFxId = EVT_LIGHTFX_ON_OFF_TOGGLE
         self.lightParam4 = EVT_TRANSITION_TOGGLE
         return self
@@ -188,7 +188,7 @@ class PFxAction:
             x = 255
         if x < 0:
             x = 0
-        self.lightOutputMask = ch_to_mask(ch)
+        self.lightOutputMask = ch_to_mask(listify(ch))
         self.lightFxId = EVT_LIGHTFX_SET_BRIGHT
         self.lightParam1 = x
         return self
@@ -228,7 +228,7 @@ class PFxAction:
         a 1 second period, 10% duty cycle, two light pulses and with
         a toggle activation.
         """
-        self.lightOutputMask = ch_to_mask(ch)
+        self.lightOutputMask = ch_to_mask(listify(ch))
         self.lightFxId = fx
         for i, p in enumerate(param):
             if i == 0:
