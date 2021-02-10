@@ -47,34 +47,38 @@ def get_error_str(x):
         s = pd.err_dict[x]
     return s
 
+
 def pprint_bytes(x):
     def append_ascii(x, a, b):
         s = []
         for i in range(a, b):
-            if (i < len(x)):
+            if i < len(x):
                 ch = "." if x[i] > 127 else x[i]
                 ch = "." if x[i] < 32 else x[i]
                 s.append("%c" % (ch))
         return "".join(s)
+
     s = []
     for i, b in enumerate(x):
         s.append("%02X " % (b))
-        if (i+1) % 8 == 0 and i > 0:
+        if (i + 1) % 8 == 0 and i > 0:
             s.append(" ")
-        if (i+1) % 16 == 0 and i > 0:
+        if (i + 1) % 16 == 0 and i > 0:
             s.append(" ")
-            s.extend(append_ascii(x, i-15, i+1))
+            s.extend(append_ascii(x, i - 15, i + 1))
             s.append("\n")
     nb = len(x) % 16
     for i in range(16 - nb + 1):
         s.append("   ")
-    s.extend(append_ascii(x, len(x)-nb, len(x)+1))
+    s.extend(append_ascii(x, len(x) - nb, len(x) + 1))
     print("".join(s))
+
 
 def listify(x):
     if isinstance(x, list):
         return x
     return [x]
+
 
 def uint16_toint(bytes):
     res = (int(bytes[0] & 0xFF) << 8) | (int(bytes[1]) & 0xFF)

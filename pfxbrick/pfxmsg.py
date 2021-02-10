@@ -176,4 +176,3 @@ def cmd_get_current_state(hdev):
 
 def cmd_raw(hdev, msg):
     return msg_transaction(hdev, msg)
-    

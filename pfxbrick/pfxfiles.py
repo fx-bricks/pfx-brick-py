@@ -150,7 +150,9 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
                 fs_error_check(res[1])
 
 
-def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True, as_bytes=False, to_console=False):
+def fs_copy_file_from(
+    hdev, pfile, fn=None, show_progress=True, as_bytes=False, to_console=False
+):
     """
     File copy handler to get a file from the PFx Brick.
 
@@ -215,6 +217,7 @@ def fs_copy_file_from(hdev, pfile, fn=None, show_progress=True, as_bytes=False, 
                     f.write(rbytes)
             return rbytes
     return None
+
 
 class PFxFile:
     """
