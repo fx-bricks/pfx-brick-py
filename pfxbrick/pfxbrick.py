@@ -29,6 +29,7 @@ from bleak import BleakScanner, BleakClient
 
 from pfxbrick import *
 from pfxbrick.pfxhelpers import *
+from pfxbrick.pfxfiles import fs_format
 
 
 def find_bricks(show_list=False):
@@ -575,6 +576,20 @@ class PFxBrick:
         :param quick: :obj:`boolean` If True, only occupied sectors are erased. If False, every sector is erased, i.e. a complete format.
         """
         fs_format(self.dev, quick)
+
+    def set_file_attributes(self, fileID, attr):
+        fileID = self.file_id_from_str_or_int(fileID)
+        res = self.send_raw_icd_command(
+            [
+                PFX_CMD_FILE_DIR,
+                PFX_DIR_REQ_SET_ATTR_MASKED_ID,
+                fileID & 0xFF,
+                0x00,
+                attr & 0xFF,
+                0x00,
+                0x7C,
+            ]
+        )
 
     def reset_factory_config(self):
         """

@@ -327,6 +327,42 @@ class PFxAction:
         v = int(vf)
         return self.sound_fx(EVT_SOUND_SET_VOL, [0, v])
 
+    def is_empty(self):
+        """Determines if the action is clear/undefined"""
+        if self.command > 0:
+            return False
+        if self.motorActionId > 0:
+            return False
+        if self.motorParam1 > 0:
+            return False
+        if self.motorParam2 > 0:
+            return False
+        if self.lightFxId > 0:
+            return False
+        if self.lightOutputMask > 0:
+            return False
+        if self.lightPFOutputMask > 0:
+            return False
+        if self.lightParam1 > 0:
+            return False
+        if self.lightParam2 > 0:
+            return False
+        if self.lightParam3 > 0:
+            return False
+        if self.lightParam4 > 0:
+            return False
+        if self.lightParam5 > 0:
+            return False
+        if self.soundFxId > 0:
+            return False
+        if self.soundFileId > 0:
+            return False
+        if self.soundParam1 > 0:
+            return False
+        if self.soundParam2 > 0:
+            return False
+        return True
+
     def clear(self):
         """
         Sets all the action data in this class to zero.
