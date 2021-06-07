@@ -89,7 +89,7 @@ class PFxSettings:
         sb.append("BLE Advert Power      : %s" % (self.bleAdvertPower))
         sb.append("BLE Session Power     : %s" % (self.bleSessionPower))
         sb.append("Motor sound notches   : %s" % (self.notchCount))
-        mb = "".join("{:02X} ".format(x) for x in self.notchBounds)
+        mb = "".join("0x{:02X} ".format(x) for x in self.notchBounds)
         sb.append("Motor sound bounds    : %s" % (mb))
         s = "\n".join(sb)
         return s
@@ -234,15 +234,15 @@ class PFxLights:
 
     def __str__(self):
         sb = []
-        sb.append("Default brightness    : %02X" % (self.defaultBrightness))
+        sb.append("Default brightness    : 0x%02X" % (self.defaultBrightness))
         sb.append(
             "Startup brightness    : "
-            + "".join("{:02X} ".format(x) for x in self.startupBrightness)
+            + "".join("0x{:02X} ".format(x) for x in self.startupBrightness)
         )
         sb.append(
             "PF output brightness  : "
             + "".join(
-                "{:02X} ".format(x)
+                "0x{:02X} ".format(x)
                 for x in [
                     self.pfBrightnessA,
                     self.pfBrightnessB,
@@ -289,7 +289,7 @@ class PFxAudio:
             os = "ON"
         else:
             os = "OFF"
-        s = "Audio DRC: %s  Bass: %02X  Treble: %02X" % (os, self.bass, self.treble)
+        s = "Audio DRC: %s  Bass: 0x%02X  Treble: 0x%02X" % (os, self.bass, self.treble)
         return s
 
 

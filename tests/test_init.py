@@ -10,7 +10,7 @@ from pfxbrick import *
 def test_pfxbrick_init():
     b = PFxBrick()
     assert not b.is_open
-    assert b.hid is None
+    assert b.dev is None
 
 
 def test_find_bricks():

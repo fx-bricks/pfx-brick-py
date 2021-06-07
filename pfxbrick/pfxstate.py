@@ -36,7 +36,7 @@ class PFxMotorState:
         self.pwm_speed = 0
 
     def __str__(self):
-        return "Dir: %7s Target speed: %3d  Current: %3d  PWM: %3d" % (
+        return "Dir: %7s Target speed: 0x%02X  Current: 0x%02X  PWM: 0x%02X" % (
             self.dir,
             self.target_speed,
             self.current_speed,
@@ -44,7 +44,7 @@ class PFxMotorState:
         )
 
     def from_bytes(self, msg):
-        self.dir = "Reverse" if msg[0] else "Forward"
+        self.dir = "Reverse" if (msg[0] & 0x01) else "Forward"
         self.target_speed = msg[1]
         self.current_speed = msg[2]
         self.pwm_speed = msg[3]
@@ -57,7 +57,7 @@ class PFxLightState:
         self.current_level = 0
 
     def __str__(self):
-        return "Active: %5s Target level: %3d  Current level: %3d" % (
+        return "Active: %5s Target level: 0x%02X  Current level: 0x%02X" % (
             self.active,
             self.target_level,
             self.current_level,
@@ -71,6 +71,99 @@ class PFxAudioChannel:
 
     def __str__(self):
         return "Mode: %d Current file: %3d" % (self.mode, self.file_id)
+
+
+class PFxBTState:
+    def __init__(self):
+        self.sleep = 0
+        self.state = 0
+        self.flags = 0
+        self.error = 0
+        self.features = 0
+        self.services = 0
+        self.auth = 0
+        self.tx_count = 0
+        self.rx_count = 0
+        self.msg_len = 0
+        self.msg_prefix = []
+
+    def __str__(self):
+        s = []
+        s.append(
+            "Sleep: %d State: 0x%04X  Flags: 0x%04X  Err: 0x%04X"
+            % (self.sleep, self.state, self.flags, self.err)
+        )
+        s.append(
+            "BLE Feautures: 0x%04X  Services: 0x%04X  Auth: 0x%04X"
+            % (self.features, self.services, self.auth)
+        )
+        s.append("Tx Count: %d  Rx Count: %d" % (self.tx_count, self.rx_count))
+        mb = " ".join(["0x%02X" % (x) for x in self.msg_prefix])
+        s.append("Last message len: %d <%s>" % (self.msg_len, mb))
+        return "\n".join(s)
+
+    def from_bytes(self, msg):
+        msg = msg[1:]
+        self.sleep = msg[1]
+        self.state = uint16_toint(msg[2:4])
+        self.flags = uint16_toint(msg[4:6])
+        self.error = uint16_toint(msg[6:8])
+        self.features = uint16_toint(msg[8:10])
+        self.services = uint16_toint(msg[10:12])
+        self.auth = uint16_toint(msg[12:14])
+        self.tx_count = uint16_toint(msg[14:16])
+        self.rx_count = uint16_toint(msg[16:18])
+        self.msg_len = msg[19]
+        self.msg_prefix = msg[20:28]
+
+
+class PFxFSState:
+    def __init__(self):
+        self.file_count = 0
+        self.open_files = 0
+        self.task_state = 0
+        self.flags = 0
+        self.erase_sector = 0
+        self.init_timemout = 0
+        self.auto_sync_dir = 0
+        self.auto_sync_map = 0
+        self.sector_capacity = 0
+        self.free_sectors = 0
+        self.empty_sectors = 0
+
+    def __str__(self):
+        s = []
+        s.append(
+            "State: 0x%02X  Flags: 0x%02X  Files: %d  Open: %d"
+            % (self.task_state, self.flags, self.file_count, self.open_files)
+        )
+        s.append(
+            "Erase: 0x%04X  InitTime: 0x%04X  SyncDir: 0x%04X  SyncMap: 0x%04X"
+            % (
+                self.erase_sector,
+                self.init_timemout,
+                self.auto_sync_dir,
+                self.auto_sync_map,
+            )
+        )
+        s.append(
+            "Sector Capacity: 0x%04X  Free: 0x%04X  Empty: 0x%04X"
+            % (self.sector_capacity, self.free_sectors, self.empty_sectors)
+        )
+        return "\n".join(s)
+
+    def from_bytes(self, msg):
+        self.file_count = msg[1]
+        self.open_files = msg[18]
+        self.task_state = msg[2]
+        self.flags = msg[3]
+        self.erase_sector = uint16_toint(msg[4:6])
+        self.init_timemout = uint16_toint(msg[6:8])
+        self.auto_sync_dir = uint16_toint(msg[8:10])
+        self.auto_sync_map = uint16_toint(msg[10:12])
+        self.sector_capacity = uint16_toint(msg[12:14])
+        self.free_sectors = uint16_toint(msg[14:16])
+        self.empty_sectors = uint16_toint(msg[16:18])
 
 
 class PFxState:
@@ -119,6 +212,7 @@ class PFxState:
         self.motors = [PFxMotorState() for ch in range(PFX_MOTOR_CHANNELS_MAX)]
         self.lights = [PFxLightState() for ch in range(PFX_LIGHT_CHANNELS)]
         self.audio_ch = [PFxAudioChannel() for ch in range(PFX_AUDIO_CHANNELS)]
+        self.lightmask = 0
         self.millisec_count = 0
         self.slow_count = 0
         self.status_latch1 = 0
@@ -128,6 +222,8 @@ class PFxState:
         self.fs_state = 0
         self.script_state = 0
         self.script_line = 0
+        self.filesys = PFxFSState()
+        self.bt = PFxBTState()
 
     def from_bytes(self, msg):
         """
@@ -138,6 +234,7 @@ class PFxState:
         self.volume = msg[2]
         for ch, idx in zip(self.motors, [3, 7, 11, 15]):
             ch.from_bytes(msg[idx : idx + 4])
+        self.lightmask = msg[19]
         for i, ch in enumerate(self.lights):
             ch.target_level = msg[21 + i]
             ch.current_level = msg[33 + i]
@@ -177,7 +274,7 @@ class PFxState:
         for i, ch in enumerate(self.motors):
             s.append("Motor Ch %d : %s" % (i + 1, str(ch)))
         for i, ch in enumerate(self.lights):
-            s.append("Light Ch %d : %s" % (i + 1, str(ch)))
+            s.append("Light Ch %2d : %s" % (i + 1, str(ch)))
         for i, ch in enumerate(self.audio_ch):
             s.append("Audio Ch %d : %s" % (i + 1, str(ch)))
         s.append(

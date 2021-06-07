@@ -28,6 +28,32 @@ import os
 from pfxbrick import *
 from pfxbrick.pfxhelpers import *
 
+try:
+    from rich.progress import (
+        BarColumn,
+        DownloadColumn,
+        Progress,
+        TaskID,
+        TextColumn,
+        TimeRemainingColumn,
+        TransferSpeedColumn,
+    )
+
+    progress = Progress(
+        TextColumn("[white]{task.fields[filename]}", justify="right"),
+        BarColumn(bar_width=None),
+        "[progress.percentage]{task.percentage:>3.1f}%",
+        "•",
+        DownloadColumn(),
+        "•",
+        TransferSpeedColumn(),
+        "•",
+        TimeRemainingColumn(),
+    )
+    has_rich = True
+except:
+    has_rich = False
+
 
 def fs_get_fileid_from_name(hdev, name):
     """
@@ -117,12 +143,16 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
         for i in range(32 - len(nd)):
             msg.append(0)
         res = usb_transaction(hdev, msg)
-
-        if res:
-            if not fs_error_check(res[1]):
+        if not res:
+            return
+        if fs_error_check(res[1]):
+            return
+        if has_rich:
+            with progress:
                 f = open(fn, "rb")
                 nCount = 0
                 err = False
+                transfer = progress.add_task("copy_to", filename=name, total=nBytes)
                 while (nCount < nBytes) and not err:
                     buf = f.read(61)
                     nRead = len(buf)
@@ -135,19 +165,44 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
                             msg.append(b)
                         res = usb_transaction(hdev, msg)
                         err = fs_error_check(res[1])
-                        if show_progress:
-                            printProgressBar(
-                                nCount,
-                                nBytes,
-                                prefix="Copying:",
-                                suffix="Complete",
-                                length=50,
-                            )
+                        progress.update(transfer, advance=nRead)
+
                 f.close()
                 msg = [PFX_CMD_FILE_CLOSE]
                 msg.append(fid)
                 res = usb_transaction(hdev, msg)
                 fs_error_check(res[1])
+            progress.remove_task(transfer)
+        else:
+            f = open(fn, "rb")
+            nCount = 0
+            err = False
+            while (nCount < nBytes) and not err:
+                buf = f.read(61)
+                nRead = len(buf)
+                nCount += nRead
+                if nRead > 0:
+                    msg = [PFX_CMD_FILE_WRITE]
+                    msg.append(fid)
+                    msg.append(nRead)
+                    for b in buf:
+                        msg.append(b)
+                    res = usb_transaction(hdev, msg)
+                    err = fs_error_check(res[1])
+                    progress.update(transfer, advance=nRead)
+                    if show_progress:
+                        printProgressBar(
+                            nCount,
+                            nBytes,
+                            prefix="Copying:",
+                            suffix="Complete",
+                            length=50,
+                        )
+            f.close()
+            msg = [PFX_CMD_FILE_CLOSE]
+            msg.append(fid)
+            res = usb_transaction(hdev, msg)
+            fs_error_check(res[1])
 
 
 def fs_copy_file_from(
@@ -172,13 +227,18 @@ def fs_copy_file_from(
     msg.append(0x01)  # READ mode
     res = usb_transaction(hdev, msg)
     rbytes = bytearray()
-    if res:
-        if not fs_error_check(res[1]):
+    if not res:
+        return None
+    if fs_error_check(res[1]):
+        return None
+    if has_rich:
+        with progress:
             nf = pfile.name
             if fn is not None:
                 nf = fn
             nCount = 0
             err = False
+            transfer = progress.add_task("copy_from", filename=nf, total=pfile.size)
             while (nCount < pfile.size) and not err:
                 msg = [PFX_CMD_FILE_READ]
                 msg.append(pfile.id)
@@ -200,22 +260,55 @@ def fs_copy_file_from(
                             for bc in b:
                                 s.append("%c" % (bc))
                             print("".join(s), end="")
-                if show_progress:
-                    printProgressBar(
-                        nCount,
-                        pfile.size,
-                        prefix="Copying:",
-                        suffix="Complete",
-                        length=50,
-                    )
+                    progress.update(transfer, advance=res[1])
             msg = [PFX_CMD_FILE_CLOSE]
             msg.append(pfile.id)
             res = usb_transaction(hdev, msg)
             fs_error_check(res[1])
-            if not as_bytes:
-                with open(nf, "wb") as f:
-                    f.write(rbytes)
-            return rbytes
+        progress.remove_task(transfer)
+        if not as_bytes:
+            with open(nf, "wb") as f:
+                f.write(rbytes)
+        return rbytes
+    else:
+        nf = pfile.name
+        if fn is not None:
+            nf = fn
+        nCount = 0
+        err = False
+        while (nCount < pfile.size) and not err:
+            msg = [PFX_CMD_FILE_READ]
+            msg.append(pfile.id)
+            nToRead = pfile.size - nCount
+            if nToRead > 62:
+                nToRead = 62
+            msg.append(nToRead)
+            res = usb_transaction(hdev, msg)
+            err = fs_error_check(res[1])
+            if not err:
+                nCount += res[1]
+                b = bytes(res[2 : 2 + res[1]])
+                rbytes.extend(b)
+                if to_console and not show_progress:
+                    if as_bytes:
+                        pprint_bytes(b)
+                    else:
+                        s = []
+                        for bc in b:
+                            s.append("%c" % (bc))
+                        print("".join(s), end="")
+            if show_progress:
+                printProgressBar(
+                    nCount, pfile.size, prefix="Copying:", suffix="Complete", length=50,
+                )
+        msg = [PFX_CMD_FILE_CLOSE]
+        msg.append(pfile.id)
+        res = usb_transaction(hdev, msg)
+        fs_error_check(res[1])
+        if not as_bytes:
+            with open(nf, "wb") as f:
+                f.write(rbytes)
+        return rbytes
     return None
 
 

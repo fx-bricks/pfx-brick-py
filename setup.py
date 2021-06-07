@@ -60,4 +60,11 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
     ],
     install_requires=["hidapi", "bleak"],
+    scripts=[
+        'pfxbrick/scripts/pfxcat.py',
+        'pfxbrick/scripts/pfxdir.py',
+        'pfxbrick/scripts/pfxget.py',
+        'pfxbrick/scripts/pfxput.py',
+        'pfxbrick/scripts/pfxrm.py',
+    ],
 )

@@ -208,28 +208,40 @@ class PFxBrick:
             self.firmware_ver = uint16_tover(res[37], res[38])
             self.firmware_build = uint16_tostr(res[39], res[40])
 
+    def status_str(self):
+        """
+        Gets top level operational status information retrieved
+        by a previous call to the get_status method into a string
+        """
+        s = []
+        s.append("USB vendor ID         : 0x%04X" % (self.usb_vid))
+        s.append("USB product ID        : 0x%04X" % (self.usb_pid))
+        s.append("USB product desc      : %s" % (self.usb_prod_str))
+        s.append("USB manufacturer      : %s" % (self.usb_manu_str))
+        s.append(
+            "PFx Brick product ID  : %s, %s" % (self.product_id, self.product_desc)
+        )
+        s.append("Serial number         : %s" % (self.serial_no))
+        s.append(
+            "Firmware version      : %s build %s"
+            % (self.firmware_ver, self.firmware_build)
+        )
+        s.append(
+            "Status                : 0x%02X %s"
+            % (self.status, get_status_str(self.status))
+        )
+        s.append(
+            "Errors                : 0x%02X %s"
+            % (self.error, get_error_str(self.error))
+        )
+        return "\n".join(s)
+
     def print_status(self):
         """
         Prints the top level operational status information retrieved
         by a previous call to the get_status method.
         """
-        print("USB vendor ID         : %04X" % (self.usb_vid))
-        print("USB product ID        : %04X" % (self.usb_pid))
-        print("USB product desc      : %s" % (self.usb_prod_str))
-        print("USB manufacturer      : %s" % (self.usb_manu_str))
-        print("PFx Brick product ID  : %s, %s" % (self.product_id, self.product_desc))
-        print("Serial number         : %s" % (self.serial_no))
-        print(
-            "Firmware version      : %s build %s"
-            % (self.firmware_ver, self.firmware_build)
-        )
-        print(
-            "Status                : %02X %s"
-            % (self.status, get_status_str(self.status))
-        )
-        print(
-            "Errors                : %02X %s" % (self.error, get_error_str(self.error))
-        )
+        print(self.status_str())
 
     def get_config(self):
         """
@@ -272,6 +284,7 @@ class PFxBrick:
         res = cmd_get_name(self.dev)
         if res:
             self.name = bytes(res[1:25]).decode("utf-8")
+        return self.name
 
     def set_name(self, name):
         """
@@ -611,6 +624,16 @@ class PFxBrick:
         res = cmd_get_current_state(self.dev)
         self.state.from_bytes(res)
         return self.state
+
+    def get_fs_state(self):
+        res = self.send_raw_icd_command([PFX_CMD_FILE_GET_FS_STATE])
+        self.state.filesys.from_bytes(res)
+        return self.state.filesys
+
+    def get_bt_state(self):
+        res = self.send_raw_icd_command([PFX_CMD_GET_BT_STATUS])
+        self.state.bt.from_bytes(res)
+        return self.state.bt
 
     def send_raw_icd_command(self, msg):
         res = cmd_raw(self.dev, msg)
