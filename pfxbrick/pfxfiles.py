@@ -299,7 +299,11 @@ def fs_copy_file_from(
                         print("".join(s), end="")
             if show_progress:
                 printProgressBar(
-                    nCount, pfile.size, prefix="Copying:", suffix="Complete", length=50,
+                    nCount,
+                    pfile.size,
+                    prefix="Copying:",
+                    suffix="Complete",
+                    length=50,
                 )
         msg = [PFX_CMD_FILE_CLOSE]
         msg.append(pfile.id)
