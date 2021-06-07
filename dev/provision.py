@@ -76,7 +76,7 @@ def test_result(desc, result):
 
 
 def preflight_check(proj):
-    """ Verifies input files """
+    """Verifies input files"""
     ok = True
     fs = FileOps(simulate=True, verbose=False, overwrite=False)
 
