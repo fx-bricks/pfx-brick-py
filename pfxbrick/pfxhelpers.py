@@ -364,12 +364,12 @@ def get_file_crc32(fn):
 
 def bounds_from_notchcount(count):
     """Returns the boundaries between a desired number of power notch levels.
-    
+
     The power range between 0 to 255 can be subdivided into a desired number
-    of notch levels (up to 8 levels).  For example, 2 notch levels would 
+    of notch levels (up to 8 levels).  For example, 2 notch levels would
     return a list with one bound of 128.  4 levels would return a list of
     [64, 128, 192], etc.
-     """
+    """
     bounds = [round((x + 1) / count * 255) for x in range(count - 1)]
     return bounds
 
@@ -395,8 +395,7 @@ def notch_ranges_from_bounds(bounds):
 
 
 def notch_from_speed(speed, bounds):
-    """Returns the notch index for a given speed value within a specified list of bounds.
-    """
+    """Returns the notch index for a given speed value within a specified list of bounds."""
     ranges = notch_ranges_from_bounds(bounds)
     for i, r in enumerate(ranges):
         if speed >= r[0] and speed < r[2]:

@@ -621,7 +621,7 @@ class PFxBrick:
 
         Although the file attribute field is actually 16 bits, this function sets the upper
         8 bits.  The lower 8-bits are reserved for identifying the file type, e.g. text, WAV,
-        etc. 
+        etc.
 
         :param fileID: :obj:`int` or :obj:`str` the file ID or filename of the file to remove
         :param attr: :obj:`int` the attribute value to set (only the lower 16)
@@ -644,7 +644,7 @@ class PFxBrick:
     def rename_file(self, fileID, new_name):
         """
         Renames a file on the file system.
-        
+
         :param fileID: :obj:`int` or :obj:`str` the file ID or filename of the file to remove
         :param new_name: :obj:`str` new file name to apply (up to 32 characters UTF-8 encoded)
         """
@@ -653,7 +653,12 @@ class PFxBrick:
         name_len = min(len(mb), 32)
         mb = mb[:name_len]
         res = self.send_raw_icd_command(
-            [PFX_CMD_FILE_DIR, PFX_DIR_REQ_RENAME_FILE_ID, fileID & 0xFF, *mb,]
+            [
+                PFX_CMD_FILE_DIR,
+                PFX_DIR_REQ_RENAME_FILE_ID,
+                fileID & 0xFF,
+                *mb,
+            ]
         )
 
     def stop_script(self):
