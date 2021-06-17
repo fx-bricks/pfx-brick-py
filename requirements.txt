@@ -1,2 +1,2 @@
-hid
+hidapi
 sphinx
