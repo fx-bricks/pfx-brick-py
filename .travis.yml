@@ -28,6 +28,9 @@ addons:
             - libhidapi-dev
             - libudev-dev
             - libusb-1.0-0-dev
+            - bluez
+            - bluetooth
+            - libbluetooth-dev
 
 before_install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
@@ -49,4 +52,4 @@ install:
 script:
     - cd tests
     - pytest -v
-    
+
