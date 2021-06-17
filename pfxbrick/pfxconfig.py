@@ -72,6 +72,14 @@ class PFxSettings:
         self.notchCount = 0
         self.notchBounds = [0, 0, 0, 0, 0, 0, 0]
 
+    def __eq__(self, other):
+        for k, v in self.__dict__.items():
+            if k not in other.__dict__:
+                return False
+            if not v == other.__dict__[k]:
+                return False
+        return True
+
     def __str__(self):
         sb = []
         sb.append("Status LED            : %s" % (pd.status_led_dict[self.statusLED]))
@@ -129,6 +137,37 @@ class PFxMotor:
         self.vmid = 128
         self.vmax = 255
 
+    def __repr__(self):
+        s = "invert=%02X torqueComp=%02X tlgMode=%02X" % (
+            self.invert,
+            self.torqueComp,
+            self.tlgMode,
+        )
+        s = s + "vmin=%02X vmid=%02X vmax=%02X" % (self.vmin, self.vmid, self.vmax)
+        s = "%s(%s)" % ("PFxMotor." + self.__class__.__name__, s)
+        return s
+
+    def __str__(self):
+        sb = []
+        sb.append(
+            "  Invert : %s  Torque comp : %s  PF mode : %s"
+            % (self.invert, self.torqueComp, self.tlgMode)
+        )
+        sb.append("  Accel  : %s  Decel : %s" % (self.accel, self.decel))
+        sb.append(
+            "  vMin   : %s  vMid  : %s  vMax : %s" % (self.vmin, self.vmid, self.vmax)
+        )
+        s = "\n".join(sb)
+        return s
+
+    def __eq__(self, other):
+        for k, v in self.__dict__.items():
+            if k not in other.__dict__:
+                return False
+            if not v == other.__dict__[k]:
+                return False
+        return True
+
     def from_config_byte(self, byte):
         self.invert = set_with_bit(byte, PFX_CFG_MOTOR_INVERT)
         self.torqueComp = set_with_bit(byte, PFX_CFG_MOTOR_TRQCOMP)
@@ -159,29 +198,6 @@ class PFxMotor:
         v.append(self.accel)
         v.append(self.decel)
         return v
-
-    def __repr__(self):
-        s = "invert=%02X torqueComp=%02X tlgMode=%02X" % (
-            self.invert,
-            self.torqueComp,
-            self.tlgMode,
-        )
-        s = s + "vmin=%02X vmid=%02X vmax=%02X" % (self.vmin, self.vmid, self.vmax)
-        s = "%s(%s)" % ("PFxMotor." + self.__class__.__name__, s)
-        return s
-
-    def __str__(self):
-        sb = []
-        sb.append(
-            "  Invert : %s  Torque comp : %s  PF mode : %s"
-            % (self.invert, self.torqueComp, self.tlgMode)
-        )
-        sb.append("  Accel  : %s  Decel : %s" % (self.accel, self.decel))
-        sb.append(
-            "  vMin   : %s  vMid  : %s  vMax : %s" % (self.vmin, self.vmid, self.vmax)
-        )
-        s = "\n".join(sb)
-        return s
 
 
 class PFxLights:
@@ -232,6 +248,14 @@ class PFxLights:
         s = "%s(%s)" % ("PFxLights." + self.__class__.__name__, s)
         return s
 
+    def __eq__(self, other):
+        for k, v in self.__dict__.items():
+            if k not in other.__dict__:
+                return False
+            if not v == other.__dict__[k]:
+                return False
+        return True
+
     def __str__(self):
         sb = []
         sb.append("Default brightness    : 0x%02X" % (self.defaultBrightness))
@@ -278,6 +302,14 @@ class PFxAudio:
         self.treble = 0
         self.defaultVolume = 0
 
+    def __eq__(self, other):
+        for k, v in self.__dict__.items():
+            if k not in other.__dict__:
+                return False
+            if not v == other.__dict__[k]:
+                return False
+        return True
+
     def __repr__(self):
         s = "drc=%d bass=%d treble=%d" % (self.audioDRC, self.bass, self.treble)
         s = "%s(%s)" % ("PFxAudio." + self.__class__.__name__, s)
@@ -316,6 +348,14 @@ class PFxConfig:
         self.motors = [PFxMotor(), PFxMotor(), PFxMotor(), PFxMotor()]
         self.lights = PFxLights()
         self.audio = PFxAudio()
+
+    def __eq__(self, other):
+        for k, v in self.__dict__.items():
+            if k not in other.__dict__:
+                return False
+            if not v == other.__dict__[k]:
+                return False
+        return True
 
     def from_bytes(self, msg):
         """

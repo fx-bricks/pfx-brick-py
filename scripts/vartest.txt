@@ -1,0 +1,22 @@
+#
+# Elf House Lighting effects
+#
+set $A = 0.1
+set $B = 2.5
+set $C = 1
+set $D = 0.1
+set $E = 0.5
+set $F = 8
+
+light all off
+light [1] on fade $A
+wait $B
+light [1] off fade $A
+wait $C
+
+light [2, $F] flash $D $E fade 0.1
+wait 4
+light [2] off
+wait 4
+light all off
+

@@ -45,20 +45,16 @@ def make_layout() -> Layout:
         Layout(name="audio", size=7),
     )
     layout["brightvol"].split_row(
-        Layout(name="bright"),
-        Layout(name="vol", ratio=1),
+        Layout(name="bright"), Layout(name="vol", ratio=1),
     )
     layout["status"].split_row(
-        Layout(name="status1"),
-        Layout(name="status2"),
+        Layout(name="status1"), Layout(name="status2"),
     )
     layout["audio"].split_row(
-        Layout(name="audio_ch"),
-        Layout(name="audio_state"),
+        Layout(name="audio_ch"), Layout(name="audio_state"),
     )
     layout["audio_state"].split_column(
-        Layout(name="audio_peak"),
-        Layout(name="audio_idx"),
+        Layout(name="audio_peak"), Layout(name="audio_idx"),
     )
     return layout
 
@@ -104,7 +100,7 @@ def update_status(brick):
         "0x%02X" % (brick.status),
         es,
         "[cyan]%5d" % (st.slow_count),
-        "[cyan]%5d" % (st.millisec_count),
+        "[cyan]%04X" % (st.millisec_count),
         ss,
         "[magenta]%02X" % (st.script_line),
     )
@@ -184,9 +180,7 @@ def update_audio(st, brick):
             fn = ""
         fs = "File: --- " if fid == 0xFF else "File: [aquamarine3]0x%02X %s" % (fid, fn)
         panel.add_row(
-            "Ch %d " % (i),
-            "Mode: [cyan]0x%02X " % (st.audio_ch[i].mode),
-            fs,
+            "Ch %d " % (i), "Mode: [cyan]0x%02X " % (st.audio_ch[i].mode), fs,
         )
     return Panel(panel)
 
@@ -202,9 +196,7 @@ def update_audio_state(st):
     for i in range(3):
         panel.add_column(ratio=1)
     panel.add_row(
-        "Audio peak: ",
-        level_bar,
-        "[aquamarine3]0x%02X" % (st.audio_peak),
+        "Audio peak: ", level_bar, "[aquamarine3]0x%02X" % (st.audio_peak),
     )
     return Panel(panel)
 

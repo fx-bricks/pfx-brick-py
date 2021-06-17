@@ -24,6 +24,7 @@
 
 # PFx Brick python API
 
+import re
 import hid
 from bleak import BleakScanner, BleakClient
 
@@ -274,6 +275,12 @@ class PFxBrick:
         """
         res = cmd_set_config(self.dev, self.config.to_bytes())
 
+    def reset_factory_config(self):
+        """
+        Resets the PFx Brick configuration settings to factory defaults.
+        """
+        res = cmd_set_factory_defaults(self.dev)
+
     def get_name(self):
         """
         Retrieves the user defined name of the PFx Brick using
@@ -383,6 +390,37 @@ class PFxBrick:
         :param action: :obj:`PFxAction` action data structure class
         """
         res = cmd_test_action(self.dev, action.to_bytes())
+
+    def find_startup_action(self, lightfx=None, soundfx=None, motorfx=None):
+        """
+        Finds a startup action with one or more specified light, motor, or
+        sound fx types.
+
+        :param lightfx: :obj:`int` optional lightfx id
+        :param soundfx: :obj:`int` optional soundfx id
+        :param motorfx: :obj:`int` optional motorfx id
+
+        :returns: :obj:`PFxAction` action data structure class matching the desired type(s)
+        """
+        req_matches = 0
+        if lightfx is not None:
+            req_matches += 1
+        if soundfx is not None:
+            req_matches += 1
+        if motorfx is not None:
+            req_matches += 1
+        for e in range(EVT_STARTUP_EVENT1, EVT_STARTUP_EVENT8 + 1):
+            matches = 0
+            action = self.get_action_by_address(e)
+            if lightfx is not None and action.lightFxId == lightfx:
+                matches += 1
+            if soundfx is not None and action.soundFxId == soundfx:
+                matches += 1
+            if motorfx is not None and action.motorActionId == motorfx:
+                matches += 1
+            if matches == req_matches:
+                return action
+        return None
 
     def set_motor_speed(self, ch, speed, duration=None):
         """
@@ -577,25 +615,46 @@ class PFxBrick:
         """
         fs_format(self.dev, quick)
 
-    def set_file_attributes(self, fileID, attr):
+    def set_file_attributes(self, fileID, attr, mask=0x7C):
+        """
+        Sets the upper 8-bit attribute field of a file's directory entry.
+
+        Although the file attribute field is actually 16 bits, this function sets the upper
+        8 bits.  The lower 8-bits are reserved for identifying the file type, e.g. text, WAV,
+        etc. 
+
+        :param fileID: :obj:`int` or :obj:`str` the file ID or filename of the file to remove
+        :param attr: :obj:`int` the attribute value to set (only the lower 16)
+        :param mask: :obj:`int` an optional bit mask applied to the attributes
+        """
         fileID = self.file_id_from_str_or_int(fileID)
+        attr = attr & 0xFF
         res = self.send_raw_icd_command(
             [
                 PFX_CMD_FILE_DIR,
                 PFX_DIR_REQ_SET_ATTR_MASKED_ID,
                 fileID & 0xFF,
                 0x00,
-                attr & 0xFF,
+                attr,
                 0x00,
-                0x7C,
+                mask,
             ]
         )
 
-    def reset_factory_config(self):
+    def rename_file(self, fileID, new_name):
         """
-        Resets the PFx Brick configuration settings to factory defaults.
+        Renames a file on the file system.
+        
+        :param fileID: :obj:`int` or :obj:`str` the file ID or filename of the file to remove
+        :param new_name: :obj:`str` new file name to apply (up to 32 characters UTF-8 encoded)
         """
-        res = cmd_set_factory_defaults(self.dev)
+        fileID = self.file_id_from_str_or_int(fileID)
+        mb = bytes(new_name, "utf-8")
+        name_len = min(len(mb), 32)
+        mb = mb[:name_len]
+        res = self.send_raw_icd_command(
+            [PFX_CMD_FILE_DIR, PFX_DIR_REQ_RENAME_FILE_ID, fileID & 0xFF, *mb,]
+        )
 
     def stop_script(self):
         """
@@ -636,20 +695,40 @@ class PFxBrick:
         return 0xFF
 
     def get_current_state(self):
+        """
+        Returns the current state of the PFx Brick operating parameters.
+
+        :returns: :obj:`PFxState` a dataclass container with state information
+        """
         res = cmd_get_current_state(self.dev)
         self.state.from_bytes(res)
         return self.state
 
     def get_fs_state(self):
+        """
+        Returns the current state of the PFx Brick file system.
+
+        :returns: :obj:`PFxFSState` a dataclass container of file system information
+        """
         res = self.send_raw_icd_command([PFX_CMD_FILE_GET_FS_STATE])
         self.state.filesys.from_bytes(res)
         return self.state.filesys
 
     def get_bt_state(self):
+        """
+        Returns the current state of the PFx Brick Bluetooth radio module.
+
+        :returns: :obj:`PFxBTState` a dataclass container of Bluetooth module information
+        """
         res = self.send_raw_icd_command([PFX_CMD_GET_BT_STATUS])
         self.state.bt.from_bytes(res)
         return self.state.bt
 
     def send_raw_icd_command(self, msg):
+        """
+        Sends a raw ICD command message represented as a list of bytes.
+
+        :returns: :obj:`bytes` response from the PFx Brick
+        """
         res = cmd_raw(self.dev, msg)
         return res

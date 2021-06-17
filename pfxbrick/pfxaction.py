@@ -89,6 +89,23 @@ class PFxAction:
         self.soundParam1 = 0
         self.soundParam2 = 0
 
+    def __eq__(self, other):
+        """Dunder method for equality"""
+        for k, v in self.__dict__.items():
+            if k not in other.__dict__:
+                return False
+            if not v == other.__dict__[k]:
+                return False
+        return True
+
+    def all_off(self):
+        """
+        Populates an action to turn off all motors, lights, and sound.
+        """
+        self.clear()
+        self.command = EVT_COMMAND_ALL_OFF
+        return self
+
     def set_motor_speed(self, ch, speed, duration=None):
         """
         Populates an action to set the speed of specified motor channel(s).

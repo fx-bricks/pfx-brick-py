@@ -23,6 +23,7 @@
 #
 # PFx Brick data helpers
 
+import zlib
 import pfxbrick.pfxdict as pd
 from pfxbrick.pfx import *
 
@@ -352,3 +353,51 @@ def printProgressBar(
     # Print New Line on Complete
     if iteration == total:
         print()
+
+
+def get_file_crc32(fn):
+    """Returns the CRC32 over the bytes of specified file on the local file system."""
+    with open(fn, "rb") as fp:
+        fb = fp.read()
+    return zlib.crc32(fb) & 0xFFFFFFFF
+
+
+def bounds_from_notchcount(count):
+    """Returns the boundaries between a desired number of power notch levels.
+    
+    The power range between 0 to 255 can be subdivided into a desired number
+    of notch levels (up to 8 levels).  For example, 2 notch levels would 
+    return a list with one bound of 128.  4 levels would return a list of
+    [64, 128, 192], etc.
+     """
+    bounds = [round((x + 1) / count * 255) for x in range(count - 1)]
+    return bounds
+
+
+def notch_ranges_from_bounds(bounds):
+    """Returns a list of tuples containing the min, mid, max power levels
+    based on a list of notch boundary values.
+    """
+    ranges = []
+    count = len(bounds) + 1
+    for i in range(count):
+        if i == 0:
+            mid_speed = bounds[0] / 2
+            lower, upper = 0, bounds[0]
+        elif i == count - 1:
+            mid_speed = bounds[i - 1] + (255 - bounds[i - 1]) / 2
+            lower, upper = bounds[i - 1], 255
+        else:
+            mid_speed = bounds[i - 1] + (bounds[i] - bounds[i - 1]) / 2
+            lower, upper = bounds[i - 1], bounds[i]
+        ranges.append((lower, round(mid_speed), upper))
+    return ranges
+
+
+def notch_from_speed(speed, bounds):
+    """Returns the notch index for a given speed value within a specified list of bounds.
+    """
+    ranges = notch_ranges_from_bounds(bounds)
+    for i, r in enumerate(ranges):
+        if speed >= r[0] and speed < r[2]:
+            return i

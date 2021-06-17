@@ -25,8 +25,9 @@
 
 
 import hid
-import platform
-from pfxbrick import *
+from .pfx import *
+from .pfxexceptions import InvalidResponseException
+from .pfxhelpers import uint32_to_bytes
 
 
 def usb_transaction(hdev, msg):
@@ -176,3 +177,24 @@ def cmd_get_current_state(hdev):
 
 def cmd_raw(hdev, msg):
     return msg_transaction(hdev, msg)
+
+
+def i2c_write(brick, add, data):
+    brick.send_raw_icd_command([PFX_CMD_WRITE_I2C, 0x30, add, data])
+
+
+def i2c_read(brick, add):
+    res = brick.send_raw_icd_command([PFX_CMD_READ_I2C, 0x30, add])
+    nbytes = res[1]
+    return res[2 : 2 + nbytes]
+
+
+def flash_read(brick, add, num_bytes):
+    rbytes = []
+    for x in range(0, num_bytes, 60):
+        msg = [PFX_CMD_READ_FLASH]
+        msg.extend(uint32_to_bytes(add + x))
+        msg.append(60)
+        res = brick.send_raw_icd_command(msg)
+        rbytes.extend(res[1:61])
+    return rbytes[0:num_bytes]

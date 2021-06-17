@@ -1,0 +1,16 @@
+#
+# Looping test
+#
+set $A = 0.1
+set $B = 0.1
+set $C = 0.5
+
+light all off
+repeat 8 {
+    light [1] on fade $A
+    wait $B
+    light [1] off fade $A
+    wait $C
+}
+light all off
+

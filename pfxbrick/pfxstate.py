@@ -91,7 +91,7 @@ class PFxBTState:
         s = []
         s.append(
             "Sleep: %d State: 0x%04X  Flags: 0x%04X  Err: 0x%04X"
-            % (self.sleep, self.state, self.flags, self.err)
+            % (self.sleep, self.state, self.flags, self.error)
         )
         s.append(
             "BLE Feautures: 0x%04X  Services: 0x%04X  Auth: 0x%04X"

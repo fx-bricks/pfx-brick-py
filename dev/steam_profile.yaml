@@ -1,0 +1,79 @@
+source: /Users/michaelgale/Dropbox/FxBricks/5-Media/30-Audio/32-Projects/ReadingT1SteamLoco/Dev
+
+# specify which motor channel modulates sounds
+motor_channel: A
+# specify either "target" or "current" speed to modulate sound
+motor_speed: current
+
+# specify optional acceleration/deceleration rates
+acceleration: 14
+deceleration: 6
+
+# default volume level at startup
+default_volume: 100
+
+# Loops for each power notch
+notch_levels: 4
+
+notch_bounds:
+  - 20
+  - 40
+  - 160
+
+notch_loops: 
+  - Notch1Loop.wav
+  - Notch2Loop.wav
+  - Notch3Loop.wav
+  - Notch4Loop.wav
+
+accel_loops:
+  - Accel12Loop.wav
+  - Accel23Loop.wav
+  - Accel34Loop.wav
+
+decel_loops:
+  - Decel21Loop.wav
+  - Decel32Loop.wav
+  - Decel43Loop.wav
+
+# Chuff loops
+gated_gain: 50
+
+# gated_loops:
+#   - ChuffLoop0.wav
+#   - ChuffLoop1.wav
+#   - ChuffLoop2.wav
+#   - ChuffLoop3.wav
+
+gated_notch1:
+  - ChuffLoop0.wav
+  - ChuffLoop1.wav
+  - ChuffLoop2.wav
+  - ChuffLoop3.wav
+gated_notch2:
+  - ChuffLoop0.wav
+  - ChuffLoop1.wav
+  - ChuffLoop2.wav
+  - ChuffLoop3.wav
+gated_notch3:
+  - ChuffLoop0.wav
+  - ChuffLoop1.wav
+  - ChuffLoop2.wav
+  - ChuffLoop3.wav
+gated_notch4:
+  - ChuffLoop4.wav
+  - ChuffLoop5.wav
+  - ChuffLoop6.wav
+  - ChuffLoop7.wav
+
+slow_stop_sound:
+  - BrakeSqueal1.wav
+
+slow_start_sound:
+  - SteamHiss1.wav
+
+# 0 = rare, 3 = often
+random_sounds:
+  - AirRelease1.wav:
+    probability: 0
+

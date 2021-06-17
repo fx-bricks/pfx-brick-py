@@ -299,11 +299,7 @@ def fs_copy_file_from(
                         print("".join(s), end="")
             if show_progress:
                 printProgressBar(
-                    nCount,
-                    pfile.size,
-                    prefix="Copying:",
-                    suffix="Complete",
-                    length=50,
+                    nCount, pfile.size, prefix="Copying:", suffix="Complete", length=50,
                 )
         msg = [PFX_CMD_FILE_CLOSE]
         msg.append(pfile.id)
@@ -373,6 +369,17 @@ class PFxFile:
             return True
         return False
 
+    def has_same_crc32_as_file(self, other):
+        """
+        Checks if the CRC32 of this file is the same as a specified file on the local filesystem
+
+        :returns: True if CRC32 hash codes match
+        """
+        other_crc = get_file_crc32(other)
+        if self.crc32 == other_crc:
+            return True
+        return False
+
     def from_bytes(self, msg):
         """
         Converts the message string bytes read from the PFx Brick into
@@ -437,6 +444,7 @@ class PFxDir:
         for f in self.files:
             if f.id == fid:
                 return f
+        return None
 
     def find_available_file_id(self):
         """
@@ -452,6 +460,22 @@ class PFxDir:
             if x not in used_ids:
                 return x
         return None
+
+    def has_file(self, fileID):
+        """
+        Determines if a specified file is on the PFx Brick file system either by
+        filename or numeric file ID.
+
+        :returns: :obj:`boolean` True or False if the file is found
+        """
+        for file in self.files:
+            if isinstance(fileID, int):
+                if file.id == fileID:
+                    return True
+            elif isinstance(fileID, str):
+                if file.name == fileID:
+                    return True
+        return False
 
     def __str__(self):
         """

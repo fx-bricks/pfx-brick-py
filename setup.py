@@ -66,5 +66,7 @@ setuptools.setup(
         "pfxbrick/scripts/pfxget.py",
         "pfxbrick/scripts/pfxput.py",
         "pfxbrick/scripts/pfxrm.py",
+        "pfxbrick/scripts/brick_status.py",
+        "pfxbrick/scripts/brick_test.py",
     ],
 )

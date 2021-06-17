@@ -1,4 +1,5 @@
 # system modules
+import copy
 import math, os.path
 import sys
 import pytest
@@ -56,3 +57,19 @@ def test_light_on():
     assert a.lightFxId == EVT_LIGHTFX_ON_OFF_TOGGLE
     assert a.lightOutputMask == 0x81
     assert a.lightParam4 == EVT_TRANSITION_ON
+
+
+def test_equality():
+    a1 = PFxAction()
+    a2 = PFxAction()
+    assert a1.is_empty()
+    assert a1 == a2
+    a1.lightFxId = 5
+    assert not a1 == a2
+    assert not a1.is_empty()
+    a2.lightFxId = 5
+    assert a1 == a2
+    a3 = copy.copy(a1)
+    assert a1 == a3
+    a3.soundFxId = 3
+    assert not a1 == a3
