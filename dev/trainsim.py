@@ -20,6 +20,7 @@ from trainprofile import IndexedPlayback
 
 console = Console()
 
+
 def get_speed_notch_loop(brick):
     brick.get_current_state()
     speed = brick.state.motors[0].current_speed
