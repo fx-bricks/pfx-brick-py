@@ -19,5 +19,5 @@ dependencies:
   - pip
   - pip:
     - "--editable=."
-    - hid
+    - hidapi
     - bleak
