@@ -16,7 +16,6 @@ import simpleaudio as sa
 from toolbox import *
 from pfxbrick import *
 
-
 from trainprofile import IndexedPlayback
 
 console = Console()
