@@ -43,17 +43,17 @@ Pre-install System requirements for linux
 
 The **pfxbrick** package will require some packages to be installed suport access to USB and Bluetooth hardware drivers.  Use your preferred package manager to install these packages:
 
-    - libhidapi-dev
-    - libudev-dev
-    - libusb-1.0-0-dev
-    - bluez
-    - bluetooth
-    - libbluetooth-dev
+ * libhidapi-dev
+ * libudev-dev
+ * libusb-1.0-0-dev
+ * bluez
+ * bluetooth
+ * libbluetooth-dev
   
 Pre-install System requirements for macOS
 -----------------------------------------
 
-It is recommended to use the `brew <https://brew.sh>`_ package manager to install the packages for USB hardware access. (Hardware support for Bluetooth will automatically be installed with **pfxbrick** `setup.py` install script which installs the `bleak <https://github.com/hbldh/bleak>`_ package with its dependency to `pyobjc-framework-CoreBluetooth`).
+It is recommended to use the `brew <https://brew.sh>`_ package manager to install the packages for USB hardware access. (Hardware support for Bluetooth will automatically be installed with **pfxbrick** :code:`setup.py` install script which installs the `bleak <https://github.com/hbldh/bleak>`_ package with its dependency to :code:`pyobjc-framework-CoreBluetooth`).
 
 .. code-block:: shell
 
@@ -71,7 +71,7 @@ The **pfxbrick** package can be installed with pip:
 Install from source
 -------------------
 
-Install directly from the source code with the `setup.py` script:
+Install directly from the source code with the :code:`setup.py` script:
 
 .. code-block:: shell
 
@@ -82,7 +82,7 @@ Install directly from the source code with the `setup.py` script:
 Conda Virtual Environment
 -------------------------
 
-You can also use the package in a standalone conda virtual environment. To create a conda environment named `pfxtest`:
+You can also use the package in a standalone conda virtual environment. To create a conda environment named :code:`pfxtest`:
 
 .. code-block:: shell
 
@@ -150,15 +150,15 @@ Utility Scripts
 
 The **pfxbrick** package will install some useful command line script applications in your python environment's path.  These include:
 
-* `pfxcat.py` - dumps the raw contents of a file on the PFx Brick to your console.
-* `pfxdir.py` - shows the directory listing of the PFx Brick file system
-* `pfxget.py` - gets a file from the PFx Brick
-* `pfxput.py` - copies a local host file on to the PFx Brick
-* `pfxrm.py` - delete a file from the PFx Brick
-* `pfxdump.py` - dumps raw contents of PFx Brick flash memory
-* `brickinfo.py` - discovers and shows information on all attached PFx Bricks
-* `brickmonitor.py` - shows real time operational status of a PFx Brick
-* `bricktest.py` - PFx Brick self test utility
+* :code:`pfxcat.py` - dumps the raw contents of a file on the PFx Brick to your console.
+* :code:`pfxdir.py` - shows the directory listing of the PFx Brick file system
+* :code:`pfxget.py` - gets a file from the PFx Brick
+* :code:`pfxput.py` - copies a local host file on to the PFx Brick
+* :code:`pfxrm.py` - delete a file from the PFx Brick
+* :code:`pfxdump.py` - dumps raw contents of PFx Brick flash memory
+* :code:`brickinfo.py` - discovers and shows information on all attached PFx Bricks
+* :code:`brickmonitor.py` - shows real time operational status of a PFx Brick
+* :code:`bricktest.py` - PFx Brick self test utility
 
 After installing the **pfxbrick** package, you should be able to use any of these utilities directly from the command line as follows:
 
@@ -184,7 +184,7 @@ After installing the **pfxbrick** package, you should be able to use any of thes
     2 files, 270.3 kB used, 16490.5 kB remaining
 
 
-To find out more information on how to use each utility, use the `-h` argument.
+To find out more information on how to use each utility, use the :code:`-h` argument.
 
 .. code-block:: shell
 
