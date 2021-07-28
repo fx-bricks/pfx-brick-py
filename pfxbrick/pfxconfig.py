@@ -71,6 +71,10 @@ class PFxSettings:
         self.bleSessionPower = 0
         self.notchCount = 0
         self.notchBounds = [0, 0, 0, 0, 0, 0, 0]
+        self.rapidAccelThr = 0
+        self.rapidDecelThr = 0
+        self.brakeDecelThr = 0
+        self.brakeSpeedThr = 0
 
     def __eq__(self, other):
         for k, v in self.__dict__.items():
@@ -99,6 +103,10 @@ class PFxSettings:
         sb.append("Motor sound notches   : %s" % (self.notchCount))
         mb = "".join("0x{:02X} ".format(x) for x in self.notchBounds)
         sb.append("Motor sound bounds    : %s" % (mb))
+        sb.append("Rapid Accel Thr       : %d" % (self.rapidAccelThr))
+        sb.append("Rapid Decel Thr       : %d" % (self.rapidDecelThr))
+        sb.append("Brake Decel Thr       : %d" % (self.brakeDecelThr))
+        sb.append("Brake Speed Thr       : %d" % (self.brakeSpeedThr))
         s = "\n".join(sb)
         return s
 
@@ -376,6 +384,10 @@ class PFxConfig:
         self.settings.notchBounds[4] = msg[12]
         self.settings.notchBounds[5] = msg[13]
         self.settings.notchBounds[6] = msg[14]
+        self.settings.rapidAccelThr = msg[15]
+        self.settings.rapidDecelThr = msg[16]
+        self.settings.brakeDecelThr = msg[17]
+        self.settings.brakeSpeedThr = msg[18]
         self.settings.irAutoOff = msg[26]
         self.settings.bleAutoOff = msg[27]
         self.settings.bleMotorWhenDisconnect = msg[28]
@@ -417,7 +429,11 @@ class PFxConfig:
         msg.append(self.settings.notchBounds[4])
         msg.append(self.settings.notchBounds[5])
         msg.append(self.settings.notchBounds[6])
-        msg.extend([0] * 11)
+        msg.append(self.settings.rapidAccelThr)
+        msg.append(self.settings.rapidDecelThr)
+        msg.append(self.settings.brakeDecelThr)
+        msg.append(self.settings.brakeSpeedThr)
+        msg.extend([0] * 7)
         msg.append(self.settings.irAutoOff)
         msg.append(self.settings.bleAutoOff)
         msg.append(self.settings.bleMotorWhenDisconnect)

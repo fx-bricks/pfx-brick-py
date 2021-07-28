@@ -6,11 +6,11 @@ motor_channel: A
 motor_speed: current
 
 # specify optional acceleration/deceleration rates
-acceleration: 14
+acceleration: 12
 deceleration: 6
 
 # default volume level at startup
-default_volume: 100
+default_volume: 80
 
 # Loops for each power notch
 notch_levels: 4
@@ -66,11 +66,23 @@ gated_notch4:
   - ChuffLoop6.wav
   - ChuffLoop7.wav
 
-slow_stop_sound:
+rapid_accel_thr: 100
+rapid_decel_thr: 70
+brake_decel_thr: 50
+brake_speed_thr: 40
+
+brake_stop_sound:
   - BrakeSqueal1.wav
 
-slow_start_sound:
+set_off_sound:
   - SteamHiss1.wav
+
+rapid_accel_loop:
+  - SteamReleaseShort.wav
+
+rapid_decel_loop:
+  - Coupler1.wav
+
 
 # 0 = rare, 3 = often
 random_sounds:

@@ -3,7 +3,7 @@ from json import detect_encoding
 import time
 import termios, fcntl, sys, os
 from datetime import datetime
-from typing import OrderedDict
+from collections import OrderedDict
 import zlib
 
 from rich import print, inspect
@@ -16,10 +16,9 @@ import simpleaudio as sa
 
 from toolbox import *
 from pfxbrick import *
-
+from audiofile import AudioFile
 
 console = Console()
-TMP_PATH = full_path("~/tmp")
 
 
 def key_pressed():
@@ -94,160 +93,160 @@ def configure_startup_action(brick, newaction, fxid, overwrite=True):
                 break
 
 
-class AudioFile:
-    FADE_INTERVAL = 5
+# class AudioFile:
+#     FADE_INTERVAL = 5
 
-    def __init__(self, fullpath, fileid, attr, new_name=None, virtual=False):
-        self.fullpath = fullpath
-        self.fileid = fileid
-        self.attr = attr
-        if virtual:
-            self.path = ""
-            self.filename = fullpath
-            fps = fullpath.split(".")
-            if len(fps) > 1:
-                self.name, self.ext = fps[0], fps[1]
-            else:
-                self.name, self.ext = fullpath, "wav"
-            self.exportpath = ""
-            self.audio = AudioSegment(
-                data=bytearray([0, 0]), frame_rate=22050, sample_width=2, channels=1
-            )
-            self.crc32 = 0
-        else:
-            self.path, self.filename = split_path(fullpath)
-            self.name, self.ext = split_filename(self.filename)
-            if new_name is not None:
-                self.exportpath = TMP_PATH + os.sep + new_name
-                self.filename = new_name
-            else:
-                self.exportpath = TMP_PATH + os.sep + self.filename
-            self.audio = AudioSegment.from_wav(self.fullpath)
-            self.convert_to_mono()
-            self.audio = self.audio.set_frame_rate(22050)
-            self.apply_fade()
-            self.export()
-            self.crc32 = get_file_crc32(self.exportpath)
+#     def __init__(self, fullpath, fileid, attr, new_name=None, virtual=False):
+#         self.fullpath = fullpath
+#         self.fileid = fileid
+#         self.attr = attr
+#         if virtual:
+#             self.path = ""
+#             self.filename = fullpath
+#             fps = fullpath.split(".")
+#             if len(fps) > 1:
+#                 self.name, self.ext = fps[0], fps[1]
+#             else:
+#                 self.name, self.ext = fullpath, "wav"
+#             self.exportpath = ""
+#             self.audio = AudioSegment(
+#                 data=bytearray([0, 0]), frame_rate=22050, sample_width=2, channels=1
+#             )
+#             self.crc32 = 0
+#         else:
+#             self.path, self.filename = split_path(fullpath)
+#             self.name, self.ext = split_filename(self.filename)
+#             if new_name is not None:
+#                 self.exportpath = TMP_PATH + os.sep + new_name
+#                 self.filename = new_name
+#             else:
+#                 self.exportpath = TMP_PATH + os.sep + self.filename
+#             self.audio = AudioSegment.from_wav(self.fullpath)
+#             self.convert_to_mono()
+#             self.audio = self.audio.set_frame_rate(22050)
+#             self.apply_fade()
+#             self.export()
+#             self.crc32 = get_file_crc32(self.exportpath)
 
-    def __str__(self):
-        return "%s rate=%d kHz samp=%s ch=%d dBFS=%.1f dur=%.3f" % (
-            self.filename,
-            self.audio.frame_rate,
-            self.audio.sample_width,
-            self.audio.channels,
-            self.audio.dBFS,
-            self.audio.duration_seconds,
-        )
+#     def __str__(self):
+#         return "%s rate=%d kHz samp=%s ch=%d dBFS=%.1f dur=%.3f" % (
+#             self.filename,
+#             self.audio.frame_rate,
+#             self.audio.sample_width,
+#             self.audio.channels,
+#             self.audio.dBFS,
+#             self.audio.duration_seconds,
+#         )
 
-    def play(self, repeat=1):
-        ntimes = 0
-        while ntimes < repeat:
-            play_obj = sa.play_buffer(
-                self.audio.raw_data,
-                self.audio.channels,
-                self.audio.sample_width,
-                self.audio.frame_rate,
-            )
-            while play_obj.is_playing():
-                if key_pressed() is not None:
-                    break
-                time.sleep(0.1)
-            play_obj.stop()
-            ntimes += 1
+#     def play(self, repeat=1):
+#         ntimes = 0
+#         while ntimes < repeat:
+#             play_obj = sa.play_buffer(
+#                 self.audio.raw_data,
+#                 self.audio.channels,
+#                 self.audio.sample_width,
+#                 self.audio.frame_rate,
+#             )
+#             while play_obj.is_playing():
+#                 if key_pressed() is not None:
+#                     break
+#                 time.sleep(0.1)
+#             play_obj.stop()
+#             ntimes += 1
 
-    @staticmethod
-    def file_table(files):
-        table = Table(show_header=True, header_style="bold blue")
-        for i, col in enumerate(
-            ["ID", "Attr", "Name", "Length (s)", "Rate (kHz)", "Samp", "Ch", "dBFS"]
-        ):
-            justify = "right" if i > 2 else "left"
-            table.add_column(col, justify=justify)
-        for file in files:
-            if file is None:
-                continue
-            table.add_row(
-                "[bold green]0x%02X" % (file.fileid),
-                "[bold yellow]0x%02X" % (file.attr),
-                "[cyan]%s" % (file.filename),
-                "%.3f" % (file.audio.duration_seconds),
-                "%d" % (file.audio.frame_rate),
-                "%d" % (file.audio.sample_width),
-                "%d" % (file.audio.channels),
-                "%.1f" % (file.audio.dBFS),
-            )
-        return table
+#     @staticmethod
+#     def file_table(files):
+#         table = Table(show_header=True, header_style="bold blue")
+#         for i, col in enumerate(
+#             ["ID", "Attr", "Name", "Length (s)", "Rate (kHz)", "Samp", "Ch", "dBFS"]
+#         ):
+#             justify = "right" if i > 2 else "left"
+#             table.add_column(col, justify=justify)
+#         for file in files:
+#             if file is None:
+#                 continue
+#             table.add_row(
+#                 "[bold green]0x%02X" % (file.fileid),
+#                 "[bold yellow]0x%02X" % (file.attr),
+#                 "[cyan]%s" % (file.filename),
+#                 "%.3f" % (file.audio.duration_seconds),
+#                 "%d" % (file.audio.frame_rate),
+#                 "%d" % (file.audio.sample_width),
+#                 "%d" % (file.audio.channels),
+#                 "%.1f" % (file.audio.dBFS),
+#             )
+#         return table
 
-    def convert_to_mono(self):
-        if self.audio.channels > 1:
-            console.log("Converting file [cyan]%s [white]to mono" % (self.filename))
-            self.audio = self.audio.set_channels(1)
+#     def convert_to_mono(self):
+#         if self.audio.channels > 1:
+#             console.log("Converting file [cyan]%s [white]to mono" % (self.filename))
+#             self.audio = self.audio.set_channels(1)
 
-    def apply_fade(self):
-        # console.log("Adding %s ms fade in/out to [cyan]%s" % (self.FADE_INTERVAL, self.filename))
-        self.audio = self.audio.fade_in(duration=self.FADE_INTERVAL)
-        self.audio = self.audio.fade_out(duration=self.FADE_INTERVAL)
+#     def apply_fade(self):
+#         # console.log("Adding %s ms fade in/out to [cyan]%s" % (self.FADE_INTERVAL, self.filename))
+#         self.audio = self.audio.fade_in(duration=self.FADE_INTERVAL)
+#         self.audio = self.audio.fade_out(duration=self.FADE_INTERVAL)
 
-    def export(self):
-        # console.log("Exporting [cyan]%s [white]to %s" % (self.filename, self.exportpath))
-        self.audio.export(self.exportpath, format="wav")
+#     def export(self):
+#         # console.log("Exporting [cyan]%s [white]to %s" % (self.filename, self.exportpath))
+#         self.audio.export(self.exportpath, format="wav")
 
-    def is_on_brick(self, brick, compare_fileid=False):
-        for f in brick.filedir.files:
-            if self.filename == f.name:
-                if compare_fileid and self.fileid == f.id:
-                    return True
-                if not compare_fileid:
-                    return True
-        return False
+#     def is_on_brick(self, brick, compare_fileid=False):
+#         for f in brick.filedir.files:
+#             if self.filename == f.name:
+#                 if compare_fileid and self.fileid == f.id:
+#                     return True
+#                 if not compare_fileid:
+#                     return True
+#         return False
 
-    def same_crc_as_on_brick(self, brick):
-        for f in brick.filedir.files:
-            if self.filename == f.name:
-                if self.crc32 == f.crc32:
-                    return True
-        return False
+#     def same_crc_as_on_brick(self, brick):
+#         for f in brick.filedir.files:
+#             if self.filename == f.name:
+#                 if self.crc32 == f.crc32:
+#                     return True
+#         return False
 
-    def copy_to_brick(self, brick, overwrite=False, use_fileid=False):
-        if self.is_on_brick(brick, compare_fileid=use_fileid):
-            if overwrite:
-                console.log(
-                    ":yellow_circle: : File [cyan]%s [white]already on brick, but forcing overwrite"
-                    % (self.filename)
-                )
-                brick.remove_file(self.filename)
-            elif self.same_crc_as_on_brick(brick):
-                console.log(
-                    ":green_circle: : File [cyan]%s [white]already on brick with same CRC32 hash, skipping"
-                    % (self.filename)
-                )
-                return
-            else:
-                brick.remove_file(self.filename)
-        time.sleep(1)
-        self.do_file_transfer(brick)
+#     def copy_to_brick(self, brick, overwrite=False, use_fileid=False):
+#         if self.is_on_brick(brick, compare_fileid=use_fileid):
+#             if overwrite:
+#                 console.log(
+#                     ":yellow_circle: : File [cyan]%s [white]already on brick, but forcing overwrite"
+#                     % (self.filename)
+#                 )
+#                 brick.remove_file(self.filename)
+#             elif self.same_crc_as_on_brick(brick):
+#                 console.log(
+#                     ":green_circle: : File [cyan]%s [white]already on brick with same CRC32 hash, skipping"
+#                     % (self.filename)
+#                 )
+#                 return
+#             else:
+#                 brick.remove_file(self.filename)
+#         time.sleep(1)
+#         self.do_file_transfer(brick)
 
-    def do_file_transfer(self, brick):
-        fn = self.exportpath
-        crc32 = get_file_crc32(fn)
-        console.log("Copying file %s with CRC32=0x%X" % (self.filename, crc32))
-        brick.put_file(fn, self.fileid)
-        fcrc = 0
-        if self.attr > 0:
-            console.log("Setting file attributes=0x%02X" % (self.attr))
-            brick.set_file_attributes(self.fileid, self.attr)
-        while fcrc == 0:
-            time.sleep(1)
-            brick.refresh_file_dir()
-            f0 = brick.filedir.get_file_dir_entry(self.fileid)
-            fcrc = f0.crc32
-        test_result("Copied file reports CRC32=0x%X" % (f0.crc32), f0.crc32 == crc32)
-        if self.attr > 0:
-            test_result(
-                "Copied file reports attributes=0x%02X" % (f0.attributes),
-                f0.attributes == self.attr,
-            )
-        time.sleep(1)
+#     def do_file_transfer(self, brick):
+#         fn = self.exportpath
+#         crc32 = get_file_crc32(fn)
+#         console.log("Copying file %s with CRC32=0x%X" % (self.filename, crc32))
+#         brick.put_file(fn, self.fileid)
+#         fcrc = 0
+#         if self.attr > 0:
+#             console.log("Setting file attributes=0x%02X" % (self.attr))
+#             brick.set_file_attributes(self.fileid, self.attr)
+#         while fcrc == 0:
+#             time.sleep(1)
+#             brick.refresh_file_dir()
+#             f0 = brick.filedir.get_file_dir_entry(self.fileid)
+#             fcrc = f0.crc32
+#         test_result("Copied file reports CRC32=0x%X" % (f0.crc32), f0.crc32 == crc32)
+#         if self.attr > 0:
+#             test_result(
+#                 "Copied file reports attributes=0x%02X" % (f0.attributes),
+#                 f0.attributes == self.attr,
+#             )
+#         time.sleep(1)
 
 
 class LoopList:
@@ -352,6 +351,22 @@ class GatedPlayback:
             newaction.soundParam1 = self.motor_ch | use_current
             newaction.soundParam2 = self.gain
             configure_startup_action(brick, newaction, EVT_SOUND_PLAY_GATED)
+
+    def fetch_from_brick(self, brick):
+        self.groups = 0
+        self.grouped_loops = [None, None, None, None]
+        groups = [{}, {}, {}, {}]
+        for f in brick.filedir.files:
+            if (f.id & 0xF0) == 0xD0:
+                idx = f.id & 0x03
+                group = (f.id & 0x0C) >> 2
+                groups[group][idx] = f.name
+
+        for i, g in enumerate(groups):
+            if len(g) > 0:
+                group = [g[x] for x in range(len(g))]
+                base = 0xD0 + (i * 4)
+                self.grouped_loops[i] = LoopList("", group, base, virtual=True)
 
 
 class IndexedPlayback:
@@ -562,10 +577,14 @@ class ProfileSettings:
         self.deceleration = None
         self.default_volume = None
         self.random_sounds = None
-        self.slow_stop_sound = None
-        self.slow_start_sound = None
-        self.fast_stop_sound = None
-        self.fast_start_sound = None
+        self.set_off_sound = None
+        self.brake_stop_sound = None
+        self.rapid_accel_loop = None
+        self.rapid_decel_loop = None
+        self.rapid_accel_thr = None
+        self.rapid_decel_thr = None
+        self.brake_decel_thr = None
+        self.brake_speed_thr = None
 
     def set_with_dict(self, d):
         for k, v in d.items():
@@ -577,11 +596,20 @@ class ProfileSettings:
                 self.deceleration = v
             elif k in ["default_volume", "volume"]:
                 self.default_volume = v
+            elif k in ["rapid_accel_thr"]:
+                self.rapid_accel_thr = v
+            elif k in ["rapid_decel_thr"]:
+                self.rapid_decel_thr = v
+            elif k in ["brake_decel_thr"]:
+                self.brake_decel_thr = v
+            elif k in ["brake_speed_thr"]:
+                self.brake_speed_thr = v
+
             elif k in [
-                "slow_stop_sound",
-                "fast_stop_sound",
-                "slow_start_sound",
-                "fast_start_sound",
+                "set_off_sound",
+                "rapid_accel_loop",
+                "brake_stop_sound",
+                "rapid_decel_loop",
             ]:
                 self.__dict__[k] = v
             elif k in ["random_sounds", "random"]:
@@ -608,8 +636,35 @@ class ProfileSettings:
             console.log("Setting motor deceleration to %d" % (self.deceleration))
             brick.config.motors[0].decel = self.deceleration
             brick.config.motors[1].decel = self.deceleration
+        if self.rapid_accel_thr is not None:
+            console.log(
+                "Setting rapid acceleration threshold to %d" % (self.rapid_accel_thr)
+            )
+            brick.config.settings.rapidAccelThr = self.rapid_accel_thr
+        if self.rapid_decel_thr is not None:
+            console.log(
+                "Setting rapid deceleration threshold to %d" % (self.rapid_decel_thr)
+            )
+            brick.config.settings.rapidDecelThr = self.rapid_decel_thr
+        if self.brake_decel_thr is not None:
+            console.log(
+                "Setting brake deceleration threshold to %d" % (self.brake_decel_thr)
+            )
+            brick.config.settings.brakeDecelThr = self.brake_decel_thr
+        if self.brake_speed_thr is not None:
+            console.log("Setting brake speed threshold to %d" % (self.brake_speed_thr))
+            brick.config.settings.brakeSpeedThr = self.brake_speed_thr
+
         brick.set_config()
         time.sleep(2.5)
+
+    def fetch_from_brick(self, brick):
+        self.default_volume = brick.config.audio.defaultVolume
+        self.acceleration = brick.config.motors[0].accel
+        self.rapid_accel_thr = brick.config.settings.rapidAccelThr
+        self.rapid_decel_thr = brick.config.settings.rapidDecelThr
+        self.brake_decel_thr = brick.config.settings.brakeDecelThr
+        self.brake_speed_thr = brick.config.settings.brakeSpeedThr
 
 
 class Profile:
@@ -633,12 +688,12 @@ class Profile:
         all_files = []
         for k, fid in zip(
             [
-                "slow_stop_sound",
-                "fast_stop_sound",
-                "slow_start_sound",
-                "fast_start_sound",
+                "set_off_sound",
+                "rapid_accel_loop",
+                "brake_stop_sound",
+                "rapid_decel_loop",
             ],
-            [0xFB, 0xFC, 0xFD, 0xFE],
+            [0xFB, 0xFC, 0xFE, 0xFD],
         ):
             if self.settings.__dict__[k] is not None:
                 for file in self.settings.__dict__[k]:
@@ -654,6 +709,11 @@ class Profile:
         self.idx_playback.set_with_dict(d)
         self.gated_playback.set_with_dict(d)
 
+    def fetch_from_brick(self, brick):
+        self.settings.fetch_from_brick(brick)
+        self.idx_playback.fetch_from_brick(brick)
+        self.gated_playback.fetch_from_brick(brick)
+
     def copy_to_brick(self, brick):
         self.idx_playback.copy_to_brick(brick)
         self.gated_playback.copy_to_brick(brick)
@@ -665,12 +725,12 @@ class Profile:
                 af.copy_to_brick(brick)
         for k, fid in zip(
             [
-                "slow_stop_sound",
-                "fast_stop_sound",
-                "slow_start_sound",
-                "fast_start_sound",
+                "set_off_sound",
+                "rapid_accel_loop",
+                "brake_stop_sound",
+                "rapid_decel_loop",
             ],
-            [0xFB, 0xFC, 0xFD, 0xFE],
+            [0xFB, 0xFC, 0xFE, 0xFD],
         ):
             if self.settings.__dict__[k] is not None:
                 for file in self.settings.__dict__[k]:
@@ -754,8 +814,17 @@ if __name__ == "__main__":
 
     if argsd["get"]:
         brick = open_brick()
+        # r = flash_read(brick, 0xFFF000, 256)
+        # s = []
+        # for rb in r:
+        #     s.append("0x%02X " % (rb))
+        # console.print("".join(s))
+        brick.get_config()
+        brick.print_config()
         profile.idx_playback.fetch_from_brick(brick)
         profile.idx_playback.print()
+        profile.gated_playback.fetch_from_brick(brick)
+        profile.gated_playback.print()
         inspect(profile.idx_playback)
     else:
         profile.set_with_dict(proj.__dict__)

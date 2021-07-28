@@ -20,8 +20,15 @@ This repository contains a python package API for developing python scripts and 
 Getting Started
 ===============
 
-Requirements
-------------
+OS Requirements
+---------------
+
+* Supports Windows 10, version 16299 (Fall Creators Update) or greater
+* Supports Linux distributions with BlueZ >= 5.43
+* OS X/macOS support via Core Bluetooth API, from at least OS X version 10.11
+
+Package Requirements
+--------------------
 
 * Python 3.6+
 * `HIDAPI <https://github.com/signal11/hidapi>`_
@@ -29,7 +36,31 @@ Requirements
 * sphinx (for documentation)
 
 Installation
-------------
+============
+
+Pre-install System requirements for linux
+-----------------------------------------
+
+The **pfxbrick** package will require some packages to be installed suport access to USB and Bluetooth hardware drivers.  Use your preferred package manager to install these packages:
+
+    - libhidapi-dev
+    - libudev-dev
+    - libusb-1.0-0-dev
+    - bluez
+    - bluetooth
+    - libbluetooth-dev
+  
+Pre-install System requirements for macOS
+-----------------------------------------
+
+It is recommended to use the `brew <https://brew.sh>`_ package manager to install the packages for USB hardware access. (Hardware support for Bluetooth will automatically be installed with **pfxbrick** `setup.py` install script which installs the `bleak <https://github.com/hbldh/bleak>`_ package with its dependency to `pyobjc-framework-CoreBluetooth`).
+
+.. code-block:: shell
+
+    $ brew install hidapi
+
+Installation with pip
+---------------------
 
 The **pfxbrick** package can be installed with pip:
 
@@ -37,12 +68,29 @@ The **pfxbrick** package can be installed with pip:
 
     $ pip install pfxbrick
 
-or directly from the source code:
+Install from source
+-------------------
+
+Install directly from the source code with the `setup.py` script:
 
 .. code-block:: shell
 
     $ git clone https://github.com/fx-bricks/pfx-brick-py.git
     $ cd pfx-brick-py
+    $ python setup.py install
+
+Conda Virtual Environment
+-------------------------
+
+You can also use the package in a standalone conda virtual environment. To create a conda environment named `pfxtest`:
+
+.. code-block:: shell
+
+    $ git clone https://github.com/fx-bricks/pfx-brick-py.git
+    $ cd pfx-brick-py
+    $ conda env create -f environment.yml
+    $ conda activate pfxtest
+    $ pip install -r requirements.txt
     $ python setup.py install
 
 Basic Usage
@@ -97,6 +145,57 @@ An example of the package can be seen below
     # End the session
     brick.close()
 
+Utility Scripts
+===============
+
+The **pfxbrick** package will install some useful command line script applications in your python environment's path.  These include:
+
+* `pfxcat.py` - dumps the raw contents of a file on the PFx Brick to your console.
+* `pfxdir.py` - shows the directory listing of the PFx Brick file system
+* `pfxget.py` - gets a file from the PFx Brick
+* `pfxput.py` - copies a local host file on to the PFx Brick
+* `pfxrm.py` - delete a file from the PFx Brick
+* `pfxdump.py` - dumps raw contents of PFx Brick flash memory
+* `brickinfo.py` - discovers and shows information on all attached PFx Bricks
+* `brickmonitor.py` - shows real time operational status of a PFx Brick
+* `bricktest.py` - PFx Brick self test utility
+
+After installing the **pfxbrick** package, you should be able to use any of these utilities directly from the command line as follows:
+
+.. code-block:: shell
+
+    $ brickinfo.py
+    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ A216 PFx Brick 16 MB                                                     ┃
+    ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+    │ Serial Number         : AF716069                                         │
+    │ ICD Version           : 03.38                                            │
+    │ Firmware Version      : 01.50 build 0555                                 │
+    │ USB vendor ID         : 0x04D8                                           │
+    │ USB product ID        : 0xEF74                                           │
+    │ Status                : 0x00 Normal                                      │
+    │ Errors                : 0x00 None                                        │
+    │ Name                  : My PFx Brick                                     │
+    └──────────────────────────────────────────────────────────────────────────┘
+    $ pfxdir.py
+     ID Name                       Size    Attr    User1    User2    CRC32
+      0 sin150Hz.wav              132.3 kB 0000 000204CE 0000002C A712A54E
+      1 pink6dB.wav               132.3 kB 0000 000204CE 0000002C E6AACE61
+    2 files, 270.3 kB used, 16490.5 kB remaining
+
+
+To find out more information on how to use each utility, use the `-h` argument.
+
+.. code-block:: shell
+
+    $ brickinfo.py -h
+    usage: brickinfo.py [-h] [-c]
+
+    Show information for all attached PFx Bricks
+
+    optional arguments:
+      -h, --help    show this help message and exit
+      -c, --config  Show configuration details
 
 ---------------
 

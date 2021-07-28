@@ -49,7 +49,7 @@ def get_error_str(x):
     return s
 
 
-def pprint_bytes(x):
+def pprint_bytes(x, address=None):
     def append_ascii(x, a, b):
         s = []
         for i in range(a, b):
@@ -60,6 +60,15 @@ def pprint_bytes(x):
         return "".join(s)
 
     s = []
+    if address is not None:
+        if isinstance(address, str):
+            a = int(address, 16)
+        else:
+            a = address
+        ads = "%06X " % (a)
+    else:
+        ads = ""
+    s.append("%s " % (ads))
     for i, b in enumerate(x):
         s.append("%02X " % (b))
         if (i + 1) % 8 == 0 and i > 0:
@@ -67,11 +76,20 @@ def pprint_bytes(x):
         if (i + 1) % 16 == 0 and i > 0:
             s.append(" ")
             s.extend(append_ascii(x, i - 15, i + 1))
+            if address is not None:
+                a += 16
+                ads = "%06X " % (a)
+            else:
+                ads = ""
             s.append("\n")
+            s.append("%s " % (ads))
     nb = len(x) % 16
-    for i in range(16 - nb + 1):
-        s.append("   ")
-    s.extend(append_ascii(x, len(x) - nb, len(x) + 1))
+    if nb:
+        for i in range(16 - nb + 1):
+            s.append("   ")
+        s.extend(append_ascii(x, len(x) - nb, len(x) + 1))
+    else:
+        s.pop()
     print("".join(s))
 
 

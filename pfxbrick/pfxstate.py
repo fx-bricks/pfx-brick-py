@@ -209,7 +209,7 @@ class PFxState:
     def __init__(self):
         self.brightness = 0
         self.volume = 0
-        self.motors = [PFxMotorState() for ch in range(PFX_MOTOR_CHANNELS_MAX)]
+        self.motors = [PFxMotorState() for ch in range(PFX_MOTOR_CHANNELS)]
         self.lights = [PFxLightState() for ch in range(PFX_LIGHT_CHANNELS)]
         self.audio_ch = [PFxAudioChannel() for ch in range(PFX_AUDIO_CHANNELS)]
         self.lightmask = 0
@@ -222,6 +222,14 @@ class PFxState:
         self.fs_state = 0
         self.script_state = 0
         self.script_line = 0
+        self.motor_ptr = 0
+        self.motor_pwm_ptr = 0
+        self.motor_rate_ptr = 0
+        self.trig_change_dir_state = 0
+        self.trig_set_off_state = 0
+        self.trig_rapid_accel_state = 0
+        self.trig_rapid_decel_state = 0
+        self.trig_brake_state = 0
         self.filesys = PFxFSState()
         self.bt = PFxBTState()
 
@@ -232,8 +240,16 @@ class PFxState:
         """
         self.brightness = msg[1]
         self.volume = msg[2]
-        for ch, idx in zip(self.motors, [3, 7, 11, 15]):
+        for ch, idx in zip(self.motors, [3, 7]):
             ch.from_bytes(msg[idx : idx + 4])
+        self.motor_ptr = msg[11]
+        self.motor_pwm_ptr = msg[12]
+        self.motor_rate_ptr = msg[13]
+        self.trig_change_dir_state = msg[14]
+        self.trig_set_off_state = msg[15]
+        self.trig_rapid_accel_state = msg[16]
+        self.trig_rapid_decel_state = msg[17]
+        self.trig_brake_state = msg[18]
         self.lightmask = msg[19]
         for i, ch in enumerate(self.lights):
             ch.target_level = msg[21 + i]

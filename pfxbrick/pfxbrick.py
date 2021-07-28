@@ -125,6 +125,7 @@ class PFxBrick:
         self.usb_serno_str = ""
         self.dev = None
         self.is_open = False
+        self.has_bluetooth = False
         self.name = ""
 
         self.config = PFxConfig()
@@ -142,6 +143,8 @@ class PFxBrick:
         :param ser_no: optional serial number to specify a particular PFx Brick if multiple connected
         :returns: boolean indicating open session result
         """
+        if ser_no is not None:
+            ser_no = ser_no.upper()
         if not self.is_open:
             numBricks = 0
             serials = []
@@ -171,6 +174,8 @@ class PFxBrick:
                     self.is_open = True
                     self.get_icd_rev()
                     self.get_status()
+                    if self.product_id in ["A204", "A208", "A216"]:
+                        self.has_bluetooth = True
         return self.is_open
 
     def close(self):

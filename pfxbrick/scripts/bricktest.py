@@ -351,9 +351,9 @@ def test_banner(title):
 
 def test_result(desc, result):
     if result:
-        res = ":green_circle:"
+        res = ":white_check_mark:"
     else:
-        res = ":red_circle:"
+        res = ":cross_mark:"
     console.log(res, ":", desc)
 
 
@@ -378,7 +378,10 @@ combo_fx = [
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="PFx Brick self test.  Most tests are run by default but individual tests can be omitted using  command line arguments.",
+        prefix_chars="-+",
+    )
     parser.add_argument(
         "-c",
         "--config",
@@ -387,9 +390,9 @@ if __name__ == "__main__":
         help="Omit config flash test",
     )
     parser.add_argument(
-        "-b",
+        "+b",
         "--button",
-        action="store_false",
+        action="store_true",
         default=False,
         help="Include button press test",
     )
@@ -436,6 +439,12 @@ if __name__ == "__main__":
         help="Dwell time for each combo light effect test",
     )
     parser.add_argument(
+        "-s",
+        "--serialno",
+        default=None,
+        help="Perform test on PFx Brick with specified serial number",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -445,7 +454,28 @@ if __name__ == "__main__":
     args = parser.parse_args()
     argsd = vars(args)
 
-    b = PFxBrick()
+    bricks = find_bricks()
+    if len(bricks) > 1 and argsd["serialno"] is None:
+        print(
+            "More than one PFx Brick is attached.  Please specify brick serial number with the -s argument."
+        )
+        print("Currently attached PFx Bricks:")
+        for brick in bricks:
+            b = PFxBrick(brick)
+            r = b.open()
+            b.get_status()
+            name = b.get_name()
+            print(
+                "[light_slate_blue]%-4s[/] [bold cyan]%-24s[/] Serial no: [bold cyan]%-9s[/] Name: [bold yellow]%s[/]"
+                % (b.product_id, b.product_desc, b.serial_no, name)
+            )
+            b.close()
+        exit()
+    if argsd["serialno"] is not None and len(bricks) > 1:
+        b = PFxBrick(argsd["serialno"])
+    else:
+        b = PFxBrick()
+
     b.open()
     b.get_status()
     icd = b.get_icd_rev()
@@ -508,9 +538,9 @@ if __name__ == "__main__":
         test_result("Millisec timer test", res)
         res = test_sec(b)
         test_result("Second timer test", res)
-
-        res = test_bt_status(b)
-        test_result("Bluetooth configuration", res)
+        if b.has_bluetooth:
+            res = test_bt_status(b)
+            test_result("Bluetooth configuration", res)
 
         if argsd["motors"]:
             test_banner("Testing Motor Channels...")

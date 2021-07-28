@@ -1,10 +1,11 @@
+import argparse
 from functools import update_wrapper
 import time
 import datetime
 import zlib
 from datetime import datetime
 
-from rich import box
+from rich import box, print
 from rich.align import Align
 from rich.console import Console, RenderGroup
 from rich.layout import Layout
@@ -15,20 +16,12 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 from rich.bar import Bar
+from rich.live import Live
+from time import sleep
 
 from pfxbrick import *
 
 console = Console()
-
-b = PFxBrick()
-r = b.open()
-if not r:
-    exit()
-b.get_status()
-b.get_config()
-icd = b.get_icd_rev()
-name = b.get_name()
-b.refresh_file_dir()
 
 
 def make_layout() -> Layout:
@@ -42,6 +35,7 @@ def make_layout() -> Layout:
         Layout(name="bluetooth", size=4),
         Layout(name="lights", size=11),
         Layout(name="motors", size=5),
+        Layout(name="motor_rate", size=5),
         Layout(name="audio", size=7),
     )
     layout["brightvol"].split_row(
@@ -338,9 +332,9 @@ def update_lights(st):
             finished_style=style,
         )
         if light.active:
-            s = ":black_square_button:"
+            s = ":black_square_button: "
         else:
-            s = ":black_large_square:"
+            s = ":black_large_square: "
         panel.add_row(
             "Ch %d %s Tgt: " % (ch + 1, s),
             tgt,
@@ -355,63 +349,143 @@ def update_lights(st):
 def update_bitfield(byte, size, labels):
     panel = Table.grid(expand=True)
     for _ in range(size):
-        panel.add_column(width=5, justify="center")
+        panel.add_column(width=8, justify="center", ratio=1)
     bits = []
     for x in range(size):
         mask = 1 << x
         if byte & mask:
-            s = ":black_square_button:"
+            s = " :black_square_button: "
         else:
-            s = ":black_large_square:"
+            s = " :black_large_square: "
         bits.append(s)
     panel.add_row(*bits)
     panel.add_row(*labels)
     return Panel(panel)
 
 
-layout = make_layout()
-layout["header"].update(Header())
+def update_motor_rates(st, b):
+    panel = Table.grid(expand=True)
+    panel.title = "Triggered Sound State"
+    panel.title_style = "bold white"
+    for _ in range(8):
+        panel.add_column(width=8, justify="center", ratio=1)
+    panel.add_row(
+        "Motor Spd",
+        "Motor PWM",
+        "Motor Rate",
+        "[Change Dir]",
+        "[Set Off]",
+        "[Rapid Acc]",
+        "[Rapid Dec]",
+        "[Brake]",
+    )
+    panel.add_row(
+        "[cyan]0x%02X" % (st.motor_ptr),
+        "[cyan]0x%02X" % (st.motor_pwm_ptr),
+        "[green]%2d" % (st.motor_rate_ptr),
+        "[magenta]%2d" % (st.trig_change_dir_state),
+        "[magenta]%2d" % (st.trig_set_off_state),
+        "[green]%2d [magenta]%2d"
+        % (b.config.settings.rapidAccelThr, st.trig_rapid_accel_state),
+        "[green]%2d [magenta]%2d"
+        % (b.config.settings.rapidDecelThr, st.trig_rapid_decel_state),
+        "[green]%2d [cyan]%2d [magenta]%2d"
+        % (
+            b.config.settings.brakeDecelThr,
+            b.config.settings.brakeSpeedThr,
+            st.trig_brake_state,
+        ),
+    )
+    return Panel(panel)
 
-from rich.live import Live
-from time import sleep
 
-with Live(layout, refresh_per_second=10, screen=True):
-    flip = True
-    while True:
-        st = b.get_current_state()
-        b.get_status()
-        if flip:
-            b.get_fs_state()
-            flip = False
-        else:
-            b.get_bt_state()
-            flip = True
-        layout["bright"].update(update_brightness(st.brightness))
-        layout["vol"].update(update_volume(st.volume))
-        layout["status1"].update(
-            update_bitfield(
-                st.status_latch1,
-                8,
-                [
-                    "USB:link:",
-                    "USB",
-                    "IR",
-                    "IR:lock:",
-                    ":speaker:",
-                    "BLE:link:",
-                    "BLE",
-                    "FS",
-                ],
-            )
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="PFx Brick real time monitoring utility. Press <Ctrl>-C to exit monitor."
+    )
+    parser.add_argument(
+        "-s",
+        "--serialno",
+        default=None,
+        help="Perform monitoring on PFx Brick with specified serial number",
+    )
+    args = parser.parse_args()
+    argsd = vars(args)
+
+    bricks = find_bricks()
+    if len(bricks) > 1 and argsd["serialno"] is None:
+        print(
+            "More than one PFx Brick is attached.  Please specify brick serial number with the -s argument."
         )
-        layout["filesys"].update(update_fs_status(st))
-        layout["status2"].update(update_status(b))
-        layout["bluetooth"].update(update_bt_status(st))
-        # layout["status2"].update(update_bitfield(st.status_latch2, 8, ["A:arrow_up:", "A:arrow_down:", "B:arrow_up:", "B:arrow_down:", "C:arrow_up:", "C:arrow_down:", "D:arrow_up:", "D:arrow_down:"]))
-        layout["lights"].update(update_lights(st))
-        layout["motors"].update(update_motors(st))
-        layout["audio_ch"].update(update_audio(st, b))
-        layout["audio_peak"].update(update_audio_state(st))
-        layout["audio_idx"].update(update_audio_idx(b))
+        print("Currently attached PFx Bricks:")
+        for brick in bricks:
+            b = PFxBrick(brick)
+            r = b.open()
+            if not r:
+                continue
+            b.get_status()
+            name = b.get_name()
+            print(
+                "[light_slate_blue]%-4s[/] [bold cyan]%-24s[/] Serial no: [bold cyan]%-9s[/] Name: [bold yellow]%s[/]"
+                % (b.product_id, b.product_desc, b.serial_no, name)
+            )
+            b.close()
+        exit()
+    if argsd["serialno"] is not None and len(bricks) > 1:
+        b = PFxBrick(argsd["serialno"])
+    else:
+        b = PFxBrick()
 
-        time.sleep(0.15)
+    r = b.open()
+    if not r:
+        exit()
+    b.get_status()
+    b.get_config()
+    icd = b.get_icd_rev()
+    name = b.get_name()
+    b.refresh_file_dir()
+
+    layout = make_layout()
+    layout["header"].update(Header())
+    with Live(layout, refresh_per_second=10, screen=True):
+        flip = True
+        while True:
+            st = b.get_current_state()
+            b.get_status()
+            if flip:
+                b.get_fs_state()
+                flip = False
+            else:
+                if b.has_bluetooth:
+                    b.get_bt_state()
+                flip = True
+            layout["bright"].update(update_brightness(st.brightness))
+            layout["vol"].update(update_volume(st.volume))
+            layout["status1"].update(
+                update_bitfield(
+                    st.status_latch1,
+                    8,
+                    [
+                        "USB:link:",
+                        "USB",
+                        "IR",
+                        "IR:lock:",
+                        ":speaker:",
+                        "BLE:link:",
+                        "BLE",
+                        "FS",
+                    ],
+                )
+            )
+            layout["filesys"].update(update_fs_status(st))
+            layout["status2"].update(update_status(b))
+            if b.has_bluetooth:
+                layout["bluetooth"].update(update_bt_status(st))
+            layout["lights"].update(update_lights(st))
+            layout["motors"].update(update_motors(st))
+            layout["motor_rate"].update(update_motor_rates(st, b))
+            layout["audio_ch"].update(update_audio(st, b))
+            layout["audio_peak"].update(update_audio_state(st))
+            layout["audio_idx"].update(update_audio_idx(b))
+
+            time.sleep(0.15)
