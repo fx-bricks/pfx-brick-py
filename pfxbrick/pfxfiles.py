@@ -396,8 +396,7 @@ class PFxFile:
         self.userData1 = uint32_toint(msg[12:16])
         self.userData2 = uint32_toint(msg[16:20])
         self.crc32 = uint32_toint(msg[20:24])
-        sn = bytes(msg[24:56]).decode("utf-8")
-        self.name = sn.rstrip("\0")
+        self.name = safe_unicode_str(msg[24:56])
 
     def __str__(self):
         """

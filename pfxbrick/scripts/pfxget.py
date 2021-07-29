@@ -19,9 +19,7 @@ if __name__ == "__main__":
     f = str(argv[1])
     if f.isnumeric():
         f = int(argv[1])
-    print(f)
     fid = b.file_id_from_str_or_int(f)
-    print(fid)
     fd = b.filedir.get_file_dir_entry(fid)
     if len(argv) == 3:
         fn = argv[2]

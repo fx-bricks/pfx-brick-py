@@ -296,7 +296,7 @@ class PFxBrick:
         """
         res = cmd_get_name(self.dev)
         if res:
-            self.name = bytes(res[1:25]).decode("utf-8")
+            self.name = safe_unicode_str(res[1:25])
         return self.name
 
     def set_name(self, name):

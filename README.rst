@@ -155,16 +155,18 @@ The **pfxbrick** package will install some useful command line script applicatio
 * :code:`pfxget.py` - gets a file from the PFx Brick
 * :code:`pfxput.py` - copies a local host file on to the PFx Brick
 * :code:`pfxrm.py` - delete a file from the PFx Brick
+* :code:`pfxrename.py` - renames a file on the PFx Brick
 * :code:`pfxdump.py` - dumps raw contents of PFx Brick flash memory
-* :code:`brickinfo.py` - discovers and shows information on all attached PFx Bricks
-* :code:`brickmonitor.py` - shows real time operational status of a PFx Brick
-* :code:`bricktest.py` - PFx Brick self test utility
+* :code:`pfxinfo.py` - discovers and shows information on all attached PFx Bricks
+* :code:`pfxmonitor.py` - shows real time operational status of a PFx Brick
+* :code:`pfxtest.py` - PFx Brick self test utility
+* :code:`pfxplay.py` - plays an audio file on the PFx Brick
 
 After installing the **pfxbrick** package, you should be able to use any of these utilities directly from the command line as follows:
 
 .. code-block:: shell
 
-    $ brickinfo.py
+    $ pfxinfo.py
     ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
     ┃ A216 PFx Brick 16 MB                                                     ┃
     ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩

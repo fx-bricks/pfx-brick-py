@@ -418,3 +418,16 @@ def notch_from_speed(speed, bounds):
     for i, r in enumerate(ranges):
         if speed >= r[0] and speed < r[2]:
             return i
+
+
+def safe_unicode_str(text):
+    try:
+        sn = bytes(text).decode("utf-8")
+    except UnicodeDecodeError:
+        sn = []
+        for b in text:
+            if b >= 0x20 and b <= 127:
+                sn.append(str(b))
+        sn = "".join(sn)
+    sn = sn.rstrip("\0")
+    return sn
