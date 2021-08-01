@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 from sys import argv
-
+from toolbox import *
 from pfxbrick import *
 
 
@@ -16,12 +16,20 @@ if __name__ == "__main__":
     if not r:
         exit()
     b.refresh_file_dir()
+
     if len(argv) == 3:
         fid = int(argv[2])
     else:
         fid = b.filedir.find_available_file_id()
-    fn = argv[1]
-    print("Copying file %s to PFx Brick..." % (fn))
+    ff = full_path(argv[1])
+    fp, fn = split_path(ff)
+    if b.filedir.has_file(fn):
+        fod = b.file_id_from_str_or_int(fn)
+        print("Replacing file %s on PFx Brick..." % (fn))
+        b.remove_file(fod)
+        fid = fod
+    else:
+        print("Copying file %s to PFx Brick..." % (fn))
     b.put_file(fn, fid)
     if fn.lower().endswith(".pfx"):
         res = b.send_raw_icd_command(

@@ -670,7 +670,7 @@ class PFxBrick:
         """
         Stops all script execution.
         """
-        self.run_script(0xFF)
+        res = cmd_run_script(self.dev, 0xFF)
 
     def run_script(self, scriptfile):
         """

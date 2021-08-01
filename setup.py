@@ -72,5 +72,6 @@ setuptools.setup(
         "pfxbrick/scripts/pfxtest.py",
         "pfxbrick/scripts/pfxinfo.py",
         "pfxbrick/scripts/pfxplay.py",
+        "pfxbrick/scripts/pfxrun.py",
     ],
 )

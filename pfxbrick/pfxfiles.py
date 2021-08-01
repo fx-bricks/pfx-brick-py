@@ -403,7 +403,12 @@ class PFxFile:
         Convenient human readable string of a file directory entry. This allows
         a :py:class:`PFxFile` object to be used with :obj:`str` and :obj:`print` methods.
         """
-        s = "%3d %-24s %6.1f kB %04X %08X %08X %08X" % (
+        attr_str = ""
+        if self.attributes in file_attr_dict:
+            attr_str = file_attr_dict[self.attributes]
+        elif self.id in fileid_dict:
+            attr_str = fileid_dict[self.id]
+        s = "%3d %-24s %6.1f kB %04X %08X %08X %08X %02X %s" % (
             self.id,
             self.name,
             float(self.size / 1000),
@@ -411,6 +416,8 @@ class PFxFile:
             self.userData1,
             self.userData2,
             self.crc32,
+            self.id,
+            attr_str,
         )
         return s
 

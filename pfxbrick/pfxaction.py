@@ -469,7 +469,7 @@ class PFxAction:
                 )
             )
         sb.append("Motor Param 1     : [%02X]" % (self.motorParam1))
-        sb.append("Motor Param 2     : [%02X]" % (self.motorParam1))
+        sb.append("Motor Param 2     : [%02X]" % (self.motorParam2))
         sf = ""
         if self.lightFxId & EVT_LIGHT_COMBO_MASK:
             sf = pd.combo_lightfx_dict[self.lightFxId & EVT_LIGHT_ID_MASK]

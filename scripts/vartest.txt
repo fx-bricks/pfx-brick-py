@@ -8,6 +8,9 @@ set $D = 0.1
 set $E = 0.5
 set $F = 8
 
+set config ar, dr, br, bs, nc, no, vol, bass, treble, ma, md = 8
+set config 34 = 9
+
 light all off
 light [1] on fade $A
 wait $B
@@ -19,4 +22,26 @@ wait 4
 light [2] off
 wait 4
 light all off
+
+event 0x10 {
+  run "Startup1.txt"
+  light all off
+}
+event startup 1 {
+  light all off
+}
+event button long {
+
+}
+event button down {
+    light [1, 2] on
+}
+event button up {
+    light [1, 2] off
+}
+
+event ir speed ch 3 left button {
+  sound play "Beep.wav"
+  light [1, 2] on
+}
 

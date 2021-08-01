@@ -1,4 +1,5 @@
 import argparse
+import base64
 import copy
 import time
 import datetime
@@ -9,9 +10,254 @@ from rich import print
 from rich.console import Console
 from rich.table import Table
 
+from toolbox import *
+from pfxbrick.pfxtesthelpers import *
+from pfxbrick.pfxtestdata import *
 from pfxbrick import *
 
 console = Console()
+
+
+TMP_FILE = "~/tmp/test_script.txt"
+
+
+def copy_script_file(brick, text):
+    file = full_path(TMP_FILE)
+    fp, fn = split_path(file)
+    brick.refresh_file_dir()
+    fileID = brick.filedir.find_available_file_id()
+    with open(file, "w") as f:
+        for line in text.splitlines():
+            f.write("%s\n" % (line))
+    crc32 = get_file_crc32(file)
+    console.log("Copying file [cyan]%s[/] with CRC32=0x%08X" % (fn, crc32))
+    brick.put_file(file, fileID)
+    fcrc = 0
+    while fcrc == 0:
+        time.sleep(1)
+        brick.refresh_file_dir()
+        f0 = brick.filedir.get_file_dir_entry(fileID)
+        fcrc = f0.crc32
+    test_result(
+        "Copied file [cyan]%s[/] CRC32=0x%08X" % (fn, f0.crc32), f0.crc32 == crc32
+    )
+    return fileID
+
+
+def event_recorder(brick, interval, duration):
+    time.sleep(interval)
+    events = []
+    tinit = datetime.now()
+    tnow = datetime.now()
+    tprev = tnow
+    state_now = brick.get_current_state()
+    prev_state = copy.deepcopy(state_now)
+    while (tnow - tinit).total_seconds() < duration:
+        time.sleep(interval)
+        tnow = datetime.now()
+        state_now = brick.get_current_state()
+        tdiff = (tnow - tprev).total_seconds()
+        for ch in range(8):
+            if state_now.lights[ch].target_level != prev_state.lights[ch].target_level:
+                event = (ch, tdiff, state_now.lights[ch].target_level)
+                events.append(event)
+                tprev = tnow
+        prev_state = copy.deepcopy(state_now)
+    return events
+
+
+def check_results(events, results, tolerance=0.175):
+    # print(events, results)
+    if not len(results) == len(events):
+        print(events, results)
+        print("[red]%s is not %s" % (len(results), len(events)))
+        return False
+    for event, result in zip(events, results):
+        if not event[0] == result[0]:
+            print(events, results)
+            print("[red]%s is not %s" % (event[0], result[0]))
+            return False
+        if not abs(event[1] - result[1]) < tolerance:
+            print(events, results)
+            print("[red]%s is not %s" % (event[1], result[1]))
+            return False
+        if not event[2] == result[2]:
+            print(events, results)
+            print("[red]%s is not %s" % (event[2], result[2]))
+            return False
+    return True
+
+
+###############################################################################
+
+
+def do_test_script_lights(brick, fid):
+    brick.run_script(fid)
+    events = event_recorder(brick, 0.1, 5)
+    brick.stop_script()
+    return check_results(events, TEST_SCRIPT_LIGHTS_RESULTS)
+
+
+###############################################################################
+
+
+def do_test_script_vars(brick, fid):
+    brick.run_script(fid)
+    events = event_recorder(brick, 0.1, 5.0)
+    brick.stop_script()
+    return check_results(events, TEST_SCRIPT_VARS_RESULTS)
+
+
+###############################################################################
+
+
+def do_test_script_config(brick, fid):
+    old_settings = snapshot_config(brick)
+    brick.run_script(fid)
+    time.sleep(2)
+    brick.stop_script()
+    brick.get_config()
+    new_settings = [
+        (brick.config.settings.notchCount, 5),
+        (brick.config.settings.rapidAccelThr, 42),
+        (brick.config.audio.bass, 3),
+        (brick.config.audio.treble, 251),
+        (brick.config.audio.defaultVolume, 80),
+        (brick.config.motors[0].accel, 14),
+        (brick.config.motors[1].decel, 4),
+        (brick.config.settings.brakeDecelThr, 88),
+        (brick.config.settings.notchBounds[3], 0x90),
+        (brick.config.lights.startupBrightness[4], 55),
+        (brick.config.motors[0].invert, False),
+        (brick.config.motors[1].invert, True),
+        (brick.config.motors[0].vmin, 10),
+        (brick.config.motors[0].vmid, 33),
+        (brick.config.motors[0].vmax, 99),
+    ]
+    ok = True
+    for setting in new_settings:
+        if not setting[0] == setting[1]:
+            test_result(
+                "Read back %s should be %s" % (setting[0], setting[1]),
+                (setting[0] == setting[1]),
+            )
+            ok = False
+    test_result("Set configuration values from script", ok)
+    restore_config(brick, old_settings)
+    return ok
+
+
+###############################################################################
+
+
+def do_test_script_repeat(brick, fid):
+    brick.run_script(fid)
+    events = event_recorder(brick, 0.1, 6.5)
+    brick.stop_script()
+    return check_results(events, TEST_SCRIPT_REPEAT_RESULTS)
+
+
+###############################################################################
+
+
+def do_test_script_events(brick, fid):
+    ok = True
+    copies = []
+    for test in TEST_SCRIPT_EVENTS_TESTS:
+        ainit = brick.get_action_by_address(test[0])
+        copies.append(ainit)
+    brick.run_script(fid)
+    time.sleep(2)
+    brick.stop_script()
+    for test, ainit in zip(TEST_SCRIPT_EVENTS_TESTS, copies):
+        achange = brick.get_action_by_address(test[0])
+        if test[0] == EVT_STARTUP_EVENT4:
+            result = achange.command == EVT_COMMAND_IR_LOCKOUT_ON
+        elif test[0] == EVT_BUTTON_LONGPRESS:
+            result = (achange.soundFxId == EVT_SOUND_PLAY_ONCE) and (
+                achange.soundFileId == 5
+            )
+        elif test[0] == EVT_8885_RIGHT_FWD | 0x02:
+            result = achange.command == EVT_COMMAND_ALL_AUDIO_OFF
+        elif test[0] == EVT_BLE_DISCONNECT:
+            result = (
+                (achange.soundFxId == EVT_SOUND_PLAY_NTIMES)
+                and (achange.soundFileId == 7)
+                and (achange.soundParam1 == 3)
+                and (achange.soundParam2 == 0)
+            )
+        elif test[0] == EVT_BUTTON_DOWN:
+            result = (
+                (achange.soundFxId == EVT_SOUND_PLAY_CONT)
+                and (achange.soundFileId == 9)
+                and (achange.lightFxId == EVT_LIGHTFX_ON_OFF_TOGGLE)
+                and (achange.lightOutputMask == 0x40)
+            )
+        elif test[0] == EVT_BUTTON_UP:
+            result = (
+                (achange.lightFxId == EVT_LIGHTFX_FLICKER)
+                and (achange.lightParam1 == 1)
+                and (achange.lightParam2 == 6)
+            )
+        elif test[0] == 0x51:
+            result = (
+                achange.motorActionId & EVT_MOTOR_ACTION_ID_MASK
+            ) == EVT_MOTOR_STOP
+        elif test[0] == 0x52:
+            result = (
+                (
+                    (achange.motorActionId & EVT_MOTOR_ACTION_ID_MASK)
+                    == EVT_MOTOR_SET_SPD
+                )
+                and (achange.motorParam1 == 144)
+                and (achange.motorParam2 == 0)
+            )
+        elif test[0] == 0x53:
+            result = (
+                (achange.motorActionId & EVT_MOTOR_ACTION_ID_MASK)
+                == EVT_MOTOR_SET_SERVO
+            ) and (achange.motorParam1 == 0x3)
+        if not result:
+            test_result(
+                "Scripted startup event did not make correct change to %s" % (test[1]),
+                result,
+            )
+            ok = False
+    for test, ainit in zip(TEST_SCRIPT_EVENTS_TESTS, copies):
+        brick.set_action_by_address(test[0], ainit)
+    time.sleep(2)
+    for test, ainit in zip(TEST_SCRIPT_EVENTS_TESTS, copies):
+        arestore = brick.get_action_by_address(test[0])
+        result = ainit == arestore
+        if not result:
+            ok = False
+            test_result(
+                "Scripted startup event did not restore to %s" % (test[1]), result
+            )
+    return ok
+
+
+###############################################################################
+
+SCRIPT_TESTS = [
+    (TEST_SCRIPT_LIGHTS, do_test_script_lights, "Lighting"),
+    (TEST_SCRIPT_VARS, do_test_script_vars, "Variables"),
+    (TEST_SCRIPT_REPEAT, do_test_script_repeat, "Repeat Loops"),
+    (TEST_SCRIPT_EVENTS, do_test_script_events, "Events"),
+    (TEST_SCRIPT_CONFIG, do_test_script_config, "Configuration"),
+]
+
+
+def test_scripts(brick):
+    fs = FileOps()
+    for test in SCRIPT_TESTS:
+        fid = copy_script_file(brick, test[0])
+        time.sleep(0.2)
+        result = test[1](brick, fid)
+        test_result("Executed test script [cyan]%s[/]" % (test[2]), result)
+        brick.remove_file(fid)
+        time.sleep(1)
+        fs.remove_file(full_path(TMP_FILE))
 
 
 def snapshot_config(brick):
@@ -321,7 +567,11 @@ def test_motor_channel(brick, ch, speed):
     return ok1 & ok2 & ok3
 
 
-def test_file_transfer(fn, fid=0):
+def test_file_transfer(fdata, fid=0, fn="test_data.wav"):
+    fs = FileOps()
+    bindata = base64.b64decode(fdata)
+    with open(fn, "wb") as f:
+        f.write(bindata)
     crc32 = get_file_crc32(fn)
     console.log("Copying file %s with CRC32=0x%08X" % (fn, crc32))
     b.put_file(fn, fid)
@@ -341,6 +591,8 @@ def test_file_transfer(fn, fid=0):
     test_result(
         "Read back file %s CRC32=0x%08X" % (fnr, read_crc32), crc32 == read_crc32
     )
+    fs.remove_file(fn)
+    fs.remove_file(fnr)
 
 
 def test_banner(title):
@@ -432,6 +684,13 @@ if __name__ == "__main__":
         help="Omit audio playback test",
     )
     parser.add_argument(
+        "+sc",
+        "--scripts",
+        action="store_true",
+        default=False,
+        help="Include script execution test",
+    )
+    parser.add_argument(
         "-t",
         "--time",
         action="store_false",
@@ -510,8 +769,8 @@ if __name__ == "__main__":
     b.get_current_state()
     b.get_fs_state()
     b.get_bt_state()
-
     b.get_config()
+
     if argsd["verbose"]:
         print(b.get_current_state())
         print(b.get_fs_state())
@@ -585,25 +844,25 @@ if __name__ == "__main__":
     if argsd["files"]:
         test_banner("Testing File System...")
         files = [
-            (0, "sin150Hz.wav", 0x0000, 0x000204CE, 0x0000002C),
-            (1, "pink6dB.wav", 0x0000, 0x000204CE, 0x0000002C),
+            (0, SINFILE, 0x0000, 0x000204CE, 0x0000002C, "sin150Hz.wav"),
+            (1, PINKFILE, 0x0000, 0x000204CE, 0x0000002C, "pink6dB.wav"),
         ]
 
         for file in files:
-            test_file_transfer(file[1], file[0])
+            test_file_transfer(file[1], file[0], file[5])
 
         b.refresh_file_dir()
         for file in files:
             f = b.filedir.get_file_dir_entry(file[0])
             test_result(
-                "File %s attributes=%X" % (file[1], f.attributes),
+                "File %s attributes=%X" % (file[5], f.attributes),
                 f.attributes == file[2],
             )
             test_result(
-                "File %s UserData1=%X" % (file[1], f.userData1), f.userData1 == file[3]
+                "File %s UserData1=%X" % (file[5], f.userData1), f.userData1 == file[3]
             )
             test_result(
-                "File %s UserData2=%X" % (file[1], f.userData2), f.userData2 == file[4]
+                "File %s UserData2=%X" % (file[5], f.userData2), f.userData2 == file[4]
             )
             oldfn = f.name
             newfn = "file%d%d%d" % (
@@ -632,6 +891,10 @@ if __name__ == "__main__":
                     ok = True
                     break
             test_result("File %s renamed to %s" % (oldfn, newfn), ok)
+
+    if argsd["scripts"]:
+        test_banner("Testing Script Execution...")
+        test_scripts(b)
 
     with console.status("Testing...") as status:
         if argsd["audio"]:
