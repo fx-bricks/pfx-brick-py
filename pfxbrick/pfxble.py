@@ -26,7 +26,6 @@
 
 import asyncio
 import logging
-import platform
 import sys
 
 from bleak import BleakScanner, BleakClient
@@ -37,9 +36,12 @@ from pfxbrick.pfxhelpers import *
 DEV_INFO_UUID = "%x" % (PFX_BLE_GATT_DEV_INFO_UUID)
 DEV_SN_UUID = "%x" % (PFX_BLE_GATT_DEV_SN_UUID)
 MAX_RETRIES = 100
+RX_RETRY_TIME = 0.05
 
 
-async def ble_device_scanner(scan_time=2.0, min_devices=1, scan_timeout=30.0):
+async def ble_device_scanner(
+    scan_time=2.0, min_devices=1, scan_timeout=30.0, silent=False
+):
     """
     Performs a Bluetooth scan for available peripheral devices which advertise
     themselves as PFx Bricks.
@@ -56,21 +58,23 @@ async def ble_device_scanner(scan_time=2.0, min_devices=1, scan_timeout=30.0):
     pfxdevs = []
     total_scan_time = 0
     while len(pfxdevs) < min_devices:
-        print("Scanning...")
+        if not silent:
+            print("Scanning...")
         async with BleakScanner() as scanner:
             await asyncio.sleep(scan_time)
             total_scan_time += scan_time
             devices = await scanner.get_discovered_devices()
         for d in devices:
             if "PFx Brick" in d.name:
-                print("Found %s" % d.name)
+                if not silent:
+                    print("Found %s" % d.name)
                 pfxdevs.append(d)
         if total_scan_time > scan_timeout:
             break
     return pfxdevs
 
 
-async def find_ble_pfxbricks(devices, connect_interval=2.0, timeout=30.0):
+async def find_ble_pfxbricks(devices, connect_interval=2.0, timeout=30.0, silent=False):
     """
     Resolves a list of scanned candidate Bluetooth devices into valid PFx Brick devices.
 
@@ -99,7 +103,8 @@ async def find_ble_pfxbricks(devices, connect_interval=2.0, timeout=30.0):
         total_connect_time = 0
         while not connected and total_connect_time < timeout:
             try:
-                print("Connecting...")
+                if not silent:
+                    print("Connecting...")
                 sn = await connect_device(d, connect_timeout=connect_interval)
                 connected = True
             except:
@@ -279,7 +284,7 @@ class PFxBrickBLE(PFxBrick):
             self._log.info("Tx Data: %s" % (chunk))
         retries = 0
         while len(self._rxbuff) == 0 and retries < MAX_RETRIES:
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(RX_RETRY_TIME)
             retries += 1
         if retries >= MAX_RETRIES:
             self._log.error(
@@ -309,6 +314,37 @@ class PFxBrickBLE(PFxBrick):
         await self._tx_msg(tx)
         return self._rxbuff
 
+    async def get_icd_rev(self, silent=False):
+        """
+        Requests the version of Interface Control Document (ICD)
+        the connected PFx Brick supports using the PFX_CMD_GET_ICD_REV
+        ICD message.  The resulting version number is stored in
+        this class and also returned.
+
+        :param boolean silent: flag to optionally silence the status LED blink
+        """
+        res = await cmd_get_icd_rev(self.dev, silent)
+        self.icd_rev = uint16_tover(res[1], res[2])
+        self.config.icd_rev = self.icd_rev
+        return self.icd_rev
+
+    async def get_status(self):
+        """
+        Requests the top level operational status of the PFx Brick
+        using the PFX_CMD_GET_STATUS ICD message.  The resulting
+        status data is stored in this class and can be queried
+        with typical class member access methods or the print_status method.
+        """
+        res = await cmd_get_status(self.dev)
+        if res:
+            self.status = res[1]
+            self.error = res[2]
+            self.product_id = uint16_tostr(res[7], res[8])
+            self.serial_no = uint32_tostr(res[9], res[10], res[11], res[12])
+            self.product_desc = bytes(res[13:37]).decode("utf-8")
+            self.firmware_ver = uint16_tover(res[37], res[38])
+            self.firmware_build = uint16_tostr(res[39], res[40])
+
     async def get_config(self):
         """
         Retrieves configuration settings from the PFx Brick using
@@ -332,35 +368,11 @@ class PFxBrickBLE(PFxBrick):
         """
         res = await cmd_set_config(self.dev, self.config.to_bytes())
 
-    async def get_icd_rev(self, silent=False):
+    async def reset_factory_config(self):
         """
-        Requests the version of Interface Control Document (ICD)
-        the connected PFx Brick supports using the PFX_CMD_GET_ICD_REV
-        ICD message.  The resulting version number is stored in
-        this class and also returned.
-
-        :param boolean silent: flag to optionally silence the status LED blink
+        Resets the PFx Brick configuration settings to factory defaults.
         """
-        res = await cmd_get_icd_rev(self.dev, silent)
-        self.icd_rev = uint16_tover(res[1], res[2])
-        return self.icd_rev
-
-    async def get_status(self):
-        """
-        Requests the top level operational status of the PFx Brick
-        using the PFX_CMD_GET_STATUS ICD message.  The resulting
-        status data is stored in this class and can be queried
-        with typical class member access methods or the print_status method.
-        """
-        res = await cmd_get_status(self.dev)
-        if res:
-            self.status = res[1]
-            self.error = res[2]
-            self.product_id = uint16_tostr(res[7], res[8])
-            self.serial_no = uint32_tostr(res[9], res[10], res[11], res[12])
-            self.product_desc = bytes(res[13:37]).decode("utf-8")
-            self.firmware_ver = uint16_tover(res[37], res[38])
-            self.firmware_build = uint16_tostr(res[39], res[40])
+        res = await cmd_set_factory_defaults(self.dev)
 
     async def get_name(self):
         """
@@ -479,6 +491,9 @@ class PFxBrickBLE(PFxBrick):
         :param action: :obj:`PFxAction` action data structure class
         """
         res = await cmd_test_action(self.dev, action.to_bytes())
+
+    async def find_startup_action(self, lightfx=None, soundfx=None, motorfx=None):
+        raise NotImplementedError("PFx Brick method not supported over Bluetooth")
 
     async def set_motor_speed(self, ch, speed, duration=None):
         """
@@ -631,46 +646,7 @@ class PFxBrickBLE(PFxBrick):
                 if file_count >= self.filedir.numFiles:
                     break
 
-    async def reset_factory_config(self):
-        """
-        Resets the PFx Brick configuration settings to factory defaults.
-        """
-        res = await cmd_set_factory_defaults(self.dev)
-
-    async def set_notifications(self, events):
-        """
-        Enables user selected notifications to be sent asynchronously from the PFx Brick.
-
-        :param events: :obj:`int` a bitwise OR of notification flags:
-
-        - :obj:`PFX_NOTIFICATION_AUDIO_PLAY_DONE = 0x01`
-        - :obj:`PFX_NOTIFICATION_AUDIO_PLAY = 0x02`
-        - :obj:`PFX_NOTIFICATION_MOTORA_CURR_SPD = 0x04`
-        - :obj:`PFX_NOTIFICATION_MOTORA_STOP = 0x08`
-        - :obj:`PFX_NOTIFICATION_MOTORB_CURR_SPD = 0x10`
-        - :obj:`PFX_NOTIFICATION_MOTORB_STOP = 0x20`
-        - :obj:`PFX_NOTIFICATION_TO_USB = 0x80`
-        - :obj:`PFX_NOTIFICATION_TO_BLE = 0x40`
-
-        Note that :obj:`PFX_NOTIFICATION_TO_BLE` is automatically set and does not need to be specified.
-        """
-
-        # if notifications are configured for audio events, refresh file directory
-        # so that we can resolve file ID numbers to filenames
-        if (
-            events & PFX_NOTIFICATION_AUDIO_PLAY
-            or events & PFX_NOTIFICATION_AUDIO_PLAY_DONE
-        ):
-            await self.refresh_file_dir()
-        res = await cmd_set_notifications(self.dev, PFX_NOTIFICATION_TO_BLE | events)
-
-    async def disable_notifications(self):
-        """
-        Disables asynchronous notifications sent from the PFx Brick.
-        """
-        res = await cmd_set_notifications(self.dev, 0)
-
-    def put_file(self, fileID, fn, show_progress=True):
+    async def put_file(self, fileID, fn, show_progress=True):
         """
         PFx Brick file system operations not supported over Bluetooth
         raises :obj:`NotImplementedError`
@@ -679,7 +655,7 @@ class PFxBrickBLE(PFxBrick):
             "PFx Brick file system operations not supported over Bluetooth"
         )
 
-    def get_file(self, fileID, fn=None, show_progress=True):
+    async def get_file(self, fileID, fn=None, show_progress=True):
         """
         PFx Brick file system operations not supported over Bluetooth
         raises :obj:`NotImplementedError`
@@ -688,7 +664,7 @@ class PFxBrickBLE(PFxBrick):
             "PFx Brick file system operations not supported over Bluetooth"
         )
 
-    def remove_file(self, fileID):
+    async def remove_file(self, fileID):
         """
         PFx Brick file system operations not supported over Bluetooth
         raises :obj:`NotImplementedError`
@@ -697,7 +673,25 @@ class PFxBrickBLE(PFxBrick):
             "PFx Brick file system operations not supported over Bluetooth"
         )
 
-    def format_fs(self, quick=False):
+    async def format_fs(self, quick=False):
+        """
+        PFx Brick file system operations not supported over Bluetooth
+        raises :obj:`NotImplementedError`
+        """
+        raise NotImplementedError(
+            "PFx Brick file system operations not supported over Bluetooth"
+        )
+
+    async def set_file_attributes(self, fileID, attr, mask=0x7C):
+        """
+        PFx Brick file system operations not supported over Bluetooth
+        raises :obj:`NotImplementedError`
+        """
+        raise NotImplementedError(
+            "PFx Brick file system operations not supported over Bluetooth"
+        )
+
+    async def rename_file(self, fileID, new_name):
         """
         PFx Brick file system operations not supported over Bluetooth
         raises :obj:`NotImplementedError`
@@ -710,7 +704,7 @@ class PFxBrickBLE(PFxBrick):
         """
         Stops all script execution.
         """
-        await self.run_script(0xFF)
+        res = await cmd_run_script(self.dev, 0xFF)
 
     async def run_script(self, scriptfile):
         """
@@ -749,3 +743,57 @@ class PFxBrickBLE(PFxBrick):
                 fileid = int(res[2])
             return fileid
         return 0xFF
+
+    async def get_current_state(self):
+        """
+        PFx Brick operation not supported over Bluetooth
+        raises :obj:`NotImplementedError`
+        """
+        raise NotImplementedError("PFx Brick method not supported over Bluetooth")
+
+    async def get_fs_state(self):
+        """
+        PFx Brick operation not supported over Bluetooth
+        raises :obj:`NotImplementedError`
+        """
+        raise NotImplementedError("PFx Brick method not supported over Bluetooth")
+
+    async def get_bt_state(self):
+        """
+        PFx Brick operation not supported over Bluetooth
+        raises :obj:`NotImplementedError`
+        """
+        raise NotImplementedError("PFx Brick method not supported over Bluetooth")
+
+    async def set_notifications(self, events):
+        """
+        Enables user selected notifications to be sent asynchronously from the PFx Brick.
+
+        :param events: :obj:`int` a bitwise OR of notification flags:
+
+        - :obj:`PFX_NOTIFICATION_AUDIO_PLAY_DONE = 0x01`
+        - :obj:`PFX_NOTIFICATION_AUDIO_PLAY = 0x02`
+        - :obj:`PFX_NOTIFICATION_MOTORA_CURR_SPD = 0x04`
+        - :obj:`PFX_NOTIFICATION_MOTORA_STOP = 0x08`
+        - :obj:`PFX_NOTIFICATION_MOTORB_CURR_SPD = 0x10`
+        - :obj:`PFX_NOTIFICATION_MOTORB_STOP = 0x20`
+        - :obj:`PFX_NOTIFICATION_TO_USB = 0x80`
+        - :obj:`PFX_NOTIFICATION_TO_BLE = 0x40`
+
+        Note that :obj:`PFX_NOTIFICATION_TO_BLE` is automatically set and does not need to be specified.
+        """
+
+        # if notifications are configured for audio events, refresh file directory
+        # so that we can resolve file ID numbers to filenames
+        if (
+            events & PFX_NOTIFICATION_AUDIO_PLAY
+            or events & PFX_NOTIFICATION_AUDIO_PLAY_DONE
+        ):
+            await self.refresh_file_dir()
+        res = await cmd_set_notifications(self.dev, PFX_NOTIFICATION_TO_BLE | events)
+
+    async def disable_notifications(self):
+        """
+        Disables asynchronous notifications sent from the PFx Brick.
+        """
+        res = await cmd_set_notifications(self.dev, 0)

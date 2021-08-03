@@ -23,8 +23,6 @@
 #
 # PFx Brick internal state helpers
 
-import hid
-import platform
 from pfxbrick import *
 
 

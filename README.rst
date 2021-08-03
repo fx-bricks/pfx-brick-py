@@ -161,6 +161,7 @@ The **pfxbrick** package will install some useful command line script applicatio
 * :code:`pfxmonitor.py` - shows real time operational status of a PFx Brick
 * :code:`pfxtest.py` - PFx Brick self test utility
 * :code:`pfxplay.py` - plays an audio file on the PFx Brick
+* :code:`pfxrun.py` - runs a script a file on the PFx Brick
 
 After installing the **pfxbrick** package, you should be able to use any of these utilities directly from the command line as follows:
 
@@ -186,11 +187,11 @@ After installing the **pfxbrick** package, you should be able to use any of thes
     2 files, 270.3 kB used, 16490.5 kB remaining
 
 
-To find out more information on how to use each utility, use the :code:`-h` argument.
+To find out more information on how to use each utility, use without arguments or with the :code:`-h` argument.
 
 .. code-block:: shell
 
-    $ brickinfo.py -h
+    $ pfxinfo.py -h
     usage: brickinfo.py [-h] [-c]
 
     Show information for all attached PFx Bricks

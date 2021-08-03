@@ -421,6 +421,7 @@ def notch_from_speed(speed, bounds):
 
 
 def safe_unicode_str(text):
+    """Trys to decode a byte stream as UTF-8 with a safe fallback to raw ascii."""
     try:
         sn = bytes(text).decode("utf-8")
     except UnicodeDecodeError:
@@ -431,3 +432,21 @@ def safe_unicode_str(text):
         sn = "".join(sn)
     sn = sn.rstrip("\0")
     return sn
+
+
+def is_version_less_than(ver, other):
+    """ "Determines if a version number is less than another version number string"""
+    sv = ver.split(".")
+    ov = other.split(".")
+    sv_major = int(sv[0])
+    if len(sv) > 1:
+        sv_minor = int(sv[1])
+    ov_major = int(ov[0])
+    if len(ov) > 1:
+        ov_minor = int(ov[1])
+    if sv_major < ov_major:
+        return True
+    if sv_major == ov_major:
+        if sv_minor < ov_minor:
+            return True
+    return False

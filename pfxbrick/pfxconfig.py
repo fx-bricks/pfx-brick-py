@@ -351,11 +351,15 @@ class PFxConfig:
         audio (:obj:`PFxAudio`): container for audio related settings
     """
 
-    def __init__(self):
+    def __init__(self, icd_rev=None):
         self.settings = PFxSettings()
         self.motors = [PFxMotor(), PFxMotor(), PFxMotor(), PFxMotor()]
         self.lights = PFxLights()
         self.audio = PFxAudio()
+        if icd_rev is not None:
+            self.icd_rev = icd_rev
+        else:
+            self.icd_rev = "3.38"
 
     def __eq__(self, other):
         for k, v in self.__dict__.items():
@@ -384,10 +388,11 @@ class PFxConfig:
         self.settings.notchBounds[4] = msg[12]
         self.settings.notchBounds[5] = msg[13]
         self.settings.notchBounds[6] = msg[14]
-        self.settings.rapidAccelThr = msg[15]
-        self.settings.rapidDecelThr = msg[16]
-        self.settings.brakeDecelThr = msg[17]
-        self.settings.brakeSpeedThr = msg[18]
+        if not is_version_less_than(self.icd_rev, "3.38"):
+            self.settings.rapidAccelThr = msg[15]
+            self.settings.rapidDecelThr = msg[16]
+            self.settings.brakeDecelThr = msg[17]
+            self.settings.brakeSpeedThr = msg[18]
         self.settings.irAutoOff = msg[26]
         self.settings.bleAutoOff = msg[27]
         self.settings.bleMotorWhenDisconnect = msg[28]
@@ -429,11 +434,14 @@ class PFxConfig:
         msg.append(self.settings.notchBounds[4])
         msg.append(self.settings.notchBounds[5])
         msg.append(self.settings.notchBounds[6])
-        msg.append(self.settings.rapidAccelThr)
-        msg.append(self.settings.rapidDecelThr)
-        msg.append(self.settings.brakeDecelThr)
-        msg.append(self.settings.brakeSpeedThr)
-        msg.extend([0] * 7)
+        if is_version_less_than(self.icd_rev, "3.38"):
+            msg.extend([0] * 11)
+        else:
+            msg.append(self.settings.rapidAccelThr)
+            msg.append(self.settings.rapidDecelThr)
+            msg.append(self.settings.brakeDecelThr)
+            msg.append(self.settings.brakeSpeedThr)
+            msg.extend([0] * 7)
         msg.append(self.settings.irAutoOff)
         msg.append(self.settings.bleAutoOff)
         msg.append(self.settings.bleMotorWhenDisconnect)

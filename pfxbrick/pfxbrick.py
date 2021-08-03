@@ -24,7 +24,6 @@
 
 # PFx Brick python API
 
-import re
 import hid
 from bleak import BleakScanner, BleakClient
 
@@ -173,6 +172,7 @@ class PFxBrick:
                     self.usb_serno_str = self.dev.get_serial_number_string()
                     self.is_open = True
                     self.get_icd_rev()
+                    self.config.icd_rev = self.icd_rev
                     self.get_status()
                     if self.product_id in ["A204", "A208", "A216"]:
                         self.has_bluetooth = True

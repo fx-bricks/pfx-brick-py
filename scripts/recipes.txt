@@ -1,0 +1,108 @@
+#
+# PFx Brick Script Recipes
+
+#
+# Status indicator setup
+#
+event startup 1 {
+    light 1 fx 18 0 0x40
+}
+event startup 2 {
+    light 2 fx 18 0 0x80
+}
+
+# toggle lights with button
+event button {
+    light 1 fx 1
+}
+
+# show button status with a light
+#
+# method 1: setup an event to respond to the down and up events separately
+event button down {
+    light 1 on
+}
+event button up {
+    light 1 off
+}
+
+# method 2: setup an Status Indicator light action for bit 6 in SOURCE2
+event startup 1 {
+    light 1 fx 18 0 0x40
+}
+
+# setup a BLE connection indicator light
+event ble connect {
+    light 1 on
+}
+event ble disconnect {
+    light 1 off
+}
+
+# setup a BLE activity light
+# Implements a Status Indicator light action for bit 6 in SOURCE1
+event startup 1 {
+    light 1 fx 18 0x40
+}
+
+# stop all motor channels when BLE disconnects
+event ble disconnect {
+    motor all stop
+}
+
+# setup directional headlights for a train
+# front light ch 1
+# rear light ch 2
+# odd numbered channels turn on when forward
+# even numbered channels turn on when reverse
+# ch 1 turns on when motor A is in forward direction
+# ch 2 turns on when motor A is in reverse direction
+#
+# method 1: use one startup action for light effect with DIR_OPTIONS
+event startup 1 {
+    light [1, 2] fx 1 9
+}
+
+# ch 1 turns on when motor A is in forward direction
+# ch 2 turns on when motor A is in reverse direction
+# method 2: use two startup actions (one for each group of light channels) 
+#           configured as Status Indicators using bits 0 and 1 of SOURCE2
+event startup 1 {
+    light 1 fx 18 0 1
+}
+event startup 2 {
+    light 2 fx 18 0 2
+}
+
+# setup ditch lights for a train which stay on between flash intervals
+# 5 = 1.25 sec period
+# 6 = 25% fade factor
+# 8 = 40% duty cycle
+# 0x03 = channels 1 & 2
+# 1 = transition to stay on
+event startup 1 {
+    light all fx 11 5 6 8 0x03 1
+}
+
+# setup ditch lights for a train which flash for 10 sec, then turn off
+# 5 = 1.25 sec period
+# 6 = 25% fade factor
+# 8 = 40% duty cycle
+# 0x03 = channels 1 & 2
+# 0x73 = transition to timed duration (7 = 10 sec)
+event speed ch 1 left button {
+    light all fx 11 5 6 8 0x03 0x73
+}
+
+# configure crossing lights which flash ch 1, 2 and activate
+# a crossing arm attached to servo motor
+# pushing joystick lever up activates the effect
+# pushing joystick lever down turns off the effect
+event joy ch 1 left up {
+    light all fx 11 5 6 8 0x03 
+    motor servo 90
+}
+event joy ch 1 left down {
+    light [1, 2] off
+    motor servo 0
+}

@@ -1,0 +1,5 @@
+PySimpleGUI
+pyaudio
+soundfile
+pydub
+simpleaudio

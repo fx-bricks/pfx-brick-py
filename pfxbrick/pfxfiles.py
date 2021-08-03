@@ -23,7 +23,6 @@
 #
 # PFx Brick file system helpers
 
-import hid
 import os
 from pfxbrick import *
 from pfxbrick.pfxhelpers import *
@@ -147,7 +146,7 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
             return
         if fs_error_check(res[1]):
             return
-        if has_rich:
+        if has_rich and show_progress:
             with progress:
                 f = open(fn, "rb")
                 nCount = 0
@@ -231,7 +230,7 @@ def fs_copy_file_from(
         return None
     if fs_error_check(res[1]):
         return None
-    if has_rich:
+    if has_rich and show_progress:
         with progress:
             nf = pfile.name
             if fn is not None:
