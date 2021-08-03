@@ -4,6 +4,7 @@ import copy
 import time
 import datetime
 import random
+import tempfile
 import zlib
 from datetime import datetime
 from rich import print
@@ -18,7 +19,7 @@ from pfxbrick import *
 console = Console()
 
 
-TMP_FILE = "~/tmp/test_script.txt"
+TMP_FILE = tempfile.gettempdir() + os.sep + "test_script.txt"
 
 
 def copy_script_file(brick, text):
@@ -846,6 +847,7 @@ if __name__ == "__main__":
         files = [
             (0, SINFILE, 0x0000, 0x000204CE, 0x0000002C, "sin150Hz.wav"),
             (1, PINKFILE, 0x0000, 0x000204CE, 0x0000002C, "pink6dB.wav"),
+            (2, YAMANOTE_FILE, 0x0000, 0x00054A80, 0x0000002C, "yamanote.wav"),
         ]
 
         for file in files:

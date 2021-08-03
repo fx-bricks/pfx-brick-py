@@ -450,3 +450,53 @@ def is_version_less_than(ver, other):
         if sv_minor < ov_minor:
             return True
     return False
+
+
+def pprint_diff(x, y, address=None):
+    from rich import print
+
+    def append_ascii(x, a, b):
+        s = []
+        for i in range(a, b):
+            if i < len(x):
+                ch = "." if x[i] > 127 else x[i]
+                ch = "." if x[i] < 32 else x[i]
+                s.append("%c" % (ch))
+        return "".join(s)
+
+    s = []
+    if address is not None:
+        if isinstance(address, str):
+            a = int(address, 16)
+        else:
+            a = address
+        ads = "%06X " % (a)
+    else:
+        ads = ""
+    s.append("%s " % (ads))
+    for i, (b, by) in enumerate(zip(x, y)):
+        if b == by:
+            s.append("[bold black]%02X|%02X[/] " % (b, by))
+        else:
+            s.append("[bold red]%02X|%02X[/] " % (b, by))
+
+        if (i + 1) % 8 == 0 and i > 0:
+            s.append(" ")
+        if (i + 1) % 16 == 0 and i > 0:
+            s.append(" ")
+            s.extend(append_ascii(x, i - 15, i + 1))
+            if address is not None:
+                a += 16
+                ads = "%06X " % (a)
+            else:
+                ads = ""
+            s.append("\n")
+            s.append("%s " % (ads))
+    nb = len(x) % 16
+    if nb:
+        for i in range(16 - nb + 1):
+            s.append("   ")
+        s.extend(append_ascii(x, len(x) - nb, len(x) + 1))
+    else:
+        s.pop()
+    print("".join(s))
