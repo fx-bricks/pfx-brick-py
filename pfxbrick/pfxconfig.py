@@ -324,12 +324,17 @@ class PFxAudio:
         return s
 
     def __str__(self):
-        os = ""
+        ds = ""
         if self.audioDRC:
-            os = "ON"
+            ds = "ON"
         else:
-            os = "OFF"
-        s = "Audio DRC: %s  Bass: 0x%02X  Treble: 0x%02X" % (os, self.bass, self.treble)
+            ds = "OFF"
+        s = "Default Vol: 0x%02X Audio DRC: %s  Bass: 0x%02X  Treble: 0x%02X" % (
+            self.defaultVolume,
+            ds,
+            self.bass,
+            self.treble,
+        )
         return s
 
 

@@ -11,7 +11,6 @@ from rich import print
 from rich.console import Console
 from rich.table import Table
 
-from toolbox import *
 from pfxbrick.pfxtesthelpers import *
 from pfxbrick.pfxtestdata import *
 from pfxbrick import *
@@ -20,6 +19,20 @@ console = Console()
 
 
 TMP_FILE = tempfile.gettempdir() + os.sep + "test_script.txt"
+
+
+def full_path(file):
+    """Returns the fully expanded path of a file"""
+    if "~" in str(file):
+        return os.path.expanduser(file)
+    return os.path.expanduser(os.path.abspath(file))
+
+
+def split_path(file):
+    """Returns a tuple containing a file's (directory, name.ext)"""
+    if os.path.isdir(file):
+        return full_path(file), None
+    return os.path.split(full_path(file))
 
 
 def copy_script_file(brick, text):
@@ -250,7 +263,6 @@ SCRIPT_TESTS = [
 
 
 def test_scripts(brick):
-    fs = FileOps()
     for test in SCRIPT_TESTS:
         fid = copy_script_file(brick, test[0])
         time.sleep(0.2)
@@ -258,7 +270,7 @@ def test_scripts(brick):
         test_result("Executed test script [cyan]%s[/]" % (test[2]), result)
         brick.remove_file(fid)
         time.sleep(1)
-        fs.remove_file(full_path(TMP_FILE))
+        os.remove(TMP_FILE)
 
 
 def snapshot_config(brick):
@@ -569,7 +581,6 @@ def test_motor_channel(brick, ch, speed):
 
 
 def test_file_transfer(fdata, fid=0, fn="test_data.wav"):
-    fs = FileOps()
     bindata = base64.b64decode(fdata)
     with open(fn, "wb") as f:
         f.write(bindata)
@@ -592,8 +603,8 @@ def test_file_transfer(fdata, fid=0, fn="test_data.wav"):
     test_result(
         "Read back file %s CRC32=0x%08X" % (fnr, read_crc32), crc32 == read_crc32
     )
-    fs.remove_file(fn)
-    fs.remove_file(fnr)
+    os.remove(fn)
+    os.remove(fnr)
 
 
 def test_banner(title):

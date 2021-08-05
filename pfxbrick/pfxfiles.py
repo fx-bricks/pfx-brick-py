@@ -222,6 +222,8 @@ def fs_copy_file_from(
     :param boolean show_progress: a flag to show the progress bar indicator during transfer.
     """
     msg = [PFX_CMD_FILE_OPEN]
+    if pfile is None:
+        return None
     msg.append(pfile.id)
     msg.append(0x01)  # READ mode
     res = usb_transaction(hdev, msg)
@@ -407,7 +409,7 @@ class PFxFile:
             attr_str = file_attr_dict[self.attributes]
         elif self.id in fileid_dict:
             attr_str = fileid_dict[self.id]
-        s = "%3d %-24s %6.1f kB %04X %08X %08X %08X %02X %s" % (
+        s = "%3d %-24s %6.1f kB %04X %08X %08X %08X %04X %02X %s" % (
             self.id,
             self.name,
             float(self.size / 1000),
@@ -415,6 +417,7 @@ class PFxFile:
             self.userData1,
             self.userData2,
             self.crc32,
+            self.firstSector,
             self.id,
             attr_str,
         )

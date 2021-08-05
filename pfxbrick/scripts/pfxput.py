@@ -1,7 +1,20 @@
 #! /usr/bin/env python3
 from sys import argv
-from toolbox import *
 from pfxbrick import *
+
+
+def full_path(file):
+    """Returns the fully expanded path of a file"""
+    if "~" in str(file):
+        return os.path.expanduser(file)
+    return os.path.expanduser(os.path.abspath(file))
+
+
+def split_path(file):
+    """Returns a tuple containing a file's (directory, name.ext)"""
+    if os.path.isdir(file):
+        return full_path(file), None
+    return os.path.split(full_path(file))
 
 
 if __name__ == "__main__":
@@ -23,18 +36,15 @@ if __name__ == "__main__":
         fid = int(argv[2])
         if b.filedir.has_file(fid):
             print("Replacing file %d on PFx Brick..." % (fid))
-            b.remove_file(fid)
         else:
             print("Copying file %s as %d to PFx Brick..." % (fn, fid))
 
     else:
-        fid = b.filedir.find_available_file_id()
         if b.filedir.has_file(fn):
-            fod = b.file_id_from_str_or_int(fn)
+            fid = b.file_id_from_str_or_int(fn)
             print("Replacing file %s on PFx Brick..." % (fn))
-            b.remove_file(fod)
-            fid = fod
         else:
+            fid = b.filedir.find_available_file_id()
             print("Copying file %s to PFx Brick..." % (fn))
 
     b.put_file(ff, fid)
