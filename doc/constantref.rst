@@ -4,7 +4,7 @@
 Constants Reference
 *******************
 
-This page shows some of the useful constants which are defined in the :py:obj:`pfxbrick.pfx` module.  This module is automatically generated from a C header file used globally by Fx Bricks for all PFx Brick related software components including the firmware and the desktop and mobile PFx apps.  This header file contains most of the constants defined in the `Interface Control Document (ICD) <https://www.fxbricks.com//downloads/PFxBrickICD-Rev3.36.pdf>`_ so that references to features, parameters, attributes, etc. can be made using a convenient literal rather a number.  Since these definitions are shared across all software and documentation assets, any changes that are made will be consistent across the entire stack of software.
+This page shows some of the useful constants which are defined in the :py:obj:`pfxbrick.pfx` module.  This module is automatically generated from a C header file used globally by Fx Bricks for all PFx Brick related software components including the firmware and the desktop and mobile PFx apps.  This header file contains most of the constants defined in the `Interface Control Document (ICD) <https://www.fxbricks.com//downloads/PFxBrickICD-Rev3.38.pdf>`_ so that references to features, parameters, attributes, etc. can be made using a convenient literal rather a number.  Since these definitions are shared across all software and documentation assets, any changes that are made will be consistent across the entire stack of software.
 
 PFxAction
 =========
@@ -501,6 +501,8 @@ Sound Fx ID
   EVT_SOUND_STOP = 0xB
   EVT_SOUND_PLAY_IDX_MOTOR = 0xC
   EVT_SOUND_PLAY_RAND = 0xD
+  EVT_SOUND_FILE_SEEK = 0xE
+  EVT_SOUND_FILE_SCRUB = 0xF
   EVT_SOUND_PLAY_PAUSE_FLAG = 0x10
 
 Sound Param 1 and 2
@@ -606,6 +608,7 @@ Shifted event IDs as an address:
   EVT_EV3_BEACON = 0x34
   EVT_TEST_EVENT = 0x38
   EVT_DEFAULT_EVENT = 0x3C
+  EVT_DEFAULT_EVENT = 0x3C
   EVT_STARTUP_EVENT1 = 0x3C
   EVT_STARTUP_EVENT2 = 0x3D
   EVT_STARTUP_EVENT3 = 0x3E
@@ -614,6 +617,14 @@ Shifted event IDs as an address:
   EVT_STARTUP_EVENT6 = 0x41
   EVT_STARTUP_EVENT7 = 0x42
   EVT_STARTUP_EVENT8 = 0x43
+  EVT_BUTTON_PRESS = 0x44
+  EVT_BUTTON_LONGPRESS = 0x45
+  EVT_BUTTON_DOWN = 0x46
+  EVT_BUTTON_UP = 0x47
+  EVT_BLE_CONNECT = 0x48
+  EVT_BLE_DISCONNECT = 0x49
+  EVT_USB_CONNECT = 0x4A
+  EVT_USB_DISCONNECT = 0x4B
   EVT_RCTRAIN_UP = 0x50
   EVT_RCTRAIN_DOWN = 0x54
   EVT_RCTRAIN_STOP = 0x58

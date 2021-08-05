@@ -5,8 +5,8 @@ from pfxbrick import *
 
 
 if __name__ == "__main__":
-    if len(argv) < 2:
-        print("Usage: pfxget file dest")
+    if len(argv) < 2 or argv[1] == "-h":
+        print("Usage: pfxget.py file dest")
         print("  where file is file ID or filename to get")
         print("        dest is optional local file path override for copied file")
         exit()

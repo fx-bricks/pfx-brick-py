@@ -2,6 +2,14 @@
 Change Log
 ==========
 
+v.0.8.0
+-------
+
+* all new support added for v.3.38 of ICD
+* support for v.1.50+ firmware which conforms to v.3.38 ICD
+* added command line utility scripts which are installed into the python path
+* revised documentation
+
 v.0.7.1
 -------
 

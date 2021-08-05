@@ -5,7 +5,7 @@ from pfxbrick import *
 
 
 if __name__ == "__main__":
-    if len(argv) < 2:
+    if len(argv) < 2 or argv[1] == "-h":
         print("Usage: pfxrun.py file [-s]")
         print("  where file is file ID or filename of script file to run")
         print("  -s optionally stops script execution")

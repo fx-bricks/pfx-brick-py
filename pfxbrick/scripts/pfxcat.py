@@ -5,8 +5,8 @@ from pfxbrick import *
 
 
 if __name__ == "__main__":
-    if len(argv) < 2:
-        print("Usage: pfxcat file -h")
+    if len(argv) < 2 or argv[1] == "-h":
+        print("Usage: pfxcat.py file -h")
         print("  where file is file ID or filename to dump")
         exit()
     b = PFxBrick()

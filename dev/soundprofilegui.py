@@ -531,7 +531,7 @@ def main():
             for af in af_all:
                 af.show_progress = False
                 af.update()
-            event, values = window.read(timeout=1)
+            window.refresh()
             brick = PFxBrick()
             r = brick.open()
             if r:
@@ -539,7 +539,7 @@ def main():
                 for af in af_all:
                     if af.is_valid():
                         af.copy_to_brick(brick)
-                    event, values = window.read(timeout=1)
+                    window.refresh()
                 brick.close()
         elif event == "-accelthr-":
             sp.rapid_accel_thr = int(values["-accelthr-"])

@@ -100,4 +100,3 @@ PFxState
     :member-order: bysource
     :members:
     :special-members: __str__
-

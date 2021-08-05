@@ -5,7 +5,7 @@ from pfxbrick import *
 
 
 if __name__ == "__main__":
-    if len(argv) < 2:
+    if len(argv) < 2 or argv[1] == "-h":
         print("Usage: pfxplay.py file")
         print("  where file is file ID or filename of audio file to playback")
         exit()

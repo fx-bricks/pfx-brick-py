@@ -15,17 +15,42 @@ Dependencies
 * `Bleak <https://github.com/hbldh/bleak>`_
 
 * sphinx (for documentation)
+  
 
-Installation (most platforms)
------------------------------
+Pre-install System requirements for linux
+-----------------------------------------
+
+The **pfxbrick** package will require some packages to be installed suport access to USB and Bluetooth hardware drivers.  Use your preferred package manager to install these packages:
+
+ * libhidapi-dev
+ * libudev-dev
+ * libusb-1.0-0-dev
+ * bluez
+ * bluetooth
+ * libbluetooth-dev
+  
+Pre-install System requirements for macOS
+-----------------------------------------
+
+It is recommended to use the `brew <https://brew.sh>`_ package manager to install the packages for USB hardware access. (Hardware support for Bluetooth will automatically be installed with **pfxbrick** :code:`setup.py` install script which installs the `bleak <https://github.com/hbldh/bleak>`_ package with its dependency to :code:`pyobjc-framework-CoreBluetooth`).
+
+.. code-block:: shell
+
+    $ brew install hidapi
+
+Installation with pip
+---------------------
 
 The **pfxbrick** package can be installed with pip:
 
 .. code-block:: shell
 
     $ pip install pfxbrick
-    
-or directly from the source code:
+
+Install from source
+-------------------
+
+Install directly from the source code with the :code:`setup.py` script:
 
 .. code-block:: shell
 
@@ -33,31 +58,20 @@ or directly from the source code:
     $ cd pfx-brick-py
     $ python setup.py install
 
-Anaconda / miniconda based environments
----------------------------------------
+Conda Virtual Environment
+-------------------------
 
-You can use `Anaconda <https://www.anaconda.com/download/>`_ or `miniconda <https://conda.io/miniconda.html>`_ to create a virtual python environment as a "sandbox" to try the pfxbrick API modules. On most unix platforms (macOS, linux, etc.) you can use the following commands to create a new conda environment called "pfxplay" and install the pfxbrick package (assuming conda is already installed):
-
-.. code-block:: shell
-
-    $ conda create --name pfxplay python=3.6
-    $ source activate pfxplay
-    $ pip install --upgrade pip
-    $ pip install hidapi
-    $ pip install pfxbrick
-
-
-Linux
------
-
-**pfxbrick** uses the hidapi module which depends on libusb.  Since libusb might not be installed by default in your Linux distribution, you can install it using your favorite package manager:
+You can also use the package in a standalone conda virtual environment. To create a conda environment named :code:`pfxtest`:
 
 .. code-block:: shell
 
-    $ sudo apt-get install python-dev libusb-1.0-0-dev libudev-dev
-    $ sudo pip install --upgrade setuptools
-    $ sudo pip install hidapi
-    
+    $ git clone https://github.com/fx-bricks/pfx-brick-py.git
+    $ cd pfx-brick-py
+    $ conda env create -f environment.yml
+    $ conda activate pfxtest
+    $ pip install -r requirements.txt
+    $ python setup.py install
+
 
 Verify Installation
 -------------------
@@ -69,7 +83,7 @@ After installation, verify the package can imported:
     $ python
     >>> import pfxbrick
     >>> pfxbrick.__version__
-    '0.7.0'
+    '0.8.0'
     >>>
 
 If you have a PFx Brick connected, you can try the following command to see if your python installation can find your connected PFx Brick(s):

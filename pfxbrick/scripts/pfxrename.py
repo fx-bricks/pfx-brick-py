@@ -6,7 +6,7 @@ from pfxbrick import *
 
 if __name__ == "__main__":
     if len(argv) < 3:
-        print("Usage: pfxrename file newname")
+        print("Usage: pfxrename.py file newname")
         print("  where file is file ID or filename to change")
         print("        newname is the new desired filename")
         exit()
@@ -19,9 +19,7 @@ if __name__ == "__main__":
     f = str(argv[1])
     if f.isnumeric():
         f = int(argv[1])
-    print(f)
     fid = b.file_id_from_str_or_int(f)
-    print(fid)
     fd = b.filedir.get_file_dir_entry(fid)
     if len(argv) == 3:
         fn = argv[2]

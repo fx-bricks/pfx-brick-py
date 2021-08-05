@@ -896,7 +896,12 @@ if __name__ == "__main__":
 
     if argsd["scripts"]:
         test_banner("Testing Script Execution...")
-        test_scripts(b)
+        if is_version_less_than(b.icd_rev, "3.38"):
+            console.log(
+                "Cannot run test scripts since the PFx Brick must support ICD v.3.38 or newer"
+            )
+        else:
+            test_scripts(b)
 
     with console.status("Testing...") as status:
         if argsd["audio"]:

@@ -5,8 +5,8 @@ from pfxbrick import *
 
 
 if __name__ == "__main__":
-    if len(argv) < 2:
-        print("Usage: pfxrm file")
+    if len(argv) < 2 or argv[1] == "-h":
+        print("Usage: pfxrm.py file")
         print("  where file is file ID or filename to remove")
         exit()
     b = PFxBrick()
