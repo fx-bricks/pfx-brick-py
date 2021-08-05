@@ -45,6 +45,7 @@ before_install:
     - conda config --set always_yes yes --set changeps1 no;
     - conda env create -f environment.yml
     - source ~/miniconda/bin/activate pfxtest
+    - conda install -c conda-forge -c defaults python=$PYTHON_VERSION
 
 install:
     - pip install -r requirements.txt
