@@ -370,9 +370,19 @@ af_all.extend(af_gated2)
 af_all.extend(af_gated3)
 af_all.extend(af_gated4)
 
+af_bell = AudioFileGui(title="Bell", fileid=0xF8, looped=True)
+af_short = AudioFileGui(title="Short Whistle", fileid=0xF9, looped=False)
+af_long = AudioFileGui(title="Long Whistle", fileid=0xCF, looped=False)
+af_all.append(af_bell)
+af_all.append(af_short)
+af_all.append(af_long)
+
 layout = [
     [
         notch_cfg,
+        sg.Column([af_bell.get_layout()]),
+        sg.Column([af_short.get_layout()]),
+        sg.Column([af_long.get_layout()]),
     ],
     [
         *(sg.Column([af.get_layout()]) for af in af_trig1),
@@ -392,6 +402,38 @@ layout = [
                 ]
             ],
         ),
+        sg.Frame(
+            "Acceleration",
+            [
+                [
+                    sg.Slider(
+                        range=(0, 15),
+                        orientation="h",
+                        resolution=1,
+                        tick_interval=5,
+                        key="-accel-",
+                        size=(20, 10),
+                        enable_events=True,
+                    )
+                ]
+            ],
+        ),
+        sg.Frame(
+            "Deceleration",
+            [
+                [
+                    sg.Slider(
+                        range=(0, 15),
+                        orientation="h",
+                        resolution=1,
+                        tick_interval=5,
+                        key="-decel-",
+                        size=(20, 10),
+                        enable_events=True,
+                    )
+                ]
+            ],
+        ),
     ],
     [
         sg.Column([af.get_layout() for af in af_decel]),
@@ -399,30 +441,30 @@ layout = [
         sg.Column([af.get_layout() for af in af_accel]),
         sg.Column(
             [
+                *(af.get_layout() for af in af_gated1),
                 AudioFileGui(**trig2_dict[0]).get_layout(),
                 [sliders[0]],
-                *(af.get_layout() for af in af_gated1),
             ]
         ),
         sg.Column(
             [
+                *(af.get_layout() for af in af_gated2),
                 AudioFileGui(**trig2_dict[1]).get_layout(),
                 [sliders[1]],
-                *(af.get_layout() for af in af_gated2),
             ]
         ),
         sg.Column(
             [
+                *(af.get_layout() for af in af_gated3),
                 AudioFileGui(**trig2_dict[2]).get_layout(),
                 [sliders[2]],
-                *(af.get_layout() for af in af_gated3),
             ]
         ),
         sg.Column(
             [
+                *(af.get_layout() for af in af_gated4),
                 AudioFileGui(**trig2_dict[3]).get_layout(),
                 [sliders[3]],
-                *(af.get_layout() for af in af_gated4),
             ]
         ),
     ],
@@ -433,6 +475,7 @@ layout = [
         sg.Input(visible=False, enable_events=True, key="-exportscript-"),
         sg.FileBrowse("Export Script"),
         sg.Button("Copy to Brick", key="-copytobrick-"),
+        sg.Button("Export Profile", key="-exportprofile-"),
     ],
 ]
 
@@ -466,8 +509,8 @@ def update_with_profile(window):
         key = "-bound%d-" % (x)
         disabled = False if x < sp.notch_count - 1 else True
         window[key].update(disabled=disabled)
-    # window["-accel-"].update("%d" % (sp.acceleration))
-    # window["-decel-"].update("%d" % (sp.deceleration))
+    window["-accel-"].update("%d" % (sp.acceleration))
+    window["-decel-"].update("%d" % (sp.deceleration))
     if sp.rapid_accel_thr is not None:
         window["-accelthr-"].update("%d" % (sp.rapid_accel_thr))
     if sp.rapid_decel_thr is not None:
@@ -476,6 +519,8 @@ def update_with_profile(window):
         window["-brakethr-"].update("%d" % (sp.brake_decel_thr))
     if sp.brake_speed_thr is not None:
         window["-brakespeed-"].update("%d" % (sp.brake_speed_thr))
+    if sp.gated_gain is not None:
+        window["-gatedgain-"].update("%d" % (sp.gated_gain))
     update_audio_file(sp.startup)
     update_audio_file(sp.shutdown)
     update_audio_file(sp.change_dir_sound)
@@ -483,6 +528,9 @@ def update_with_profile(window):
     update_audio_file(sp.rapid_accel_loop)
     update_audio_file(sp.rapid_decel_loop)
     update_audio_file(sp.brake_stop_sound)
+    update_audio_file(sp.bell)
+    update_audio_file(sp.short_whistle)
+    update_audio_file(sp.long_whistle)
     if sp.idle_loops is not None:
         for el in sp.idle_loops.loops:
             update_audio_file(el)
@@ -540,7 +588,16 @@ def main():
                     if af.is_valid():
                         af.copy_to_brick(brick)
                     window.refresh()
+                sp.export_script("startup.pfx", as_bytes=True, to_brick=brick)
                 brick.close()
+
+        elif event == "-exportprofile-":
+            brick = PFxBrick()
+            r = brick.open()
+            if r:
+                brick.get_config()
+                sp.export_pfx_profile("test.pfxconfig", brick, af_all)
+            brick.close()
         elif event == "-accelthr-":
             sp.rapid_accel_thr = int(values["-accelthr-"])
         elif event == "-decelthr-":

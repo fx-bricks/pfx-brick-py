@@ -113,6 +113,13 @@ def uint32_to_bytes(v):
     return x
 
 
+def uint16_to_bytes(v):
+    x = []
+    x.append((v >> 8) & 0xFF)
+    x.append(v & 0xFF)
+    return x
+
+
 def uint32_toint(bytes):
     res = (
         (int(bytes[0] & 0xFF) << 24)

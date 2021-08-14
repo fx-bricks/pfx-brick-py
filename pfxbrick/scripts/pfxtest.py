@@ -140,7 +140,7 @@ def do_test_script_config(brick, fid):
         (brick.config.motors[0].accel, 14),
         (brick.config.motors[1].decel, 4),
         (brick.config.settings.brakeDecelThr, 88),
-        (brick.config.settings.notchBounds[3], 0x90),
+        (brick.config.settings.notchBounds[2], 0x90),
         (brick.config.lights.startupBrightness[4], 55),
         (brick.config.motors[0].invert, False),
         (brick.config.motors[1].invert, True),

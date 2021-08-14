@@ -98,10 +98,10 @@ def update_status(brick):
         "0x%02X" % (brick.status),
         es,
         "[cyan]%5d" % (st.slow_count),
-        "[cyan]%04X" % (st.millisec_count),
+        "[cyan]%5d" % (st.millisec_count),
         ss,
-        "[magenta]%02X" % (st.script_line),
-        "%02X" % (st.status_latch2),
+        "[magenta]%3d" % (st.script_line),
+        "0x%02X" % (st.status_latch2),
     )
     return Panel(panel)
 
@@ -213,7 +213,7 @@ def update_audio_idx(brick):
     n = brick.state.audio_notch
     if n < len(brick.config.settings.notchBounds):
         notches[n] = "[black on white]0x%02X " % (brick.config.settings.notchBounds[n])
-    panel.add_row("Curr Notch ", "%d" % brick.state.audio_notch)
+    panel.add_row("Curr Notch ", "%d" % (brick.state.audio_notch + 1))
     panel.add_row("Notch", *notches)
     return Panel(panel)
 
@@ -380,21 +380,43 @@ def update_motor_rates(st, b):
         "[Rapid Dec]",
         "[Brake]",
     )
+    if st.motor_rate_ptr & 0x80:
+        rate = -((~st.motor_rate_ptr + 1) & 0xFF)
+    else:
+        rate = st.motor_rate_ptr
+    if st.trig_change_dir_state > 0:
+        s1 = "[bold magenta]%2d" % (st.trig_change_dir_state)
+    else:
+        s1 = "[bold black]%2d" % (st.trig_change_dir_state)
+    if st.trig_set_off_state > 0:
+        s2 = "[bold magenta]%2d" % (st.trig_set_off_state)
+    else:
+        s2 = "[bold black]%2d" % (st.trig_set_off_state)
+    if st.trig_rapid_accel_state > 0:
+        s3 = "[bold magenta]%2d" % (st.trig_rapid_accel_state)
+    else:
+        s3 = "[bold black]%2d" % (st.trig_rapid_accel_state)
+    if st.trig_rapid_decel_state > 0:
+        s4 = "[bold magenta]%2d" % (st.trig_rapid_decel_state)
+    else:
+        s4 = "[bold black]%2d" % (st.trig_rapid_decel_state)
+    if st.trig_brake_state > 0:
+        s5 = "[bold magenta]%2d" % (st.trig_brake_state)
+    else:
+        s5 = "[bold black]%2d" % (st.trig_brake_state)
     panel.add_row(
-        "[cyan]0x%02X" % (st.motor_ptr),
+        "[cyan]%3d" % (st.motor_ptr),
         "[cyan]0x%02X" % (st.motor_pwm_ptr),
-        "[green]%2d" % (st.motor_rate_ptr),
-        "[magenta]%2d" % (st.trig_change_dir_state),
-        "[magenta]%2d" % (st.trig_set_off_state),
-        "[green]%2d [magenta]%2d"
-        % (b.config.settings.rapidAccelThr, st.trig_rapid_accel_state),
-        "[green]%2d [magenta]%2d"
-        % (b.config.settings.rapidDecelThr, st.trig_rapid_decel_state),
-        "[green]%2d [cyan]%2d [magenta]%2d"
+        "[green]%2d" % (rate),
+        s1,
+        s2,
+        "[green]%2d %s" % (b.config.settings.rapidAccelThr, s3),
+        "[green]%2d %s" % (b.config.settings.rapidDecelThr, s4),
+        "[green]%2d [cyan]%2d %s"
         % (
             b.config.settings.brakeDecelThr,
             b.config.settings.brakeSpeedThr,
-            st.trig_brake_state,
+            s5,
         ),
     )
     return Panel(panel)

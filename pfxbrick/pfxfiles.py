@@ -114,7 +114,7 @@ def fs_remove_file(hdev, fid):
     fs_error_check(res[1])
 
 
-def fs_copy_file_to(hdev, fid, fn, show_progress=True):
+def fs_copy_file_to(hdev, fid, fn, show_progress=True, with_bytes=None):
     """
     File copy handler to put a file on the PFx Brick.
 
@@ -129,7 +129,10 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
     :param fn: the host filename (optionally including path) to copy
     :param boolean show_progress: a flag to show the progress bar indicator during transfer.
     """
-    nBytes = os.path.getsize(fn)
+    if with_bytes is not None:
+        nBytes = len(with_bytes)
+    else:
+        nBytes = os.path.getsize(fn)
     if nBytes > 0:
         msg = [PFX_CMD_FILE_OPEN]
         msg.append(fid)
@@ -148,12 +151,18 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
             return
         if has_rich and show_progress:
             with progress:
-                f = open(fn, "rb")
+                if with_bytes is None:
+                    f = open(fn, "rb")
                 nCount = 0
                 err = False
                 transfer = progress.add_task("copy_to", filename=name, total=nBytes)
                 while (nCount < nBytes) and not err:
-                    buf = f.read(61)
+                    if with_bytes is None:
+                        buf = f.read(61)
+                    else:
+                        remain = len(with_bytes) - nCount
+                        remain = min(61, remain)
+                        buf = with_bytes[nCount : nCount + remain]
                     nRead = len(buf)
                     nCount += nRead
                     if nRead > 0:
@@ -166,18 +175,25 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
                         err = fs_error_check(res[1])
                         progress.update(transfer, advance=nRead)
 
-                f.close()
+                if with_bytes is None:
+                    f.close()
                 msg = [PFX_CMD_FILE_CLOSE]
                 msg.append(fid)
                 res = usb_transaction(hdev, msg)
                 fs_error_check(res[1])
             progress.remove_task(transfer)
         else:
-            f = open(fn, "rb")
+            if with_bytes is None:
+                f = open(fn, "rb")
             nCount = 0
             err = False
             while (nCount < nBytes) and not err:
-                buf = f.read(61)
+                if with_bytes is None:
+                    buf = f.read(61)
+                else:
+                    remain = len(with_bytes) - nCount
+                    remain = min(61, remain)
+                    buf = with_bytes[nCount : nCount + remain]
                 nRead = len(buf)
                 nCount += nRead
                 if nRead > 0:
@@ -197,7 +213,8 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True):
                             suffix="Complete",
                             length=50,
                         )
-            f.close()
+            if with_bytes is None:
+                f.close()
             msg = [PFX_CMD_FILE_CLOSE]
             msg.append(fid)
             res = usb_transaction(hdev, msg)

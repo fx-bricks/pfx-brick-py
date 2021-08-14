@@ -74,5 +74,6 @@ setuptools.setup(
         "pfxbrick/scripts/pfxplay.py",
         "pfxbrick/scripts/pfxrun.py",
         "pfxbrick/scripts/pfxfat.py",
+        "pfxbrick/scripts/pfxrestart.py",
     ],
 )

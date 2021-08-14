@@ -6,8 +6,8 @@ motor_channel: A
 motor_speed: current
 
 # specify optional acceleration/deceleration rates
-acceleration: 12
-deceleration: 6
+acceleration: 14
+deceleration: 12
 
 # default volume level at startup
 default_volume: 80
@@ -16,25 +16,25 @@ default_volume: 80
 notch_levels: 4
 
 notch_bounds:
-  - 20
   - 40
+  - 80
   - 160
 
 notch_loops: 
-  - Notch1Loop.wav
-  - Notch2Loop.wav
-  - Notch3Loop.wav
-  - Notch4Loop.wav
+  - Notch1Loop.wav -15
+  - Notch2Loop.wav -10
+  - Notch3Loop.wav -15
+  - Notch4Loop.wav -15
 
 accel_loops:
-  - Accel12Loop.wav
-  - Accel23Loop.wav
-  - Accel34Loop.wav
+  - Accel12Loop.wav -15
+  - Accel23Loop.wav -15
+  - Accel34Loop.wav -15
 
 decel_loops:
-  - Decel21Loop.wav
-  - Decel32Loop.wav
-  - Decel43Loop.wav
+  - Decel21Loop.wav -15
+  - Decel32Loop.wav -15
+  - Decel43Loop.wav -15
 
 # Chuff loops
 gated_gain: 50
@@ -46,46 +46,48 @@ gated_gain: 50
 #   - ChuffLoop3.wav
 
 gated_notch1:
-  - ChuffLoop0.wav
-  - ChuffLoop1.wav
-  - ChuffLoop2.wav
-  - ChuffLoop3.wav
+  - ChuffLoop0.wav -6
+  - ChuffLoop1.wav -6
+  - ChuffLoop2.wav -6
+  - ChuffLoop3.wav -6
 gated_notch2:
-  - ChuffLoop0.wav
-  - ChuffLoop1.wav
-  - ChuffLoop2.wav
-  - ChuffLoop3.wav
+  - ChuffLoop0.wav -4
+  - ChuffLoop1.wav -4
+  - ChuffLoop2.wav -4
+  - ChuffLoop3.wav -4
 gated_notch3:
-  - ChuffLoop0.wav
-  - ChuffLoop1.wav
-  - ChuffLoop2.wav
-  - ChuffLoop3.wav
+  - ChuffLoop0.wav -2
+  - ChuffLoop1.wav -2
+  - ChuffLoop2.wav -2
+  - ChuffLoop3.wav -2
 gated_notch4:
-  - ChuffLoop4.wav
-  - ChuffLoop5.wav
-  - ChuffLoop6.wav
-  - ChuffLoop7.wav
+  - ChuffLoop4.wav -2
+  - ChuffLoop5.wav -2
+  - ChuffLoop6.wav -2
+  - ChuffLoop7.wav -2
 
-rapid_accel_thr: 100
-rapid_decel_thr: 70
-brake_decel_thr: 50
-brake_speed_thr: 40
+rapid_accel_thr: 45
+rapid_decel_thr: 50
+brake_decel_thr: 40
+brake_speed_thr: 35
 
-brake_stop_sound:
-  - BrakeSqueal1.wav
+brake_stop_sound: BrakeSqueal1.wav -10
 
-set_off_sound:
-  - SteamHiss1.wav
+set_off_sound: SteamHiss1.wav -6
 
-rapid_accel_loop:
-  - SteamReleaseShort.wav
+rapid_accel_loop: SteamHiss2.wav -2
 
-rapid_decel_loop:
-  - Coupler1.wav
+rapid_decel_loop: SteamReleaseShort2.wav -2
+
+bell: SlowBell1.wav -8
+
+short_whistle: WhistleShort.wav -0.1
+
+long_whistle:  Whistle1.wav -0.1
 
 
 # 0 = rare, 3 = often
-random_sounds:
-  - AirRelease1.wav:
-    probability: 0
+# random_sounds:
+#   - AirRelease1.wav:
+#     probability: 0
 

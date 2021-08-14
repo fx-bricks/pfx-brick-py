@@ -20,7 +20,9 @@ def get_file_crc32(fn):
 class AudioFile:
     FADE_INTERVAL = 5
 
-    def __init__(self, fullpath, fileid, attr=None, new_name=None, virtual=False):
+    def __init__(
+        self, fullpath, fileid, attr=None, new_name=None, virtual=False, norm=None
+    ):
         self.fullpath = full_path(fullpath)
         self.fileid = fileid
         if attr is not None:
@@ -56,6 +58,8 @@ class AudioFile:
             self.audio = AudioSegment.from_wav(self.fullpath)
             self.convert_to_mono()
             self.audio = self.audio.set_frame_rate(22050)
+            if norm is not None:
+                self.audio = self.audio.normalize(abs(norm))
             self.apply_fade()
             self.export()
             self.crc32 = get_file_crc32(self.exportpath)

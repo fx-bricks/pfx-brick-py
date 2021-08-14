@@ -374,6 +374,24 @@ class PFxConfig:
                 return False
         return True
 
+    def settings_byte(self):
+        v = 0
+        if self.settings.statusLED == PFX_CFG_STATLED_OFF:
+            v |= PFX_CFG_STATLED_OFF
+        else:
+            v |= PFX_CFG_STATLED_ON
+        if self.settings.volumeBeep == PFX_CFG_VOLBEEP_ON:
+            v |= PFX_CFG_VOLBEEP_ON
+        else:
+            v |= PFX_CFG_VOLBEEP_OFF
+        v |= self.settings.autoPowerDown
+        v |= self.settings.lockoutMode
+        if self.audio.audioDRC == PFX_CFG_AUDIO_DRC_ON:
+            v |= PFX_CFG_AUDIO_DRC_ON
+        else:
+            v |= PFX_CFG_AUDIO_DRC_OFF
+        return v
+
     def from_bytes(self, msg):
         """
         Converts the message string bytes read from the PFx Brick into
@@ -454,22 +472,7 @@ class PFxConfig:
         msg.append(self.settings.bleSessionPower)
         msg.append(self.audio.bass)
         msg.append(self.audio.treble)
-        v = 0
-        if self.settings.statusLED == PFX_CFG_STATLED_OFF:
-            v |= PFX_CFG_STATLED_OFF
-        else:
-            v |= PFX_CFG_STATLED_ON
-        if self.settings.volumeBeep == PFX_CFG_VOLBEEP_ON:
-            v |= PFX_CFG_VOLBEEP_ON
-        else:
-            v |= PFX_CFG_VOLBEEP_OFF
-        v |= self.settings.autoPowerDown
-        v |= self.settings.lockoutMode
-        if self.audio.audioDRC == PFX_CFG_AUDIO_DRC_ON:
-            v |= PFX_CFG_AUDIO_DRC_ON
-        else:
-            v |= PFX_CFG_AUDIO_DRC_OFF
-        msg.append(v)
+        msg.append(self.settings_byte())
         msg.append(self.motors[0].to_config_byte())
         msg.extend(self.motors[0].to_speed_bytes())
         msg.append(self.motors[1].to_config_byte())

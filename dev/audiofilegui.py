@@ -162,15 +162,16 @@ class AudioFileGui:
             return
         self.show_progress = True
         if self.audiofile.is_on_brick(brick):
-            self.update(progress=1.0)
-            return
-        nBytes = os.path.getsize(self.audiofile.fullpath)
+            if self.audiofile.same_crc_as_on_brick(brick):
+                self.update(progress=1.0)
+                return
+        nBytes = os.path.getsize(self.audiofile.exportpath)
         if nBytes > 0:
             msg = [PFX_CMD_FILE_OPEN]
             msg.append(self.fileid)
             msg.append(0x06)  # CREATE | WRITE mode
             msg.extend(uint32_to_bytes(nBytes))
-            name = os.path.basename(self.audiofile.fullpath)
+            name = os.path.basename(self.audiofile.exportpath)
             nd = bytes(name, "utf-8")
             for b in nd:
                 msg.append(b)
@@ -181,7 +182,7 @@ class AudioFileGui:
                 return
             if fs_error_check(res[1]):
                 return
-            f = open(self.audiofile.fullpath, "rb")
+            f = open(self.audiofile.exportpath, "rb")
             nCount = 0
             err = False
             interval = 0
@@ -197,7 +198,7 @@ class AudioFileGui:
                         msg.append(b)
                     res = usb_transaction(brick.dev, msg)
                     err = fs_error_check(res[1])
-                if (interval % 32) == 0 or abs(nBytes - nCount) < 61:
+                if (interval % 256) == 0 or abs(nBytes - nCount) < 61:
                     sg.one_line_progress_meter(
                         "Copying File to PFx Brick",
                         nCount,
