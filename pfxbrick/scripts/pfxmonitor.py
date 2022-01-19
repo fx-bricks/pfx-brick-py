@@ -58,6 +58,7 @@ def make_layout() -> Layout:
 
 class Header:
     """Display header with clock."""
+
     def __init__(self, brick):
         self.brick = brick
 
@@ -68,7 +69,8 @@ class Header:
         grid.add_column(justify="left", min_width=42, ratio=1)
         grid.add_column(justify="right", ratio=1)
         grid.add_row(
-            "[light_slate_blue]%s [bold cyan]%s" % (self.brick.product_id, self.brick.product_desc),
+            "[light_slate_blue]%s [bold cyan]%s"
+            % (self.brick.product_id, self.brick.product_desc),
             "S/N: [yellow]%s" % (self.brick.serial_no),
             "[white]Firmware [green]v.%s build %s [white]ICD [green]v.%s"
             % (self.brick.firmware_ver, self.brick.firmware_build, self.brick.icd_rev),
