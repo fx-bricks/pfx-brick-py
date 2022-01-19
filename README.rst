@@ -150,24 +150,24 @@ Utility Scripts
 
 The **pfxbrick** package will install some useful command line script applications in your python environment's path.  These include:
 
-* :code:`pfxcat.py` - dumps the raw contents of a file on the PFx Brick to your console.
-* :code:`pfxdir.py` - shows the directory listing of the PFx Brick file system
-* :code:`pfxget.py` - gets a file from the PFx Brick
-* :code:`pfxput.py` - copies a local host file on to the PFx Brick
-* :code:`pfxrm.py` - delete a file from the PFx Brick
-* :code:`pfxrename.py` - renames a file on the PFx Brick
-* :code:`pfxdump.py` - dumps raw contents of PFx Brick flash memory
-* :code:`pfxinfo.py` - discovers and shows information on all attached PFx Bricks
-* :code:`pfxmonitor.py` - shows real time operational status of a PFx Brick
-* :code:`pfxtest.py` - PFx Brick self test utility
-* :code:`pfxplay.py` - plays an audio file on the PFx Brick
-* :code:`pfxrun.py` - runs a script a file on the PFx Brick
+* :code:`pfxcat` - dumps the raw contents of a file on the PFx Brick to your console.
+* :code:`pfxdir` - shows the directory listing of the PFx Brick file system
+* :code:`pfxget` - gets a file from the PFx Brick
+* :code:`pfxput` - copies a local host file on to the PFx Brick
+* :code:`pfxrm` - delete a file from the PFx Brick
+* :code:`pfxrename` - renames a file on the PFx Brick
+* :code:`pfxdump` - dumps raw contents of PFx Brick flash memory
+* :code:`pfxinfo` - discovers and shows information on all attached PFx Bricks
+* :code:`pfxmonitor` - shows real time operational status of a PFx Brick
+* :code:`pfxtest` - PFx Brick self test utility
+* :code:`pfxplay` - plays an audio file on the PFx Brick
+* :code:`pfxrun` - runs a script a file on the PFx Brick
 
 After installing the **pfxbrick** package, you should be able to use any of these utilities directly from the command line as follows:
 
 .. code-block:: shell
 
-    $ pfxinfo.py
+    $ pfxinfo
     ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
     ┃ A216 PFx Brick 16 MB                                                     ┃
     ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -180,7 +180,7 @@ After installing the **pfxbrick** package, you should be able to use any of thes
     │ Errors                : 0x00 None                                        │
     │ Name                  : My PFx Brick                                     │
     └──────────────────────────────────────────────────────────────────────────┘
-    $ pfxdir.py
+    $ pfxdir
      ID Name                       Size    Attr    User1    User2    CRC32
       0 sin150Hz.wav              132.3 kB 0000 000204CE 0000002C A712A54E
       1 pink6dB.wav               132.3 kB 0000 000204CE 0000002C E6AACE61
@@ -191,7 +191,7 @@ To find out more information on how to use each utility, use without arguments o
 
 .. code-block:: shell
 
-    $ pfxinfo.py -h
+    $ pfxinfo -h
     usage: brickinfo.py [-h] [-c]
 
     Show information for all attached PFx Bricks
