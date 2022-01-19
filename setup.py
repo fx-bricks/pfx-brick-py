@@ -4,6 +4,7 @@
 # Learn more: https://github.com/fx-bricks/pfx-brick-py/setup.py
 
 import os
+import platform
 import sys
 import setuptools
 
@@ -13,7 +14,7 @@ MINIMUM_PYTHON_VERSION = "3.6"
 
 def check_python_version():
     """Exit when the Python version is too low."""
-    if sys.version < MINIMUM_PYTHON_VERSION:
+    if platform.python_version() < MINIMUM_PYTHON_VERSION:
         sv = "Python %s+ is required, not %s" % (MINIMUM_PYTHON_VERSION, sys.version)
         sys.exit(sv)
 
