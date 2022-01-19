@@ -40,9 +40,6 @@ def build_description():
     else:
         return readme + "\n" + changelog
 
-
-check_python_version()
-
 setuptools.setup(
     name=read_package_variable("__project__"),
     version=read_package_variable("__version__"),
