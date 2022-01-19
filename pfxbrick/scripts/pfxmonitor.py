@@ -58,6 +58,8 @@ def make_layout() -> Layout:
 
 class Header:
     """Display header with clock."""
+    def __init__(self, brick):
+        self.brick = brick
 
     def __rich__(self) -> Panel:
         grid = Table.grid(expand=False)
@@ -66,12 +68,12 @@ class Header:
         grid.add_column(justify="left", min_width=42, ratio=1)
         grid.add_column(justify="right", ratio=1)
         grid.add_row(
-            "[light_slate_blue]%s [bold cyan]%s" % (b.product_id, b.product_desc),
-            "S/N: [yellow]%s" % (b.serial_no),
+            "[light_slate_blue]%s [bold cyan]%s" % (self.brick.product_id, self.brick.product_desc),
+            "S/N: [yellow]%s" % (self.brick.serial_no),
             "[white]Firmware [green]v.%s build %s [white]ICD [green]v.%s"
-            % (b.firmware_ver, b.firmware_build, b.icd_rev),
+            % (self.brick.firmware_ver, self.brick.firmware_build, self.brick.icd_rev),
             "",
-            "[bold yellow]%s" % (b.name),
+            "[bold yellow]%s" % (self.brick.name),
             # datetime.now().ctime().replace(":", "[blink]:[/]"),
         )
         return Panel(grid)
@@ -469,7 +471,7 @@ def main():
     b.refresh_file_dir()
 
     layout = make_layout()
-    layout["header"].update(Header())
+    layout["header"].update(Header(b))
     with Live(layout, refresh_per_second=8, screen=True):
         flip = True
         while True:
