@@ -309,9 +309,9 @@ def test_dac(brick):
         (63, 0xB6),
     ]
     ok = True
-    i2c_write(b, 0, 0)
+    i2c_write(brick, 0, 0)
     for reg in registers:
-        v = i2c_read(b, reg[0])
+        v = i2c_read(brick, reg[0])
         if not v[0] == reg[1]:
             ok = False
     return ok
@@ -641,7 +641,7 @@ combo_fx = [
 ]
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="PFx Brick self test.  Most tests are run by default but individual tests can be omitted using  command line arguments.",
         prefix_chars="-+",
@@ -921,6 +921,11 @@ if __name__ == "__main__":
             test_audio_playback(b, 1)
 
     b.close()
+
+
+if __name__ == "__main__":
+    main()
+
 
 # b.play_audio_file(7)
 # time.sleep(5)

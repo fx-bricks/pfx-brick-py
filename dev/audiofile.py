@@ -3,7 +3,7 @@ import zlib
 import time
 
 from wavplay import WavePlayerLoop
-
+from rich import print
 from pydub import AudioSegment
 
 from toolbox import *
@@ -51,10 +51,9 @@ class AudioFile:
             self.path, self.filename = split_path(fullpath)
             self.name, self.ext = split_filename(self.filename)
             if new_name is not None:
-                self.exportpath = TMP_PATH + os.sep + new_name
                 self.filename = new_name
-            else:
-                self.exportpath = TMP_PATH + os.sep + self.filename
+                self.name, self.ext = split_filename(self.filename)
+            self.exportpath = TMP_PATH + os.sep + self.name + self.ext
             self.audio = AudioSegment.from_wav(self.fullpath)
             self.convert_to_mono()
             self.audio = self.audio.set_frame_rate(22050)

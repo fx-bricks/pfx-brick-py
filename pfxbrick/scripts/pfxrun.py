@@ -4,10 +4,10 @@ from sys import argv
 from pfxbrick import *
 
 
-if __name__ == "__main__":
-    if len(argv) < 2 or argv[1] == "-h":
+def main():
+    if len(argv) < 2 or "-h" in argv:
         print("Usage: pfxrun.py file [-s]")
-        print("  where file is file ID or filename of script file to run")
+        print("  where <file> is file ID or filename of script file to run")
         print("  -s optionally stops script execution")
         exit()
     b = PFxBrick()
@@ -30,3 +30,7 @@ if __name__ == "__main__":
     else:
         print("File %s is not found on the PFx Brick" % (argv[1]))
     b.close()
+
+
+if __name__ == "__main__":
+    main()

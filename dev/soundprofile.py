@@ -26,6 +26,35 @@ attr_dict = {
 }
 
 
+def map_pct_to_motor_step(amount):
+    if isinstance(amount, str):
+        pct = amount.replace("%", "")
+        pct = int(pct)
+    elif isinstance(amount, float):
+        pct = int(amount * 100.0)
+    else:
+        pct = int(amount)
+    if pct >= 33:
+        return 9
+    if pct >= 25:
+        return 8
+    if pct >= 20:
+        return 7
+    if pct >= 10:
+        return 6
+    if pct >= 6:
+        return 5
+    if pct >= 5:
+        return 4
+    if pct >= 3:
+        return 3
+    if pct >= 2:
+        return 2
+    if pct >= 1:
+        return 1
+    return 0
+
+
 class LoopList:
     def __init__(self, path, files, fileid_base, attr_base=None, **kwargs):
         self.loops = []
@@ -55,7 +84,10 @@ class LoopList:
             else:
                 attr = 0
             if prefix is not None:
-                new_name = prefix + vf
+                f0 = full_path(path + os.sep + vf)
+                p, f1 = split_path(f0)
+                name, ext = split_filename(f1)
+                new_name = prefix + name + ext
             else:
                 new_name = None
             if virtual:
@@ -101,8 +133,19 @@ class GatedLoops(LoopList):
 class SoundProfile:
     def __init__(self):
         self.source_path = None
+        self.motor_speed = "target"
+        self.motor_ch = 0
         self.acceleration = None
         self.deceleration = None
+        self.vmin = None
+        self.vmid = None
+        self.vmax = None
+
+        self.increase_speed = None
+        self.decrease_speed = None
+        self.change_dir = None
+        self.stop = None
+
         self.default_volume = None
         self.rapid_accel_thr = 0
         self.rapid_decel_thr = 0
@@ -124,10 +167,8 @@ class SoundProfile:
         self.startup = None
         self.shutdown = None
         self.skip_startup = True
-        self.motor_speed = "target"
-        self.motor_ch = 0
         self.gated_gain = 50
-        self.random_sounds = None
+        self.other_sounds = None
         self.bell = None
         self.short_whistle = None
         self.long_whistle = None
@@ -138,6 +179,14 @@ class SoundProfile:
         self.source_path = None
         self.acceleration = None
         self.deceleration = None
+        self.vmin = None
+        self.vmid = None
+        self.vmax = None
+        self.increase_speed = None
+        self.decrease_speed = None
+        self.change_dir = None
+        self.stop = None
+
         self.default_volume = None
         self.rapid_accel_thr = 0
         self.rapid_decel_thr = 0
@@ -162,7 +211,7 @@ class SoundProfile:
         self.motor_speed = "target"
         self.motor_ch = 0
         self.gated_gain = 50
-        self.random_sounds = None
+        self.other_sounds = None
 
         self.audio_files = None
 
@@ -188,6 +237,8 @@ class SoundProfile:
         return ranges
 
     def set_with_dict(self, d):
+        fid = 1
+        self.other_sounds = None
         for k, v in d.items():
             if k == "source":
                 self.source_path = v
@@ -221,17 +272,22 @@ class SoundProfile:
                     vn = None
                 fn = d["source"] + os.sep + vf
                 self.__dict__[k] = AudioFile(fn, fileid=fid, attr=attr, norm=vn)
-            elif k in ["random_sounds", "random"]:
+            elif k in ["random_sounds", "random", "other_sounds"]:
                 dd = []
                 for vv in v:
                     dk = {}
                     for kk, vk in vv.items():
                         if vk is None:
-                            dk["filename"] = kk
+                            fn = d["source"] + os.sep + kk
+                            dk["audiofile"] = AudioFile(fn, fileid=fid, attr=0)
                         else:
                             dk[kk] = vk
                     dd.append(dk)
-                self.random_sounds = dd
+                    fid += 1
+                if self.other_sounds is None:
+                    self.other_sounds = dd
+                else:
+                    self.other_sounds.extend(dd)
             elif k in ["notch_levels", "notch_count"]:
                 self.notch_count = v
             elif k == "notch_bounds":
@@ -274,6 +330,14 @@ class SoundProfile:
                     )
             elif k == "skip_startup":
                 self.skip_startup = v
+            elif k == "vmin":
+                self.vmin = int(v)
+            elif k == "vmid":
+                self.vmid = int(v)
+            elif k == "vmax":
+                self.vmax = int(v)
+            elif k in ["increase_speed", "decrease_speed", "stop", "change_dir"]:
+                self.__dict__[k] = v
             elif k == "motor_channel":
                 if str(v).lower() in ["a", "0"]:
                     self.motor_ch = 0
@@ -320,6 +384,12 @@ class SoundProfile:
             s.append("set config motor %s accel = %d" % (ch, self.acceleration))
         if self.deceleration is not None:
             s.append("set config motor %s decel = %d" % (ch, self.deceleration))
+        if self.vmin is not None:
+            s.append("set config motor %s v0 = %d" % (ch, self.vmin))
+        if self.vmid is not None:
+            s.append("set config motor %s v1 = %d" % (ch, self.vmid))
+        if self.vmax is not None:
+            s.append("set config motor %s v2 = %d" % (ch, self.vmax))
         s.append("set config nc = %d" % (self.notch_count))
         for i in range(self.notch_count - 1):
             s.append("set config nb %d = %d" % (i + 1, self.notch_bounds[i]))
@@ -367,8 +437,8 @@ class SoundProfile:
                     loopid = 41 + (loop.fileid - 0xDC)
                 s.append('set file gated %d = "%s"' % (loopid, loop.filename))
 
-        s.append("\n# Activate sound effects\n")
         if self.notch_count > 1:
+            s.append("\n# Activate motor indexed sound effects")
             idx_options = 0
             if self.startup is not None:
                 idx_options |= 0x04
@@ -381,6 +451,7 @@ class SoundProfile:
                 motor_op |= 0x04
             s.append("sound fx 12 0 0x%02X 0x%02X" % (motor_op, idx_options))
         if self.gated_loops is not None:
+            s.append("\n# Activate motor gated sound effects")
             if len(self.gated_loops) > 0:
                 motor_op = 0
                 if self.motor_ch == 1:
@@ -389,26 +460,41 @@ class SoundProfile:
                 motor_op |= 0x04
                 s.append("sound fx 9 0 0x%02X 0x%02X" % (motor_op, self.gated_gain))
 
-        if self.random_sounds is not None:
-            s.append("\n# Activate random sound effects\n")
-            for sound in self.random_sounds:
-                s.append(
-                    'sound fx 13 "%s" %d 0' % (sound["filename"], sound["probability"])
-                )
-        s.append("\n# setup remote control\n")
-        s.append("event ir speed ch 1 left up {")
-        s.append("  motor a fx 0x2 2 0")
-        s.append("}\n")
-        s.append("event ir speed ch 1 left down {")
-        s.append("  motor a fx 0x3 2 0")
-        s.append("}\n")
-        s.append("event ir speed ch 1 left button {")
-        s.append("  motor a fx 0x1 0 0")
-        s.append("}\n")
-        s.append("event ir speed ch 1 right button {")
-        s.append("  motor a fx 0x6 0 0")
-        s.append("}\n")
-
+        if self.other_sounds is not None:
+            s.append("\n# Other sound effects")
+            for sound in self.other_sounds:
+                name = sound["audiofile"].name + sound["audiofile"].ext
+                if "probability" in sound:
+                    s.append("# random sound effect")
+                    s.append('sound fx 13 "%s" %d 0' % (name, sound["probability"]))
+                elif "trigger" in sound:
+                    repeat = ""
+                    if "repeat" in sound:
+                        if sound["repeat"]:
+                            repeat = "repeat"
+                    s.append(
+                        'event ir %s {\n  sound play "%s" %s\n}'
+                        % (sound["trigger"], name, repeat)
+                    )
+        s.append("\n# setup remote control")
+        if self.increase_speed is not None:
+            trig = self.increase_speed["trigger"]
+            step = 0
+            if "amount" in self.increase_speed:
+                step = map_pct_to_motor_step(self.increase_speed["amount"])
+            s.append("event ir %s {\n  motor %s fx 0x2 %d 0\n}" % (trig, ch, step))
+        if self.decrease_speed is not None:
+            trig = self.decrease_speed["trigger"]
+            step = 0
+            if "amount" in self.decrease_speed:
+                step = map_pct_to_motor_step(self.decrease_speed["amount"])
+            s.append("event ir %s {\n  motor %s fx 0x3 %d 0\n}" % (trig, ch, step))
+        if self.stop is not None:
+            trig = self.stop["trigger"]
+            s.append("event ir %s {\n  motor %s fx 0x1 0 0\n}" % (trig, ch))
+        if self.change_dir is not None:
+            trig = self.change_dir["trigger"]
+            s.append("event ir %s {\n  motor %s fx 0x6 0 0\n}" % (trig, ch))
         s.append("\n")
 
         if to_brick is not None:

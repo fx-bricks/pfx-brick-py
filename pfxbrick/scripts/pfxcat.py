@@ -6,9 +6,10 @@ from pfxbrick import *
 
 TMP_FILE = tempfile.gettempdir() + os.sep + "pfxdump.dat"
 
-if __name__ == "__main__":
-    if len(argv) < 2 or argv[1] == "-h":
-        print("Usage: pfxcat.py file -h")
+
+def main():
+    if len(argv) < 2 or "-h" in argv:
+        print("Usage: pfxcat file -h")
         print("  where file is file ID or filename to dump")
         exit()
     b = PFxBrick()
@@ -32,3 +33,7 @@ if __name__ == "__main__":
     else:
         print("File %s not found" % (argv[1]))
     b.close()
+
+
+if __name__ == "__main__":
+    main()

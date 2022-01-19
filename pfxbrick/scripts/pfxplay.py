@@ -4,10 +4,10 @@ from sys import argv
 from pfxbrick import *
 
 
-if __name__ == "__main__":
-    if len(argv) < 2 or argv[1] == "-h":
-        print("Usage: pfxplay.py file")
-        print("  where file is file ID or filename of audio file to playback")
+def main():
+    if len(argv) < 2 or "-h" in argv:
+        print("Usage: pfxplay file")
+        print("  where <file> is file ID or filename of audio file to playback")
         exit()
     b = PFxBrick()
     b.open()
@@ -28,3 +28,7 @@ if __name__ == "__main__":
     else:
         print("File %s is not found on the PFx Brick" % (argv[1]))
     b.close()
+
+
+if __name__ == "__main__":
+    main()

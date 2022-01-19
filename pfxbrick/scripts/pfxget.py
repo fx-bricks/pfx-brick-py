@@ -4,11 +4,11 @@ from sys import argv
 from pfxbrick import *
 
 
-if __name__ == "__main__":
-    if len(argv) < 2 or argv[1] == "-h":
-        print("Usage: pfxget.py file dest")
-        print("  where file is file ID or filename to get")
-        print("        dest is optional local file path override for copied file")
+def main():
+    if len(argv) < 2 or "-h" in argv:
+        print("Usage: pfxget file dest")
+        print("  where <file> is file ID or filename to get")
+        print("        <dest> is optional local file path override for copied file")
         exit()
     b = PFxBrick()
     r = b.open()
@@ -32,3 +32,7 @@ if __name__ == "__main__":
     print("Copying file %s as %s from brick..." % (f, fn))
     b.get_file(fid, fn)
     b.close()
+
+
+if __name__ == "__main__":
+    main()

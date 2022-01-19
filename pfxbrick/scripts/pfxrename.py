@@ -4,11 +4,11 @@ from sys import argv
 from pfxbrick import *
 
 
-if __name__ == "__main__":
-    if len(argv) < 3:
-        print("Usage: pfxrename.py file newname")
-        print("  where file is file ID or filename to change")
-        print("        newname is the new desired filename")
+def main():
+    if len(argv) < 3 or "-h" in argv:
+        print("Usage: pfxrename file newname")
+        print("  where <file> is file ID or filename to change")
+        print("        <newname> is the new desired filename")
         exit()
     b = PFxBrick()
     r = b.open()
@@ -28,3 +28,7 @@ if __name__ == "__main__":
     b.refresh_file_dir()
     print(b.filedir)
     b.close()
+
+
+if __name__ == "__main__":
+    main()

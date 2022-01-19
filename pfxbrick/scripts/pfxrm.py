@@ -4,10 +4,10 @@ from sys import argv
 from pfxbrick import *
 
 
-if __name__ == "__main__":
-    if len(argv) < 2 or argv[1] == "-h":
-        print("Usage: pfxrm.py file")
-        print("  where file is file ID or filename to remove")
+def main():
+    if len(argv) < 2 or "-h" in argv:
+        print("Usage: pfxrm file")
+        print("  where <file> is file ID or filename to remove")
         exit()
     b = PFxBrick()
     b.open()
@@ -24,3 +24,7 @@ if __name__ == "__main__":
     else:
         print("File %s is not found on the PFx Brick" % (argv[1]))
     b.close()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,9 +1,5 @@
+#! /usr/bin/env python3
 import argparse
-import copy
-import time
-import datetime
-import random
-import zlib
 from datetime import datetime
 from rich import print
 from rich.console import Console
@@ -14,7 +10,7 @@ from pfxbrick import *
 console = Console()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Show information for all attached PFx Bricks"
     )
@@ -69,4 +65,8 @@ if __name__ == "__main__":
 
         if argsd["config"]:
             b.get_config()
-            b.print_config()
+            console.print(str(b.config))
+
+
+if __name__ == "__main__":
+    main()

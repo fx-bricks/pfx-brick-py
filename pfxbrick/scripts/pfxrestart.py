@@ -4,12 +4,11 @@ from sys import argv
 from pfxbrick import *
 
 
-if __name__ == "__main__":
-    if len(argv) > 1:
-        if argv[1] == "-h":
-            print("Usage: pfxrestart.py -h")
-            print("  Restart the PFx Brick")
-            exit()
+def main():
+    if "-h" in argv[1]:
+        print("Usage: pfxrestart -h")
+        print("  Restart the PFx Brick")
+        exit()
     b = PFxBrick()
     b.open()
     r = b.open()
@@ -28,3 +27,7 @@ if __name__ == "__main__":
         ]
     )
     b.close()
+
+
+if __name__ == "__main__":
+    main()

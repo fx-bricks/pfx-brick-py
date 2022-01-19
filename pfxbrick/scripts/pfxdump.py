@@ -4,11 +4,11 @@ from sys import argv
 from pfxbrick import *
 
 
-if __name__ == "__main__":
-    if len(argv) < 2:
+def main():
+    if len(argv) < 3 or "-h" in argv:
         print("Usage: pfxdump address bytes")
         print(
-            "  where address is the flash start address and bytes is number of bytes to dump"
+            "  where <address> is the flash start address and <bytes> is number of bytes to dump"
         )
         exit()
     b = PFxBrick()
@@ -19,3 +19,7 @@ if __name__ == "__main__":
     rb = flash_read(b, int(argv[1], 16), int(argv[2]))
     pprint_bytes(rb, argv[1])
     b.close()
+
+
+if __name__ == "__main__":
+    main()

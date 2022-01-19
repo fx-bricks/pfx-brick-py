@@ -485,8 +485,8 @@ def update_audio_file(audiofile):
         if audiofile is not None:
             if f.fileid == audiofile.fileid:
                 f.set_audiofile(audiofile)
-        else:
-            f.clear()
+                return
+    f.clear()
 
 
 def update_gui(window, event, values):
@@ -524,10 +524,10 @@ def update_with_profile(window):
     update_audio_file(sp.startup)
     update_audio_file(sp.shutdown)
     update_audio_file(sp.change_dir_sound)
-    update_audio_file(sp.set_off_sound)
     update_audio_file(sp.rapid_accel_loop)
     update_audio_file(sp.rapid_decel_loop)
     update_audio_file(sp.brake_stop_sound)
+    update_audio_file(sp.set_off_sound)
     update_audio_file(sp.bell)
     update_audio_file(sp.short_whistle)
     update_audio_file(sp.long_whistle)
@@ -583,11 +583,16 @@ def main():
             brick = PFxBrick()
             r = brick.open()
             if r:
+                halt_action = PFxAction()
+                halt_action.command = EVT_COMMAND_ALL_OFF
+                brick.test_action(halt_action)
                 brick.refresh_file_dir()
                 for af in af_all:
                     if af.is_valid():
                         af.copy_to_brick(brick)
                     window.refresh()
+                for af in sp.other_sounds:
+                    af["audiofile"].copy_to_brick(brick)
                 sp.export_script("startup.pfx", as_bytes=True, to_brick=brick)
                 brick.close()
 

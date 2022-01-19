@@ -426,7 +426,7 @@ class PFxFile:
             attr_str = file_attr_dict[self.attributes]
         elif self.id in fileid_dict:
             attr_str = fileid_dict[self.id]
-        s = "%3d %-24s %6.1f kB %04X %08X %08X %08X %04X %02X %s" % (
+        s = "%3d %-24s %6.1f kB %04X %08X %08X %08X  %04X %02X %s" % (
             self.id,
             self.name,
             float(self.size / 1000),
@@ -513,8 +513,18 @@ class PFxDir:
         """
         sb = []
         sb.append(
-            "%3s %-24s %6s    %4s %8s %8s %8s"
-            % ("ID", "Name", "Size", "Attr", "User1", "User2", "CRC32")
+            "%3s %-24s %6s    %4s %8s %8s %8s %5s %s"
+            % (
+                "ID",
+                "Name",
+                "Size",
+                "Attr",
+                "User1",
+                "User2",
+                "CRC32",
+                "Start",
+                "Ext Attr",
+            )
         )
         for f in self.files:
             sb.append(str(f))

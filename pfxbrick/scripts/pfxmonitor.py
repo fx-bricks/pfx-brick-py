@@ -1,8 +1,7 @@
+#! /usr/bin/env python3
 import argparse
 from functools import update_wrapper
 import time
-import datetime
-import zlib
 from datetime import datetime
 
 from rich import box, print
@@ -173,10 +172,11 @@ def update_audio(st, brick):
     panel.add_column(ratio=5, min_width=24)
     for i in range(4):
         fid = st.audio_ch[i].file_id
+        fn = ""
         if not fid == 0xFF:
-            fn = brick.filedir.get_file_dir_entry(fid).name
-        else:
-            fn = ""
+            fn = brick.filedir.get_file_dir_entry(fid)
+            if fn is not None:
+                fn = fn.name
         fs = "File: --- " if fid == 0xFF else "File: [aquamarine3]0x%02X %s" % (fid, fn)
         panel.add_row(
             "Ch %d " % (i),
@@ -422,7 +422,7 @@ def update_motor_rates(st, b):
     return Panel(panel)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="PFx Brick real time monitoring utility. Press <Ctrl>-C to exit monitor."
     )
@@ -470,7 +470,7 @@ if __name__ == "__main__":
 
     layout = make_layout()
     layout["header"].update(Header())
-    with Live(layout, refresh_per_second=10, screen=True):
+    with Live(layout, refresh_per_second=8, screen=True):
         flip = True
         while True:
             st = b.get_current_state()
@@ -512,3 +512,7 @@ if __name__ == "__main__":
             layout["audio_idx"].update(update_audio_idx(b))
 
             time.sleep(0.15)
+
+
+if __name__ == "__main__":
+    main()

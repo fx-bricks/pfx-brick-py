@@ -17,11 +17,11 @@ def split_path(file):
     return os.path.split(full_path(file))
 
 
-if __name__ == "__main__":
-    if len(argv) < 2 or argv[1] == "-h":
-        print("Usage: pfxput.py file id")
-        print("  where file is the local file to copy")
-        print("        id is an optional file ID to use instead of next available ID")
+def main():
+    if len(argv) < 2 or "-h" in argv:
+        print("Usage: pfxput file id")
+        print("  where <file> is the local file to copy")
+        print("        <id> is an optional file ID to use instead of next available ID")
         exit()
     b = PFxBrick()
     b.open()
@@ -53,3 +53,7 @@ if __name__ == "__main__":
             [PFX_CMD_FILE_DIR, PFX_DIR_REQ_SET_ATTR_ID, fid, 0x30, 0x80]
         )
     b.close()
+
+
+if __name__ == "__main__":
+    main()

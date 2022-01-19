@@ -2,8 +2,14 @@
 Change Log
 ==========
 
+v.0.8.3
+-------
+
+* updated command line scripts to install using setuptools console_scripts for better platform compatibility
+
 v.0.8.1
 -------
+
 * bug fixes
 
 v.0.8.0

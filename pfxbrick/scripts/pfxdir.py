@@ -4,7 +4,12 @@ from sys import argv
 from pfxbrick import *
 
 
-if __name__ == "__main__":
+def main():
+    if "-h" in argv:
+        print("Usage: pfxdir -h")
+        print("  Show the PFx Brick file system directory")
+        exit()
+
     b = PFxBrick()
     r = b.open()
     if not r:
@@ -12,3 +17,7 @@ if __name__ == "__main__":
     b.refresh_file_dir()
     print(b.filedir)
     b.close()
+
+
+if __name__ == "__main__":
+    main()

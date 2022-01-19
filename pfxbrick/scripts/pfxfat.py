@@ -1,15 +1,23 @@
+#! /usr/bin/env python3
+from sys import argv
+
 from rich import print
 from pfxbrick import *
 
-if __name__ == "__main__":
+
+def main():
+    if len(argv) > 1 or "-h" in argv:
+        print("Usage: pfxfat -h")
+        print("  Shows the PFx Brick file allocation table")
+        exit()
+
     b = PFxBrick()
     b.open()
     r = b.open()
     if not r:
         exit()
-    rb = flash_read(b, 0xFFC000, 4096)
+    rb = flash_read(b, 0xFFC000, 8192)
     b.close()
-    print(len(rb))
     x = []
     for i in range(0, len(rb) - 1, 2):
         x.append(rb[i + 1])
@@ -55,3 +63,7 @@ if __name__ == "__main__":
     else:
         s.pop()
     print("".join(s))
+
+
+if __name__ == "__main__":
+    main()
