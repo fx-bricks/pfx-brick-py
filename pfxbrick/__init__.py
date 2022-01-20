@@ -6,7 +6,7 @@ import os
 
 # fmt: off
 __project__ = 'pfxbrick'
-__version__ = '0.8.3'
+__version__ = '0.8.4'
 
 VERSION = __project__ + "-" + __version__
 
