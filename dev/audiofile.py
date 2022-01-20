@@ -67,7 +67,9 @@ class AudioFile:
         self.is_playing = False
 
     def __str__(self):
-        return "%s rate=%d kHz samp=%s ch=%d dBFS=%.1f dur=%.3f" % (
+        return "%d[0x%02X] %s rate=%d kHz samp=%s ch=%d dBFS=%.1f dur=%.3f" % (
+            self.fileid,
+            self.fileid,
             self.filename,
             self.audio.frame_rate,
             self.audio.sample_width,
@@ -178,7 +180,8 @@ class AudioFile:
             time.sleep(1)
             brick.refresh_file_dir()
             f0 = brick.filedir.get_file_dir_entry(self.fileid)
-            fcrc = f0.crc32
+            if f0 is not None:
+                fcrc = f0.crc32
         print("Copied file reports CRC32=0x%X" % (f0.crc32), f0.crc32 == crc32)
         if self.attr > 0:
             print(

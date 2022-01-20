@@ -5,7 +5,7 @@ from pfxbrick import *
 
 
 def main():
-    if "-h" in argv[1]:
+    if "-h" in argv:
         print("Usage: pfxrestart -h")
         print("  Restart the PFx Brick")
         exit()

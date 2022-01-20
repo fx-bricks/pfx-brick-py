@@ -580,25 +580,25 @@ def test_motor_channel(brick, ch, speed):
     return ok1 & ok2 & ok3
 
 
-def test_file_transfer(fdata, fid=0, fn="test_data.wav"):
+def test_file_transfer(brick, fdata, fid=0, fn="test_data.wav"):
     bindata = base64.b64decode(fdata)
     with open(fn, "wb") as f:
         f.write(bindata)
     crc32 = get_file_crc32(fn)
     console.log("Copying file %s with CRC32=0x%08X" % (fn, crc32))
-    b.put_file(fn, fid)
+    brick.put_file(fn, fid)
     fcrc = 0
     while fcrc == 0:
         time.sleep(1)
-        b.refresh_file_dir()
-        f0 = b.filedir.get_file_dir_entry(fid)
+        brick.refresh_file_dir()
+        f0 = brick.filedir.get_file_dir_entry(fid)
         fcrc = f0.crc32
     test_result(
         "Copied file directory %s CRC32=0x%08X" % (fn, f0.crc32), f0.crc32 == crc32
     )
     console.log("Getting file %s with CRC32=0x%08X" % (fn, crc32))
     fnr = fn + ".rx"
-    b.get_file(fid, fnr)
+    brick.get_file(fid, fnr)
     read_crc32 = get_file_crc32(fnr)
     test_result(
         "Read back file %s CRC32=0x%08X" % (fnr, read_crc32), crc32 == read_crc32
@@ -856,13 +856,16 @@ def main():
     if argsd["files"]:
         test_banner("Testing File System...")
         files = [
-            (0, SINFILE, 0x0000, 0x000204CE, 0x0000002C, "sin150Hz.wav"),
-            (1, PINKFILE, 0x0000, 0x000204CE, 0x0000002C, "pink6dB.wav"),
-            (2, YAMANOTE_FILE, 0x0000, 0x00054A80, 0x0000002C, "yamanote.wav"),
+            (10, SINFILE, 0x0000, 0x000204CE, 0x0000002C, "sin150Hz.wav"),
+            (11, PINKFILE, 0x0000, 0x000204CE, 0x0000002C, "pink6dB.wav"),
+            (12, CHIRP22K16, 0x0000, 0x000204CC, 0x0000002C, "chirp22k16.wav"),
+            (13, CHIRP22K8, 0x0002, 0x00010266, 0x0000002C, "chirp22k8.wav"),
+            (14, CHIRP11K16, 0x0001, 0x00010266, 0x0000002C, "chirp11k16.wav"),
+            (15, CHIRP11K8, 0x0003, 0x00008133, 0x0000002C, "chirp11k8.wav"),
         ]
 
         for file in files:
-            test_file_transfer(file[1], file[0], file[5])
+            test_file_transfer(b, file[1], file[0], file[5])
 
         b.refresh_file_dir()
         for file in files:

@@ -592,6 +592,7 @@ def main():
                         af.copy_to_brick(brick)
                     window.refresh()
                 for af in sp.other_sounds:
+                    print(af["audiofile"])
                     af["audiofile"].copy_to_brick(brick)
                 sp.export_script("startup.pfx", as_bytes=True, to_brick=brick)
                 brick.close()

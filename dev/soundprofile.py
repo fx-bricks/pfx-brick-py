@@ -258,7 +258,7 @@ class SoundProfile:
                 self.brake_speed_thr = v
 
             elif k in fileid_dict:
-                fid = fileid_dict[k]
+                fk = fileid_dict[k]
                 if k in attr_dict:
                     attr = attr_dict[k]
                 else:
@@ -271,7 +271,7 @@ class SoundProfile:
                     vf = v
                     vn = None
                 fn = d["source"] + os.sep + vf
-                self.__dict__[k] = AudioFile(fn, fileid=fid, attr=attr, norm=vn)
+                self.__dict__[k] = AudioFile(fn, fileid=fk, attr=attr, norm=vn)
             elif k in ["random_sounds", "random", "other_sounds"]:
                 dd = []
                 for vv in v:
