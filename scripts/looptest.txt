@@ -13,4 +13,3 @@ repeat 8 {
     wait $C
 }
 light all off
-

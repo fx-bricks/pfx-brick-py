@@ -23,8 +23,8 @@
 #
 # PFx Brick configuration data helpers
 
-from pfxbrick.pfx import *
 import pfxbrick.pfxdict as pd
+from pfxbrick.pfx import *
 from pfxbrick.pfxhelpers import *
 
 

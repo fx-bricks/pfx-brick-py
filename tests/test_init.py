@@ -1,10 +1,13 @@
 # system modules
-import math, os.path
+import math
+import os.path
 import sys
+
 import pytest
 
 # my modules
 from pfxbrick import *
+from pfxbrick.pfxhelpers import *
 
 
 def test_pfxbrick_init():

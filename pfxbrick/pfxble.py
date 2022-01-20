@@ -28,9 +28,9 @@ import asyncio
 import logging
 import sys
 
-from bleak import BleakScanner, BleakClient
+from bleak import BleakClient, BleakScanner
 
-from pfxbrick import *
+from pfxbrick.pfxbrick import PFxBrick
 from pfxbrick.pfxhelpers import *
 
 DEV_INFO_UUID = "%x" % (PFX_BLE_GATT_DEV_INFO_UUID)

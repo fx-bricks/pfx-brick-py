@@ -14,7 +14,7 @@ The **pfxbrick** python package provides an easy to use API for communicating wi
 
 * Low level hardware access
 
-Details on the PFx Brick and its communication protocol can be found in the `PFx Brick Interface Control Document (ICD) v3.38 <https://www.fxbricks.com//downloads/PFxBrickICD-Rev3.38.pdf>`_.  This comprehensive document fundamentally describes the operation of the PFx Brick and is used to develop both the firmware and host software APIs designed to communicate with the PFx Brick.  
+Details on the PFx Brick and its communication protocol can be found in the `PFx Brick Interface Control Document (ICD) v3.38 <https://www.fxbricks.com//downloads/PFxBrickICD-Rev3.38.pdf>`_.  This comprehensive document fundamentally describes the operation of the PFx Brick and is used to develop both the firmware and host software APIs designed to communicate with the PFx Brick.
 
 Links
 -----

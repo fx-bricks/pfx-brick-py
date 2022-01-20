@@ -1,7 +1,9 @@
 # system modules
 import copy
-import math, os.path
+import math
+import os.path
 import sys
+
 import pytest
 
 # my modules

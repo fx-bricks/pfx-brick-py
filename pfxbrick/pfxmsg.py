@@ -25,6 +25,7 @@
 
 
 import hid
+
 from .pfx import *
 from .pfxexceptions import InvalidResponseException
 from .pfxhelpers import uint32_to_bytes

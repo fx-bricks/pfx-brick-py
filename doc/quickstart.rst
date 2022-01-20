@@ -8,7 +8,7 @@ To start using the **pfxbrick** package, import the following modules into your 
 .. code-block:: python
 
   from pfxbrick import *
-  
+
 Enumerating USB PFx Bricks and Connecting
 -----------------------------------------
 
@@ -30,7 +30,7 @@ A listing of discovered PFx Bricks can be printed by setting the :py:data:`show_
   1. PFx Brick 4 MB, Serial No: 890F3024
   2. PFx Brick 4 MB, Serial No: 897C933B
   3. PFx Brick 4 MB, Serial No: 8951E33B
-  
+
 
 
 Connecting/Disconnecting a PFx Brick
@@ -49,7 +49,7 @@ If more than one PFx Brick has been enumerated, then you must specify the serial
 
   brick = PFxBrick()
   brick.open('890F3024')
-  
+
 A connected session to a PFx Brick should be closed with the :py:meth:`close` method:
 
 .. code-block:: python
@@ -61,9 +61,9 @@ Enumerating BLE PFx Bricks and Connecting
 
 BLE connections to the PFx Brick use the **Bleak** python module which provides the Bluetooth communications stack.  This communication API uses python's **asyncio** runtime context and therefore accessing the PFx Brick using the **pfxbrick** module is somewhat different than with USB.  All of the same access methods and functionality are supported, however scripts written to connect via BLE must use **asyncio** runtime call mechanisms using **async/await**.
 
-The following code scans for advertising PFx Bricks and using the :py:meth:`ble_device_scanner` and returns a list of **Bleak** :py:class:`BLEDevice` peripheral devices.  The list of :py:class:`BLEDevice` is processed with the :py:meth:`find_ble_pfxbricks` function to validate each device as a PFx Brick and returns a list of dictionaries describing each PFx Brick found.  This is necessary in order to obtain the Bluetooth MAC address/UUID of each PFx Brick.  Finally, a communication session with a desired PFx Brick must be run within an asynio event loop shown below in the :py:meth:`brick_session` asynchronous function.  
+The following code scans for advertising PFx Bricks and using the :py:meth:`ble_device_scanner` and returns a list of **Bleak** :py:class:`BLEDevice` peripheral devices.  The list of :py:class:`BLEDevice` is processed with the :py:meth:`find_ble_pfxbricks` function to validate each device as a PFx Brick and returns a list of dictionaries describing each PFx Brick found.  This is necessary in order to obtain the Bluetooth MAC address/UUID of each PFx Brick.  Finally, a communication session with a desired PFx Brick must be run within an asynio event loop shown below in the :py:meth:`brick_session` asynchronous function.
 
-Similar to a USB communication session, an instance to :py:class:`PFxBrickBLE` is created and the :py:meth:`open` method is called to start the communication session.  All methods which result in a communication transaction with the PFx Brick must by **awaited** with the :py:obj:`await` keyword.  
+Similar to a USB communication session, an instance to :py:class:`PFxBrickBLE` is created and the :py:meth:`open` method is called to start the communication session.  All methods which result in a communication transaction with the PFx Brick must by **awaited** with the :py:obj:`await` keyword.
 
 .. code-block:: python
 
@@ -83,7 +83,7 @@ Similar to a USB communication session, an instance to :py:class:`PFxBrickBLE` i
       loop.run_until_complete(brick_session(bricks[0]))
 
 
-  
+
 Getting PFx Brick Information
 -----------------------------
 
@@ -123,7 +123,7 @@ Useful information about the PFx Brick identity, version, etc. can be queried us
   Firmware version      : 01.37 build 0529
   Status                : 00 Normal
   Errors                : 00 None
-  
+
 PFx Brick Configuration
 -----------------------
 
@@ -261,7 +261,7 @@ Methods for configuring sound effects include:
     * :py:meth:`PFxBrick.set_volume`
     * :py:meth:`PFxBrick.sound_fx`
 
-Note that it is possible to specify an audio file by either its numeric file ID or filename. 
+Note that it is possible to specify an audio file by either its numeric file ID or filename.
 
 .. code-block:: python
 

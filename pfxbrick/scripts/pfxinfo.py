@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 import argparse
 from datetime import datetime
+
 from rich import print
 from rich.console import Console
 from rich.table import Table

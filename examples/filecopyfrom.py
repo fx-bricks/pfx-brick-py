@@ -2,9 +2,11 @@
 
 # PFx Brick example script to show copying a file from the PFx Brick
 
-import hid
-from pfxbrick import PFxBrick
 from sys import argv
+
+import hid
+
+from pfxbrick import PFxBrick
 
 brick = PFxBrick()
 brick.open()

@@ -25,11 +25,12 @@
 # PFx Brick python API
 
 import hid
-from bleak import BleakScanner, BleakClient
+from bleak import BleakClient, BleakScanner
 
 from pfxbrick import *
-from pfxbrick.pfxhelpers import *
 from pfxbrick.pfxfiles import fs_format
+from pfxbrick.pfxhelpers import *
+from pfxbrick.pfxmsg import *
 
 
 def find_bricks(show_list=False):
@@ -603,14 +604,14 @@ class PFxBrick:
         f = self.filedir.get_file_dir_entry(fileID)
         fs_copy_file_from(self.dev, f, fn, show_progress)
 
-    def remove_file(self, fileID):
+    def remove_file(self, fileID, silent=False):
         """
         Removes a file from the PFx Brick file system.
 
         :param fileID: :obj:`int` or :obj:`str` the file ID or filename of the file to remove
         """
         fileID = self.file_id_from_str_or_int(fileID)
-        fs_remove_file(self.dev, fileID)
+        fs_remove_file(self.dev, fileID, silent=silent)
 
     def format_fs(self, quick=False):
         """

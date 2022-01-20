@@ -19,4 +19,3 @@ wait 4
 light [2] off
 wait 4
 light all off
-

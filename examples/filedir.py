@@ -3,6 +3,7 @@
 # PFx Brick example script to show PFx Brick file directory
 
 import hid
+
 from pfxbrick import PFxBrick
 
 brick = PFxBrick()

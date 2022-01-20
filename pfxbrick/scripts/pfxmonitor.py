@@ -1,22 +1,22 @@
 #! /usr/bin/env python3
 import argparse
-from functools import update_wrapper
 import time
 from datetime import datetime
+from functools import update_wrapper
+from time import sleep
 
 from rich import box, print
 from rich.align import Align
+from rich.bar import Bar
 from rich.console import Console, RenderGroup
 from rich.layout import Layout
+from rich.live import Live
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from rich.progress_bar import ProgressBar
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
-from rich.bar import Bar
-from rich.live import Live
-from time import sleep
 
 from pfxbrick import *
 

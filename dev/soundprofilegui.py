@@ -1,10 +1,9 @@
 import PySimpleGUI as sg
-
-from toolbox import *
-from pfxbrick import *
-
 from audiofilegui import AudioFileGui
 from soundprofile import SoundProfile
+from toolbox import *
+
+from pfxbrick import *
 
 sp = SoundProfile()
 

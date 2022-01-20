@@ -3,9 +3,11 @@
 # PFx Brick example script to show access to the event/action LUT
 # by showing startup events
 
-import hid
-import time
 import copy
+import time
+
+import hid
+
 from pfxbrick import *
 
 brick = PFxBrick()

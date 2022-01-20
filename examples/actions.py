@@ -3,8 +3,9 @@
 # PFx Brick example script to demonstrate multiple scripted actions
 
 
-import time
 import random
+import time
+
 from pfxbrick import *
 
 brick = PFxBrick()

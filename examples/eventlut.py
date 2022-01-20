@@ -2,10 +2,12 @@
 
 # PFx Brick example script to show access to the event/action LUT
 
-import hid
-import time
 import copy
-from pfxbrick import PFxBrick, PFxAction, find_bricks
+import time
+
+import hid
+
+from pfxbrick import PFxAction, PFxBrick, find_bricks
 from pfxbrick.pfx import *
 
 brick = PFxBrick()

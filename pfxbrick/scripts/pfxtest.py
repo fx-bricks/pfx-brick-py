@@ -1,19 +1,20 @@
 import argparse
 import base64
 import copy
-import time
 import datetime
 import random
 import tempfile
+import time
 import zlib
 from datetime import datetime
+
 from rich import print
 from rich.console import Console
 from rich.table import Table
 
-from pfxbrick.pfxtesthelpers import *
-from pfxbrick.pfxtestdata import *
 from pfxbrick import *
+from pfxbrick.pfxtestdata import *
+from pfxbrick.pfxtesthelpers import *
 
 console = Console()
 
@@ -493,17 +494,18 @@ def test_button_events(brick, testtime=10):
     console.log("Detected %d button events" % (nevents))
 
 
-def test_audio_playback(brick, fileid):
-    brick.get_config()
-    st = brick.get_current_state()
-    old_vol = st.volume
-    brick.set_volume(30)
-    brick.play_audio_file(fileid)
+def test_audio_playback(brick, fileid, name):
+    console.log("Testing playback of audio file %d (%s)" % (fileid, name))
     brick.refresh_file_dir()
     fd = brick.filedir.get_file_dir_entry(fileid)
     if fd is None:
         console.log("[red]Audio file %d does not exist" % (fileid))
         return False
+    brick.get_config()
+    st = brick.get_current_state()
+    old_vol = st.volume
+    brick.set_volume(30)
+    brick.play_audio_file(fileid)
     test_result("File %d is an audio file" % (fileid), fd.is_audio_file())
     sr = 22050
     ws = 2
@@ -512,29 +514,41 @@ def test_audio_playback(brick, fileid):
     if (fd.attributes & PFX_WAV_ATTR_QUANTIZATION_MASK) == PFX_WAV_ATTR_QUANTIZATION_8:
         ws = 1
     file_dur = fd.userData1 * 1.0 / sr / ws
+    test_result(
+        "File %d sample rate=%d kHz quantization=%d duration=%.1f sec"
+        % (fileid, sr, ws, file_dur),
+        True,
+    )
     time.sleep(0.1)
     st = brick.get_current_state()
     test_result(
-        "Audio channel %d is active in mode %d" % (0, EVT_SOUND_PLAY_ONCE),
-        st.audio_ch[0].mode == EVT_SOUND_PLAY_ONCE,
-    )
-    test_result(
-        "Audio channel %d reports file 0x%02X" % (0, st.audio_ch[0].file_id),
-        fileid == st.audio_ch[0].file_id,
+        "Audio channel %d is active in mode %d with file %d"
+        % (0, EVT_SOUND_PLAY_ONCE, st.audio_ch[0].file_id),
+        (st.audio_ch[0].mode == EVT_SOUND_PLAY_ONCE)
+        and (fileid == st.audio_ch[0].file_id),
     )
     test_result("Audio peak values 0x%02X > 0" % (st.audio_peak), st.audio_peak > 0)
-    console.log(
-        "Waiting %.1f sec for file %d to finish playing..." % (file_dur, fileid)
-    )
-    time.sleep(file_dur)
+    time.sleep(file_dur / 2)
     st = brick.get_current_state()
     test_result(
-        "Audio channel %d is not active in mode %d" % (0, 0), st.audio_ch[0].mode == 0
+        "Audio channel %d is still active in mode %d with file %d"
+        % (0, EVT_SOUND_PLAY_ONCE, st.audio_ch[0].file_id),
+        (st.audio_ch[0].mode == EVT_SOUND_PLAY_ONCE)
+        and (fileid == st.audio_ch[0].file_id),
+    )
+    test_result("Audio peak values 0x%02X > 0" % (st.audio_peak), st.audio_peak > 0)
+    time.sleep(file_dur / 2)
+    st = brick.get_current_state()
+    test_result(
+        "File %d should have finished playback after %.1f sec" % (fileid, file_dur),
+        (st.audio_ch[0].mode == 0),
     )
     test_result(
-        "Audio channel %d reports file 0x%02X" % (0, st.audio_ch[0].file_id),
-        st.audio_ch[0].file_id == 0xFF,
+        "Audio channel %d is not active in mode %d with file 0x%02X"
+        % (0, 0, st.audio_ch[0].file_id),
+        (st.audio_ch[0].mode == 0) and (st.audio_ch[0].file_id == 0xFF),
     )
+    console.log("")
     brick.set_volume(old_vol / 255 * 100)
 
 
@@ -580,7 +594,7 @@ def test_motor_channel(brick, ch, speed):
     return ok1 & ok2 & ok3
 
 
-def test_file_transfer(brick, fdata, fid=0, fn="test_data.wav"):
+def test_file_transfer(brick, fdata, fid=0, fn="test_data.wav", skip_readback=False):
     bindata = base64.b64decode(fdata)
     with open(fn, "wb") as f:
         f.write(bindata)
@@ -596,6 +610,8 @@ def test_file_transfer(brick, fdata, fid=0, fn="test_data.wav"):
     test_result(
         "Copied file directory %s CRC32=0x%08X" % (fn, f0.crc32), f0.crc32 == crc32
     )
+    if skip_readback:
+        return
     console.log("Getting file %s with CRC32=0x%08X" % (fn, crc32))
     fnr = fn + ".rx"
     brick.get_file(fid, fnr)
@@ -689,6 +705,13 @@ def main():
         help="Omit file transfer test",
     )
     parser.add_argument(
+        "+fl",
+        "--long",
+        action="store_true",
+        default=False,
+        help="Perform long file transfer test",
+    )
+    parser.add_argument(
         "-a",
         "--audio",
         action="store_false",
@@ -714,6 +737,13 @@ def main():
         "--serialno",
         default=None,
         help="Perform test on PFx Brick with specified serial number",
+    )
+    parser.add_argument(
+        "-k",
+        "--keep",
+        action="store_true",
+        default=False,
+        help="Keep test files on PFx Brick after tests are completed",
     )
     parser.add_argument(
         "-v",
@@ -778,6 +808,10 @@ def main():
 
     table.add_row("Name                  : [bold yellow]%s" % (name))
     console.print(table)
+
+    # turn off all active actions
+    b.test_action(PFxAction().all_off())
+
     b.get_current_state()
     b.get_fs_state()
     b.get_bt_state()
@@ -857,28 +891,37 @@ def main():
         test_banner("Testing File System...")
         files = [
             (10, SINFILE, 0x0000, 0x000204CE, 0x0000002C, "sin150Hz.wav"),
-            (11, PINKFILE, 0x0000, 0x000204CE, 0x0000002C, "pink6dB.wav"),
+            (11, PINKFILE, 0x0000, 0x0001B016, 0x0000002C, "pink3dB.wav"),
             (12, CHIRP22K16, 0x0000, 0x000204CC, 0x0000002C, "chirp22k16.wav"),
-            (13, CHIRP22K8, 0x0002, 0x00010266, 0x0000002C, "chirp22k8.wav"),
-            (14, CHIRP11K16, 0x0001, 0x00010266, 0x0000002C, "chirp11k16.wav"),
             (15, CHIRP11K8, 0x0003, 0x00008133, 0x0000002C, "chirp11k8.wav"),
         ]
-
+        if not argsd["long"]:
+            files = files[0:2]
         for file in files:
+            console.log(
+                "Testing file transfer integrity for file %d (%s)..."
+                % (file[0], file[5])
+            )
             test_file_transfer(b, file[1], file[0], file[5])
-
+            console.log("")
         b.refresh_file_dir()
         for file in files:
+            console.log(
+                "Checking file %d (%s) directory attributes and name..."
+                % (file[0], file[5])
+            )
             f = b.filedir.get_file_dir_entry(file[0])
             test_result(
-                "File %s attributes=%X" % (file[5], f.attributes),
+                "File %s attributes=%X expected=%X" % (file[5], f.attributes, file[2]),
                 f.attributes == file[2],
             )
             test_result(
-                "File %s UserData1=%X" % (file[5], f.userData1), f.userData1 == file[3]
+                "File %s UserData1=%X expected=%X" % (file[5], f.userData1, file[3]),
+                f.userData1 == file[3],
             )
             test_result(
-                "File %s UserData2=%X" % (file[5], f.userData2), f.userData2 == file[4]
+                "File %s UserData2=%X expected=%X" % (file[5], f.userData2, file[4]),
+                f.userData2 == file[4],
             )
             oldfn = f.name
             newfn = "file%d%d%d" % (
@@ -906,7 +949,8 @@ def main():
                 if e.name == oldfn:
                     ok = True
                     break
-            test_result("File %s renamed to %s" % (oldfn, newfn), ok)
+            test_result("File %s restored to %s" % (oldfn, newfn), ok)
+            console.log("")
 
     if argsd["scripts"]:
         test_banner("Testing Script Execution...")
@@ -917,11 +961,28 @@ def main():
         else:
             test_scripts(b)
 
-    with console.status("Testing...") as status:
-        if argsd["audio"]:
-            test_banner("Testing Audio Playback...")
-            test_audio_playback(b, 0)
-            test_audio_playback(b, 1)
+    # with console.status("Testing...") as status:
+    if argsd["audio"]:
+        files = [
+            (11, PINKFILE, 0x0000, 0x0001B016, 0x0000002C, "pink3dB.wav"),
+            (12, CHIRP22K16, 0x0000, 0x000204CC, 0x0000002C, "chirp22k16.wav"),
+            (13, CHIRP22K8, 0x0002, 0x00010266, 0x0000002C, "chirp22k8.wav"),
+            (14, CHIRP11K16, 0x0001, 0x00010266, 0x0000002C, "chirp11k16.wav"),
+            (15, CHIRP11K8, 0x0003, 0x00008133, 0x0000002C, "chirp11k8.wav"),
+        ]
+        if not argsd["long"]:
+            files = files[0:2]
+
+        b.refresh_file_dir()
+        test_banner("Testing Audio Playback...")
+        for file in files:
+            if not b.filedir.has_file(file[0]):
+                test_file_transfer(b, file[1], file[0], file[5], skip_readback=True)
+            test_audio_playback(b, file[0], file[5])
+
+    if not argsd["keep"]:
+        for f in [10, 11, 12, 13, 14, 15]:
+            b.remove_file(f, silent=True)
 
     b.close()
 

@@ -6,6 +6,7 @@
 import os
 import platform
 import sys
+
 import setuptools
 
 PACKAGE_NAME = "pfxbrick"

@@ -24,6 +24,7 @@
 # PFx Brick internal state helpers
 
 from pfxbrick import *
+from pfxbrick.pfxhelpers import *
 
 
 class PFxMotorState:

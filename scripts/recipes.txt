@@ -65,7 +65,7 @@ event startup 1 {
 
 # ch 1 turns on when motor A is in forward direction
 # ch 2 turns on when motor A is in reverse direction
-# method 2: use two startup actions (one for each group of light channels) 
+# method 2: use two startup actions (one for each group of light channels)
 #           configured as Status Indicators using bits 0 and 1 of SOURCE2
 event startup 1 {
     light 1 fx 18 0 1
@@ -99,7 +99,7 @@ event speed ch 1 left button {
 # pushing joystick lever up activates the effect
 # pushing joystick lever down turns off the effect
 event joy ch 1 left up {
-    light all fx 11 5 6 8 0x03 
+    light all fx 11 5 6 8 0x03
     motor servo 90
 }
 event joy ch 1 left down {

@@ -3,11 +3,12 @@
 # PFx Brick example script to retrieve basic information about the
 # brick including its identidy and configuration settings.
 
-import hid
 import time
 from math import sin
-from pfxbrick import *
 
+import hid
+
+from pfxbrick import *
 
 brick = PFxBrick()
 brick.open()

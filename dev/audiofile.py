@@ -1,12 +1,11 @@
 import os
-import zlib
 import time
+import zlib
 
-from wavplay import WavePlayerLoop
-from rich import print
 from pydub import AudioSegment
-
+from rich import print
 from toolbox import *
+from wavplay import WavePlayerLoop
 
 TMP_PATH = full_path("~/tmp")
 

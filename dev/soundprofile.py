@@ -1,12 +1,12 @@
 # from typeshed import SupportsDivMod
 import os
-from pfxbrick.pfxhelpers import uint16_to_bytes, uint32_to_bytes
-from pfxbrick.pfxfiles import fs_copy_file_to
-from pfxbrick.pfx import *
-
-from toolbox import *
 
 from audiofile import AudioFile
+from toolbox import *
+
+from pfxbrick.pfx import *
+from pfxbrick.pfxfiles import fs_copy_file_to
+from pfxbrick.pfxhelpers import uint16_to_bytes, uint32_to_bytes
 
 fileid_dict = {
     "startup": 0xEF,

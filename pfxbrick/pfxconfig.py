@@ -23,9 +23,9 @@
 #
 # PFx Brick configuration data helpers
 
-from pfxbrick import *
 import pfxbrick.pfxdict as pd
-from pfxbrick.pfxhelpers import set_with_bit
+from pfxbrick import *
+from pfxbrick.pfxhelpers import *
 
 
 class PFxSettings:

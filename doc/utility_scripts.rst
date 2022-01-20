@@ -240,12 +240,12 @@ Shows real time internal state information of a PFx Brick.
     $ pfxmonitor.py
 
 .. image:: _static/pfxmonitor.png
- 
+
 
 pfxtest.py
 ==========
 
-Performs self-test diagnostics of various functions of the PFx Brick. 
+Performs self-test diagnostics of various functions of the PFx Brick.
 
 .. code-block:: shell
 
@@ -273,4 +273,4 @@ Performs self-test diagnostics of various functions of the PFx Brick.
 
     $ pfxtest.py
 
-.. image:: _static/pfxtest.png    
+.. image:: _static/pfxtest.png

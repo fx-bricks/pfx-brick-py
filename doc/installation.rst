@@ -15,7 +15,7 @@ Dependencies
 * `Bleak <https://github.com/hbldh/bleak>`_
 
 * sphinx (for documentation)
-  
+
 
 Pre-install System requirements for linux
 -----------------------------------------
@@ -28,7 +28,7 @@ The **pfxbrick** package will require some packages to be installed suport acces
  * bluez
  * bluetooth
  * libbluetooth-dev
-  
+
 Pre-install System requirements for macOS
 -----------------------------------------
 
@@ -89,7 +89,7 @@ After installation, verify the package can imported:
 If you have a PFx Brick connected, you can try the following command to see if your python installation can find your connected PFx Brick(s):
 
 .. code-block:: shell
-    
+
     >>> pfxbrick.find_bricks()
     ['89000001', '89000002']
     >>>

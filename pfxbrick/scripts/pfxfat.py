@@ -2,6 +2,7 @@
 from sys import argv
 
 from rich import print
+
 from pfxbrick import *
 
 

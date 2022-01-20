@@ -2,9 +2,11 @@
 
 # PFx Brick example script to show PFx Brick file directory
 
-import hid
-from pfxbrick import PFxBrick
 from sys import argv
+
+import hid
+
+from pfxbrick import PFxBrick
 
 if len(argv) < 3:
     print("Usage: ./filecopy.py <filename> [id]")

@@ -4,6 +4,7 @@
 # brick configuration settings.
 
 import hid
+
 from pfxbrick import PFxBrick, find_bricks
 from pfxbrick.pfx import *
 

@@ -3,8 +3,8 @@
 # PFx Brick example script to demonstrate motor control
 
 import time
-from pfxbrick import *
 
+from pfxbrick import *
 
 brick = PFxBrick()
 brick.open()

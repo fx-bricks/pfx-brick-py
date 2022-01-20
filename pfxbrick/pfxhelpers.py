@@ -24,6 +24,7 @@
 # PFx Brick data helpers
 
 import zlib
+
 import pfxbrick.pfxdict as pd
 from pfxbrick.pfx import *
 

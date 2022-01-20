@@ -1,22 +1,24 @@
 import argparse
+import fcntl
+import os
+import sys
+import termios
 import time
-import termios, fcntl, sys, os
+import zlib
 from datetime import datetime
 from typing import OrderedDict
-import zlib
 
-from rich import print, inspect
-from rich.console import Console
-from rich.table import Table
+import simpleaudio as sa
 import soundfile as sf
 from pydub import AudioSegment
 from pydub.playback import play
-import simpleaudio as sa
-
+from rich import inspect, print
+from rich.console import Console
+from rich.table import Table
 from toolbox import *
-from pfxbrick import *
-
 from trainprofile import IndexedPlayback
+
+from pfxbrick import *
 
 console = Console()
 

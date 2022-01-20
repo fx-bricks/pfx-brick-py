@@ -21,7 +21,7 @@ default_volume: 64
 
 # Loops for each power notch
 notch_levels: 8
-notch_loops: 
+notch_loops:
   - GMDLoop1.wav
   - GMDLoop2.wav
   - GMDLoop3.wav

@@ -20,7 +20,7 @@ notch_bounds:
   - 80
   - 160
 
-notch_loops: 
+notch_loops:
   - Notch1Loop.wav -15
   - Notch2Loop.wav -10
   - Notch3Loop.wav -15
@@ -90,4 +90,3 @@ long_whistle:  Whistle1.wav -0.1
 # random_sounds:
 #   - AirRelease1.wav:
 #     probability: 0
-

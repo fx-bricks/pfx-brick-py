@@ -586,12 +586,12 @@ Event IDs
   EVT_ID_RCTRAIN_DOWN = 0x15
   EVT_ID_RCTRAIN_STOP = 0x16
   EVT_ID_RCTRAIN_HORN = 0x17
-  EVT_ID_MAX = 0x20 
+  EVT_ID_MAX = 0x20
 
 Shifted event IDs as an address:
 
 .. code-block:: python
-  
+
   EVT_8879_TWO_BUTTONS = 0x00
   EVT_8879_LEFT_BUTTON = 0x04
   EVT_8879_RIGHT_BUTTON = 0x08
@@ -662,7 +662,7 @@ Shifted event IDs as an address:
   EVT_EVENT_ID_MAX = 0x20
   EVT_EVENT_ID_MASK = 0x7C
   EVT_EVENT_CH_MASK = 0x03
-  
+
 Error Codes
 ===========
 

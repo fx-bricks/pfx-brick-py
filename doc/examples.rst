@@ -12,7 +12,7 @@ Brick Enumeration, Connection, Info Query USB
 .. code-block:: python
 
   #! /usr/bin/env python3
- 
+
   # PFx Brick example script to retrieve basic information about the
   # brick including its identity and configuration settings.
 
@@ -88,7 +88,7 @@ Changing Configuration
 .. code-block:: python
 
   #! /usr/bin/env python3
- 
+
   # PFx Brick example script to showing modification to the
   # brick configuration settings.
 
@@ -130,7 +130,7 @@ Modifying the Event/Action LUT
 .. code-block:: python
 
   #! /usr/bin/env python3
- 
+
   # PFx Brick example script to show access to the event/action LUT
 
   import hid
@@ -170,7 +170,7 @@ Copy file to PFx Brick specified by command line arguments:
 .. code-block:: python
 
   #! /usr/bin/env python3
- 
+
   # PFx Brick example script to show copying files to the PFx Brick
 
   import hid
@@ -199,7 +199,7 @@ Copy a list of files to the PFx Brick:
 .. code-block:: python
 
   #! /usr/bin/env python3
- 
+
   # PFx Brick example script to show copying files to the PFx Brick
 
   import hid
@@ -228,7 +228,7 @@ A demonstration of scripting multiple actions involving motors, lighting, and so
 .. code-block:: python
 
     #! /usr/bin/env python3
-    
+
     # PFx Brick example script to demonstrate multiple scripted actions
 
     import time
@@ -360,8 +360,8 @@ This example shows how to activate PFx Brick notifications to be sent asynchrono
 
         # activate our desired PFx Brick notifications
         await brick.set_notifications(
-            PFX_NOTIFICATION_AUDIO_PLAY | 
-            PFX_NOTIFICATION_MOTORA_STOP | 
+            PFX_NOTIFICATION_AUDIO_PLAY |
+            PFX_NOTIFICATION_MOTORA_STOP |
             PFX_NOTIFICATION_MOTORA_CURR_SPD
         )
 

@@ -4,6 +4,7 @@
 # brick including its identity and configuration settings.
 
 import hid
+
 from pfxbrick import PFxBrick, find_bricks
 
 bricks = find_bricks(True)

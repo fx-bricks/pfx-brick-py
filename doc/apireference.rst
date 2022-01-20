@@ -71,7 +71,7 @@ Functions which query and modify PFx Brick configuration and settings.
     PFxBrick.set_config
     PFxBrick.print_config
     PFxBrick.reset_factory_config
-    
+
 Event/Action LUT
 ----------------
 
@@ -150,7 +150,7 @@ Light Actions
     PFxAction.set_brightness
     PFxAction.light_fx
     PFxAction.combo_light_fx
-    
+
 Sound Actions
 =============
 

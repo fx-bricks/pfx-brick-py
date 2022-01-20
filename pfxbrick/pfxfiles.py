@@ -24,20 +24,24 @@
 # PFx Brick file system helpers
 
 import os
+
 from pfxbrick import *
+from pfxbrick.pfxdict import file_attr_dict, fileid_dict
 from pfxbrick.pfxhelpers import *
+from pfxbrick.pfxmsg import cmd_file_dir, usb_transaction
 
+# fmt: off
 try:
-    from rich.progress import (
-        BarColumn,
-        DownloadColumn,
-        Progress,
-        TaskID,
-        TextColumn,
-        TimeRemainingColumn,
-        TransferSpeedColumn,
-    )
+    from rich.progress import (BarColumn, DownloadColumn, Progress, TaskID,
+                               TextColumn, TimeRemainingColumn,
+                               TransferSpeedColumn)
 
+    has_rich = True
+except:
+    has_rich = False
+# fmt: on
+
+if has_rich:
     progress = Progress(
         TextColumn("[white]{task.fields[filename]}", justify="right"),
         BarColumn(bar_width=None),
@@ -49,9 +53,6 @@ try:
         "•",
         TimeRemainingColumn(),
     )
-    has_rich = True
-except:
-    has_rich = False
 
 
 def fs_get_fileid_from_name(hdev, name):
@@ -71,7 +72,7 @@ def fs_get_fileid_from_name(hdev, name):
     return fileid
 
 
-def fs_error_check(res):
+def fs_error_check(res, silent=False):
     """
     Convenience error status lookup function used by other file system functions.
 
@@ -79,7 +80,8 @@ def fs_error_check(res):
     :returns: True if there is an error, False on success
     """
     if res > 62:
-        print("File system error: [%02X] %s" % (res, get_error_str(res)))
+        if not silent:
+            print("File system error: [%02X] %s" % (res, get_error_str(res)))
         return True
     else:
         return False
@@ -101,7 +103,7 @@ def fs_format(hdev, quick=False):
     fs_error_check(res[1])
 
 
-def fs_remove_file(hdev, fid):
+def fs_remove_file(hdev, fid, silent=False):
     """
     Sends an ICD message to remove a file from the PFx Brick file system.
 
@@ -111,7 +113,7 @@ def fs_remove_file(hdev, fid):
     msg = [PFX_CMD_FILE_REMOVE]
     msg.append(fid)
     res = usb_transaction(hdev, msg)
-    fs_error_check(res[1])
+    fs_error_check(res[1], silent=silent)
 
 
 def fs_copy_file_to(hdev, fid, fn, show_progress=True, with_bytes=None):

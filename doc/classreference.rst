@@ -79,7 +79,7 @@ PFxFile
     :member-order: bysource
     :members:
     :special-members: __str__
-    
+
 PFxAction
 =========
 

@@ -1,12 +1,11 @@
 import os
+
 import PySimpleGUI as sg
+from audiofile import AudioFile
+from toolbox import FileOps
 
 from pfxbrick import *
 from pfxbrick.pfxfiles import fs_error_check
-
-from toolbox import FileOps
-
-from audiofile import AudioFile
 
 
 class AudioFileGui:
