@@ -192,13 +192,14 @@ To find out more information on how to use each utility, use without arguments o
 .. code-block:: shell
 
     $ pfxinfo -h
-    usage: brickinfo.py [-h] [-c]
+    usage: pfxinfo [-h] [-c]
 
     Show information for all attached PFx Bricks
 
     optional arguments:
-      -h, --help    show this help message and exit
-      -c, --config  Show configuration details
+    -h, --help    show this help message and exit
+    -c, --config  Show configuration details
+
 
 ---------------
 
