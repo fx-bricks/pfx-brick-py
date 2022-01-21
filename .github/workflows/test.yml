@@ -19,3 +19,34 @@ jobs:
           python-version: ${{ env.python_version }}
       - name: Lint with Pre-commit
         run: pip install pre-commit && pre-commit run --all-files
+
+  linux:
+    needs: lint
+    runs-on: ubuntu-20.04
+    timeout-minutes: 30
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    strategy:
+      matrix:
+        python_version: ["3.7", "3.8", "3.9"]
+    steps:
+      - name: Install Linux Dependencies
+        uses: ./.github/actions/linux_dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v2.3.1
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Use Python Dependency Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Check out repository code
+        uses: actions/checkout@v2.4.0
+      - name: Install pip dependencies
+        run: pip install -r requirements.txt
+      - name: Install pfxbrick
+        run: python setup.py install
+      - name: Run tests
+        run: cd tests && pytest -v

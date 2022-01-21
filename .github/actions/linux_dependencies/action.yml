@@ -1,0 +1,9 @@
+name: 'Install Linux Dependencies'
+description: 'Installs runtime dependencies for USB HID and Bluetooth'
+runs:
+  using: composite
+  steps:
+    - run: >
+        sudo apt-get update -qq && sudo apt-get install -qq --no-install-recommends
+        libhidapi-dev libudev-dev libusb-1.0-0-dev bluez bluetooth libbluetooth-dev
+      shell: bash
