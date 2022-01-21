@@ -85,3 +85,38 @@ jobs:
         run: python setup.py install
       - name: Run tests
         run: cd tests && pytest -v
+
+  windows:
+    needs: lint
+    runs-on: windows-latest
+    timeout-minutes: 45
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2.4.0
+      - name: install libusb
+        run: wget https://github.com/libusb/libusb/archive/v1.0.23.zip && unzip v1.0.23.zip
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-hidapi mingw-w64-x86_64-libusb
+      - name: Set up Python
+        uses: actions/setup-python@v2.3.1
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Use Python Dependency Cache
+        uses: actions/cache@v2.1.7
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install pip dependencies
+        run: pip install -r requirements.txt
+      - name: Install pytest
+        run: pip install -r requirements_test.txt
+      - name: Install pfxbrick
+        run: python setup.py install
+      - name: Run tests
+        run: cd tests && pytest -v
