@@ -52,3 +52,36 @@ jobs:
         run: python setup.py install
       - name: Run tests
         run: cd tests && pytest -v
+
+  macos:
+    needs: lint
+    runs-on: macos-latest
+    timeout-minutes: 30
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    env:
+      LDFLAGS: -L/usr/local/opt/python@3.10/lib
+      PKG_CONFIG_PATH: /usr/local/opt/libffi/lib/pkgconfig:/usr/local/opt/python@3.10/lib/pkgconfig:${PKG_CONFIG_PATH:-}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2.4.0
+      - name: Install macOS Dependencies
+        uses: ./.github/actions/macos_dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v2.3.1
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Use Python Dependency Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install pip dependencies
+        run: pip install -r requirements.txt
+      - name: Install pytest
+        run: pip install -r requirements_test.txt
+      - name: Install pfxbrick
+        run: python setup.py install
+      - name: Run tests
+        run: cd tests && pytest -v

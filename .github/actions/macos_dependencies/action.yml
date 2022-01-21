@@ -1,0 +1,7 @@
+name: 'Install macOS Dependencies'
+description: 'Installs macOS brew with dependencies'
+runs:
+  using: composite
+  steps:
+    - run: brew install hidapi
+      shell: bash
