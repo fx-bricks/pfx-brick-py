@@ -1,32 +1,48 @@
 #! /usr/bin/env python3
-from sys import argv
+"""
+pfxrename - renames a file on the PFx Brick
+"""
+import argparse
 
 from pfxbrick import *
 
 
 def main():
-    if len(argv) < 3 or "-h" in argv:
-        print("Usage: pfxrename file newname")
-        print("  where <file> is file ID or filename to change")
-        print("        <newname> is the new desired filename")
-        exit()
-    b = PFxBrick()
+    parser = argparse.ArgumentParser(
+        description="Rename a file on the PFx Brick",
+        prefix_chars="-+",
+    )
+    parser.add_argument(
+        "file", metavar="file", type=str, help="file name or file ID to rename"
+    )
+    parser.add_argument(
+        "newname",
+        type=str,
+        default=None,
+        help="new name to assign to file",
+    )
+    parser.add_argument(
+        "-s",
+        "--serialno",
+        default=None,
+        help="Specify PFx Brick with serial number (if more than one connected)",
+    )
+    args = parser.parse_args()
+    argsd = vars(args)
+
+    b = get_one_pfxbrick(argsd["serialno"])
     r = b.open()
     if not r:
         exit()
     b.open()
     b.refresh_file_dir()
-    f = str(argv[1])
+    f = str(argsd["file"])
     if f.isnumeric():
-        f = int(argv[1])
+        f = int(argsd["file"])
     fid = b.file_id_from_str_or_int(f)
-    fd = b.filedir.get_file_dir_entry(fid)
-    if len(argv) == 3:
-        fn = argv[2]
-        b.rename_file(fid, fn)
-        print("Renamed file %s to %s" % (str(argv[1]), fn))
-    b.refresh_file_dir()
-    print(b.filedir)
+    fn = argsd["newname"]
+    b.rename_file(fid, fn)
+    print("Renamed file %s to %s" % (str(argsd["file"]), fn))
     b.close()
 
 

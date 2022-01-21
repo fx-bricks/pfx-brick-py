@@ -1,4 +1,8 @@
 #! /usr/bin/env python3
+"""
+pfxcat - print the contens of a file on the PFx Brick
+"""
+import argparse
 import tempfile
 from sys import argv
 
@@ -8,17 +12,28 @@ TMP_FILE = tempfile.gettempdir() + os.sep + "pfxdump.dat"
 
 
 def main():
-    if len(argv) < 2 or "-h" in argv:
-        print("Usage: pfxcat file -h")
-        print("  where file is file ID or filename to dump")
-        exit()
-    b = PFxBrick()
-    b.open()
+    parser = argparse.ArgumentParser(
+        description="PFx Brick print file contents",
+        prefix_chars="-+",
+    )
+    parser.add_argument(
+        "file", metavar="file", type=str, help="file name or file ID to show contents"
+    )
+    parser.add_argument(
+        "-s",
+        "--serialno",
+        default=None,
+        help="Specify PFx Brick with serial number (if more than one connected)",
+    )
+    args = parser.parse_args()
+    argsd = vars(args)
+
+    b = get_one_pfxbrick(argsd["serialno"])
     r = b.open()
     if not r:
         exit()
     b.refresh_file_dir()
-    f = str(argv[1])
+    f = argsd["file"]
     if f.isnumeric():
         fid = int(f)
     else:

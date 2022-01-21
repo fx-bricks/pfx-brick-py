@@ -609,6 +609,7 @@ class PFxBrick:
         Removes a file from the PFx Brick file system.
 
         :param fileID: :obj:`int` or :obj:`str` the file ID or filename of the file to remove
+        :param silent: :obj:`boolean` if True, warnings about missing files are suppressed
         """
         fileID = self.file_id_from_str_or_int(fileID)
         fs_remove_file(self.dev, fileID, silent=silent)

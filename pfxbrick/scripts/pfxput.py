@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-from sys import argv
+import argparse
 
 from pfxbrick import *
 
@@ -19,22 +19,39 @@ def split_path(file):
 
 
 def main():
-    if len(argv) < 2 or "-h" in argv:
-        print("Usage: pfxput file id")
-        print("  where <file> is the local file to copy")
-        print("        <id> is an optional file ID to use instead of next available ID")
-        exit()
-    b = PFxBrick()
-    b.open()
+    parser = argparse.ArgumentParser(
+        description="copy a file to the PFx Brick from host computer",
+        prefix_chars="-+",
+    )
+    parser.add_argument(
+        "file", metavar="file", type=str, help="is the local filename to copy"
+    )
+    parser.add_argument(
+        "dest",
+        type=str,
+        default=None,
+        nargs="?",
+        help="is optional file ID instead of next available ID",
+    )
+    parser.add_argument(
+        "-s",
+        "--serialno",
+        default=None,
+        help="Specify PFx Brick with serial number (if more than one connected)",
+    )
+    args = parser.parse_args()
+    argsd = vars(args)
+
+    b = get_one_pfxbrick(argsd["serialno"])
     r = b.open()
     if not r:
         exit()
     b.refresh_file_dir()
 
-    ff = full_path(argv[1])
-    fp, fn = split_path(ff)
-    if len(argv) == 3:
-        fid = int(argv[2])
+    ff = full_path(argsd["file"])
+    _, fn = split_path(ff)
+    if argsd["dest"] is not None:
+        fid = int(argsd["dest"])
         if b.filedir.has_file(fid):
             print("Replacing file %d on PFx Brick..." % (fid))
         else:

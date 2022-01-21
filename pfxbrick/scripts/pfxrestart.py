@@ -1,16 +1,27 @@
 #! /usr/bin/env python3
-from sys import argv
+"""
+pfxrestart - restarts the PFx Brick
+"""
+import argparse
 
 from pfxbrick import *
 
 
 def main():
-    if "-h" in argv:
-        print("Usage: pfxrestart -h")
-        print("  Restart the PFx Brick")
-        exit()
-    b = PFxBrick()
-    b.open()
+    parser = argparse.ArgumentParser(
+        description="Restarts the PFx Brick",
+        prefix_chars="-+",
+    )
+    parser.add_argument(
+        "-s",
+        "--serialno",
+        default=None,
+        help="Specify PFx Brick with serial number (if more than one connected)",
+    )
+    args = parser.parse_args()
+    argsd = vars(args)
+
+    b = get_one_pfxbrick(argsd["serialno"])
     r = b.open()
     if not r:
         exit()
@@ -26,7 +37,7 @@ def main():
             PFX_REBOOT_BYTE6,
         ]
     )
-    b.close()
+    print("PFx Brick restarted")
 
 
 if __name__ == "__main__":

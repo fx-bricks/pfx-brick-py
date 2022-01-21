@@ -1,23 +1,46 @@
 #! /usr/bin/env python3
-from sys import argv
+"""
+pfxdump - show the raw contents of the PFx Brick flash memory
+"""
+import argparse
 
 from pfxbrick import *
 
 
 def main():
-    if len(argv) < 3 or "-h" in argv:
-        print("Usage: pfxdump address bytes")
-        print(
-            "  where <address> is the flash start address and <bytes> is number of bytes to dump"
-        )
-        exit()
-    b = PFxBrick()
+    parser = argparse.ArgumentParser(
+        description="PFx Brick dump flash memory contents",
+        prefix_chars="-+",
+    )
+    parser.add_argument(
+        "address",
+        metavar="address",
+        type=str,
+        help="base address to start showing contents",
+    )
+    parser.add_argument(
+        "bytes",
+        metavar="bytes",
+        type=int,
+        help="number of bytes to show",
+        default=256,
+    )
+    parser.add_argument(
+        "-s",
+        "--serialno",
+        default=None,
+        help="Specify PFx Brick with serial number (if more than one connected)",
+    )
+    args = parser.parse_args()
+    argsd = vars(args)
+
+    b = get_one_pfxbrick(argsd["serialno"])
     b.open()
     r = b.open()
     if not r:
         exit()
-    rb = flash_read(b, int(argv[1], 16), int(argv[2]))
-    pprint_bytes(rb, argv[1])
+    rb = flash_read(b, int(argsd["address"], 16), int(argsd["bytes"]))
+    pprint_bytes(rb, str(argsd["address"]))
     b.close()
 
 

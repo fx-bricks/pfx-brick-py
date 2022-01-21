@@ -1,16 +1,28 @@
 #! /usr/bin/env python3
-from sys import argv
+"""
+pfxdir - shows the PFx Brick file directory listing
+"""
+import argparse
 
 from pfxbrick import *
+from pfxbrick.pfxhelpers import get_one_pfxbrick
 
 
 def main():
-    if "-h" in argv:
-        print("Usage: pfxdir -h")
-        print("  Show the PFx Brick file system directory")
-        exit()
+    parser = argparse.ArgumentParser(
+        description="PFx Brick file directory listing",
+        prefix_chars="-+",
+    )
+    parser.add_argument(
+        "-s",
+        "--serialno",
+        default=None,
+        help="Specify PFx Brick with serial number (if more than one connected)",
+    )
+    args = parser.parse_args()
+    argsd = vars(args)
 
-    b = PFxBrick()
+    b = get_one_pfxbrick(argsd["serialno"])
     r = b.open()
     if not r:
         exit()

@@ -508,3 +508,35 @@ def pprint_diff(x, y, address=None):
     else:
         s.pop()
     print("".join(s))
+
+
+def get_one_pfxbrick(serial_no=None):
+    """Returns only one instance of a PFx Brick if one or more are connected.
+    If only one is connected, then a PFxBrick object is returned for it.
+    If more than one is connected, a warning to select using serial number is shown.
+    """
+    from pfxbrick.pfxbrick import PFxBrick, find_bricks
+
+    b = None
+    bricks = find_bricks()
+    if len(bricks) > 1 and serial_no is None:
+        print(
+            "More than one PFx Brick is attached.  Please specify brick serial number with the -s argument."
+        )
+        print("Currently attached PFx Bricks:")
+        for brick in bricks:
+            b = PFxBrick(brick)
+            r = b.open()
+            b.get_status()
+            name = b.get_name()
+            print(
+                "[light_slate_blue]%-4s[/] [bold cyan]%-24s[/] Serial no: [bold cyan]%-9s[/] Name: [bold yellow]%s[/]"
+                % (b.product_id, b.product_desc, b.serial_no, name)
+            )
+            b.close()
+        exit()
+    if serial_no is not None and len(bricks) > 1:
+        b = PFxBrick(serial_no=serial_no)
+    else:
+        b = PFxBrick()
+    return b

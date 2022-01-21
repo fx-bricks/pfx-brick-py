@@ -24,21 +24,4 @@ from .pfxdict import *
 from .pfxexceptions import *
 from .pfxmsg import *
 
-# __all__ = (
-#     "PFxConfig",
-#     "PFxBrick",
-#     "PFxAction",
-#     "find_bricks",
-#     "PFxDir",
-#     "PFxFile",
-#     "PFxBrickBLE",
-#     "PFxState",
-#     "find_bricks",
-#     "find_ble_pfxbricks",
-#     "ble_device_scanner",
-#     "fs_copy_file_from",
-#     "fs_copy_file_to",
-#     "fs_get_fileid_from_name",
-#     "fs_remove_file",
-# )
 # fmt: on

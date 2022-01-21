@@ -1,4 +1,8 @@
 #! /usr/bin/env python3
+"""
+pfxfat - shows the PFx Brick file allocation table (FAT)
+"""
+import argparse
 from sys import argv
 
 from rich import print
@@ -7,13 +11,20 @@ from pfxbrick import *
 
 
 def main():
-    if len(argv) > 1 or "-h" in argv:
-        print("Usage: pfxfat -h")
-        print("  Shows the PFx Brick file allocation table")
-        exit()
+    parser = argparse.ArgumentParser(
+        description="Dumps the contents of the PFx Brick file allocation table (FAT)",
+        prefix_chars="-+",
+    )
+    parser.add_argument(
+        "-s",
+        "--serialno",
+        default=None,
+        help="Specify PFx Brick with serial number (if more than one connected)",
+    )
+    args = parser.parse_args()
+    argsd = vars(args)
 
-    b = PFxBrick()
-    b.open()
+    b = get_one_pfxbrick(argsd["serialno"])
     r = b.open()
     if not r:
         exit()

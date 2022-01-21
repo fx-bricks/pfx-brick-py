@@ -439,30 +439,7 @@ def main():
     args = parser.parse_args()
     argsd = vars(args)
 
-    bricks = find_bricks()
-    if len(bricks) > 1 and argsd["serialno"] is None:
-        print(
-            "More than one PFx Brick is attached.  Please specify brick serial number with the -s argument."
-        )
-        print("Currently attached PFx Bricks:")
-        for brick in bricks:
-            b = PFxBrick(brick)
-            r = b.open()
-            if not r:
-                continue
-            b.get_status()
-            name = b.get_name()
-            print(
-                "[light_slate_blue]%-4s[/] [bold cyan]%-24s[/] Serial no: [bold cyan]%-9s[/] Name: [bold yellow]%s[/]"
-                % (b.product_id, b.product_desc, b.serial_no, name)
-            )
-            b.close()
-        exit()
-    if argsd["serialno"] is not None and len(bricks) > 1:
-        b = PFxBrick(argsd["serialno"])
-    else:
-        b = PFxBrick()
-
+    b = get_one_pfxbrick(argsd["serialno"])
     r = b.open()
     if not r:
         exit()

@@ -1,28 +1,46 @@
 #! /usr/bin/env python3
-from sys import argv
+import argparse
 
 from pfxbrick import *
 
 
 def main():
-    if len(argv) < 2 or "-h" in argv:
-        print("Usage: pfxget file dest")
-        print("  where <file> is file ID or filename to get")
-        print("        <dest> is optional local file path override for copied file")
-        exit()
-    b = PFxBrick()
+    parser = argparse.ArgumentParser(
+        description="copy a file from the PFx Brick to host computer",
+        prefix_chars="-+",
+    )
+    parser.add_argument(
+        "file", metavar="file", type=str, help="is file ID or filename to copy"
+    )
+    parser.add_argument(
+        "dest",
+        type=str,
+        default=None,
+        nargs="?",
+        help="is optional local file path override for copied file",
+    )
+    parser.add_argument(
+        "-s",
+        "--serialno",
+        default=None,
+        help="Specify PFx Brick with serial number (if more than one connected)",
+    )
+    args = parser.parse_args()
+    argsd = vars(args)
+
+    b = get_one_pfxbrick(argsd["serialno"])
     r = b.open()
     if not r:
         exit()
     b.open()
     b.refresh_file_dir()
-    f = str(argv[1])
+    f = str(argsd["file"])
     if f.isnumeric():
-        f = int(argv[1])
+        f = int(argsd["file"])
     fid = b.file_id_from_str_or_int(f)
     fd = b.filedir.get_file_dir_entry(fid)
-    if len(argv) == 3:
-        fn = argv[2]
+    if argsd["dest"] is not None:
+        fn = argsd["dest"]
     else:
         fn = fd.name
         if fd.is_audio_file() and not fd.name.lower().endswith(".wav"):

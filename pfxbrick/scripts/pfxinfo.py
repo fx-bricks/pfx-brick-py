@@ -1,4 +1,7 @@
 #! /usr/bin/env python3
+"""
+pfxinfo - get identity and status information from PFx Brick
+"""
 import argparse
 from datetime import datetime
 
