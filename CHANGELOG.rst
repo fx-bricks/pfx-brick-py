@@ -6,6 +6,7 @@ v.0.8.4
 -------
 
 * updated command line scripts to use argparse
+* added new GitHub test actions
 
 v.0.8.3
 -------
