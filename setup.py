@@ -34,8 +34,8 @@ def read_package_variable(key, filename="__init__.py"):
 def build_description():
     """Build a description for the project from documentation files."""
     try:
-        readme = open("README.rst").read()
-        changelog = open("CHANGELOG.rst").read()
+        readme = open("README.rst", encoding="utf8").read()
+        changelog = open("CHANGELOG.rst", encoding="utf8").read()
     except IOError:
         return "<placeholder>"
     else:
