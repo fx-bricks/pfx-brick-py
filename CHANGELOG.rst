@@ -2,6 +2,11 @@
 Change Log
 ==========
 
+v.0.8.4
+-------
+
+* updated command line scripts to use argparse
+
 v.0.8.3
 -------
 
