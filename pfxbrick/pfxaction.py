@@ -447,6 +447,34 @@ class PFxAction:
         msg.append(self.soundParam2)
         return msg
 
+    def verbose_line_str(self, brick):
+        """
+        Human readable string of action object in single line.
+
+        :param brick: :obj:`PFxBrick` reference to a PFx Brick in order to query filename
+        """
+        s = []
+        if self.command > 0:
+            s.append("Cmd: %s" % shorter_str(pd.command_dict[self.command]))
+        if self.motorActionId & EVT_MOTOR_OUTPUT_MASK:
+            x = pd.motor_action_dict[self.motorActionId & EVT_MOTOR_ACTION_ID_MASK]
+            s.append("%s%s" % (motor_ch_str(self.motorActionId), shorter_str(x)))
+        if self.lightFxId & EVT_LIGHT_COMBO_MASK:
+            sf = pd.combo_lightfx_dict[self.lightFxId & EVT_LIGHT_ID_MASK]
+            s.append("Combo light: %s" % (shorter_str(sf)))
+        elif self.lightFxId & EVT_LIGHT_ID_MASK:
+            sf = pd.ind_lightfx_dict[self.lightFxId & EVT_LIGHT_ID_MASK]
+            sc = light_ch_str(self.lightOutputMask)
+            s.append("Light %s %s" % (sc, sf))
+        if self.soundFxId:
+            x = pd.soundfx_dict[self.soundFxId]
+            if self.soundFileId:
+                fn = brick.filedir.get_filename(self.soundFileId)
+                s.append('Sound %s "%s" (%d)' % (x, fn, self.soundFileId))
+            else:
+                s.append("Sound %s" % (x))
+        return " ".join(s)
+
     def __str__(self):
         """
         Convenient human readable string of the action data structure. This allows

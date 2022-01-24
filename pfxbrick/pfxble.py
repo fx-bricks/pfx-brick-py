@@ -30,17 +30,24 @@ import sys
 
 from bleak import BleakClient, BleakScanner
 
-from pfxbrick.pfxbrick import PFxBrick
+from pfxbrick import *
+from pfxbrick.pfxexceptions import *
 from pfxbrick.pfxhelpers import *
+from pfxbrick.pfxmsg import *
 
 DEV_INFO_UUID = "%x" % (PFX_BLE_GATT_DEV_INFO_UUID)
 DEV_SN_UUID = "%x" % (PFX_BLE_GATT_DEV_SN_UUID)
-MAX_RETRIES = 100
+MAX_RETRIES = 200
 RX_RETRY_TIME = 0.05
 
 
 async def ble_device_scanner(
-    scan_time=2.0, min_devices=1, scan_timeout=30.0, silent=False
+    scan_time=3.0,
+    min_devices=1,
+    scan_timeout=30.0,
+    filters=None,
+    silent=False,
+    verbose=False,
 ):
     """
     Performs a Bluetooth scan for available peripheral devices which advertise
@@ -52,11 +59,26 @@ async def ble_device_scanner(
     :param scan_time: :obj:`float` scan time interval to look for devices
     :param min_devices: :obj:`int` minimum number of devices to look for before returning
     :param scan_timeout: :obj:`float` timeout interval for finding the required min_devices
+    :param filters: :obj:`list` or `str` optional device name filters, e.g. "16 MB"
+    :param silent: :obj:`boolean` a flag to disable printing of status
+    :param verbose: :obj:`boolean` a flag to print a verbose list of advertising devices
 
     :returns: [:obj:`BLEDevice`] a list of PFx Brick device objects described in a Bleak BLEDevice class.
     """
+
+    def _filter_device(dc):
+        if filters is not None:
+            for f in filters:
+                if f in dc.name:
+                    return True
+            return False
+        return True
+
     pfxdevs = []
     total_scan_time = 0
+    if filters is not None:
+        if isinstance(filters, str):
+            filters = [filters]
     while len(pfxdevs) < min_devices:
         if not silent:
             print("Scanning...")
@@ -64,23 +86,31 @@ async def ble_device_scanner(
             await asyncio.sleep(scan_time)
             total_scan_time += scan_time
             devices = await scanner.get_discovered_devices()
+        if not silent and len(devices) > 0:
+            print("Found %d advertising devices" % (len(devices)))
+            if verbose:
+                for i, d in enumerate(devices):
+                    s = '%2d. UUID=%-36s "%s"' % (i + 1, d.address, d.name)
+                    print(s)
         for d in devices:
             if "PFx Brick" in d.name:
-                if not silent:
-                    print("Found %s" % d.name)
-                pfxdevs.append(d)
+                if _filter_device(d):
+                    if not silent:
+                        print("Found %s" % d.name)
+                    pfxdevs.append(d)
         if total_scan_time > scan_timeout:
             break
     return pfxdevs
 
 
-async def find_ble_pfxbricks(devices, connect_interval=2.0, timeout=30.0, silent=False):
+async def find_ble_pfxbricks(devices, connect_interval=5.0, timeout=30.0, silent=False):
     """
     Resolves a list of scanned candidate Bluetooth devices into valid PFx Brick devices.
 
     :param devices: [:obj:`BLEDevice`] a list of candidate PFx Brick device objects
     :param connect_interval: :obj:`float` time interval to wait for connection
     :param timeout: :obj:`float` timeout interval for attempting a device connection
+    :param silent: :obj:`boolean` a flag to disable printing of status
 
     :returns: [:obj:`dict`] a list of dictionary objects for each PFx Brick verified by connection. The dictionary contains keys for "address", "serial_no" and "name".
     """
@@ -89,12 +119,13 @@ async def find_ble_pfxbricks(devices, connect_interval=2.0, timeout=30.0, silent
         async with BleakClient(device.address, timeout=connect_timeout) as client:
             sn = None
             x = await client.is_connected()
+            rssi = await client.get_rssi()
             for service in client.services:
                 if DEV_INFO_UUID.lower() in service.uuid:
                     for char in service.characteristics:
                         if DEV_SN_UUID in char.uuid:
                             sn = bytes(await client.read_gatt_char(char.uuid))
-                            return sn
+                            return sn, rssi
 
     pfxbricks = []
     for d in devices:
@@ -104,12 +135,19 @@ async def find_ble_pfxbricks(devices, connect_interval=2.0, timeout=30.0, silent
         while not connected and total_connect_time < timeout:
             try:
                 if not silent:
-                    print("Connecting...")
-                sn = await connect_device(d, connect_timeout=connect_interval)
+                    print('Discovering device %s "%s"...' % (d.address, d.name))
+                sn, rssi = await connect_device(d, connect_timeout=connect_interval)
                 connected = True
             except:
                 total_connect_time += connect_interval
         if sn is not None:
+            if not silent:
+                fmt = 'Found "%s" S/N=%s UUID=%s'
+                if rssi is not None:
+                    fmt = fmt + " RSSI=%d dBm"
+                    print(fmt % (d.name, str(sn, encoding="utf8"), d.address, rssi))
+                else:
+                    print(fmt % (d.name, str(sn, encoding="utf8"), d.address))
             pfxbricks.append({"address": d.address, "serial_no": sn, "name": d.name})
 
     return pfxbricks
@@ -228,6 +266,17 @@ class PFxBrickBLE(PFxBrick):
             await self.client.disconnect()
             self._log.info("Connection closed with PFx Brick %s" % (self.ble_address))
 
+    async def get_rssi(self):
+        """
+        Get a recent measurement of RSSI (received signal strength)
+
+        :returns: :obj:`int` or None of signal strength in dBm
+        """
+        rssi = None
+        if self.is_open:
+            rssi = await self.client.get_rssi()
+        return rssi
+
     def _disconnected_callback(self, client):
         """
         BLE disconnection event handler.
@@ -290,12 +339,14 @@ class PFxBrickBLE(PFxBrick):
             self._log.error(
                 "Timeout waiting for response from PFx Brick %s" % (self.ble_address)
             )
+            await self.close()
             raise ResponseTimeoutException()
         if len(self._rxbuff) > 0:
             if self._rxbuff[0] != msg_type and self._rxbuff[0] != PFX_MSG_NOTIFICATION:
                 self._log.error(
                     "Invalid response from PFx Brick %s" % (self.ble_address)
                 )
+                await self.close()
                 raise InvalidResponseException()
 
     async def ble_transaction(self, msg):
@@ -491,6 +542,52 @@ class PFxBrickBLE(PFxBrick):
         :param action: :obj:`PFxAction` action data structure class
         """
         res = await cmd_test_action(self.dev, action.to_bytes())
+
+    async def clear_action_by_address(self, address):
+        """
+        Clears a stored action in the event/action LUT at the
+        address specified. The address is converted into a
+        [eventID, IR channel] pair and the set_action method is
+        called with this function as a convenient wrapper.
+
+        :param address: :obj:`int` event/action LUT address (0 - 0x7F)
+                        :obj:`list,tuple,range` specify a list or range of addresses
+        """
+        if isinstance(address, (list, tuple)):
+            addresses = address
+        elif isinstance(address, range):
+            addresses = [x for x in range]
+        else:
+            addresses = [address]
+        for a in addresses:
+            if a > EVT_LUT_MAX:
+                print("Requested action at address %02X is out of range" % (a))
+                return None
+            else:
+                evt, ch = address_to_evtch(a)
+                await self.clear_action(evt, ch)
+
+    async def clear_action(self, evtID, ch):
+        """
+        Clears a stored action associated with a particular
+        [eventID / IR channel] event. The eventID and channel value
+        form a composite address pointer into the event/action LUT
+        in the PFx Brick. The address to the LUT is formed as:
+
+        Address[5:2] = event ID
+        Address[1:0] = channel
+
+        :param evtID: :obj:`int` event ID LUT address component (0 - 0x20)
+        :param ch: :obj:`int` channel index LUT address component (0 - 3)
+        """
+        if ch > 3 or evtID > EVT_ID_MAX:
+            print("Requested action (id=%02X, ch=%02X) is out of range" % (evtID, ch))
+            return None
+        else:
+            # set to an empty PFxAction to clear
+            res = await cmd_set_event_action(
+                self.dev, evtID, ch, PFxAction().to_bytes()
+            )
 
     async def find_startup_action(self, lightfx=None, soundfx=None, motorfx=None):
         raise NotImplementedError("PFx Brick method not supported over Bluetooth")
@@ -739,17 +836,20 @@ class PFxBrickBLE(PFxBrick):
             p = [len(fb)]
             p.extend(fb)
             res = await cmd_file_dir(self.dev, PFX_DIR_REQ_GET_NAMED_FILE_ID, p)
-            if len(res) >= 3:
+            if len(res) >= 3 and not res[2] == PFX_ERR_FILE_NOT_FOUND:
                 fileid = int(res[2])
             return fileid
         return 0xFF
 
     async def get_current_state(self):
         """
-        PFx Brick operation not supported over Bluetooth
-        raises :obj:`NotImplementedError`
+        Returns the current state of the PFx Brick operating parameters.
+
+        :returns: :obj:`PFxState` a dataclass container with state information
         """
-        raise NotImplementedError("PFx Brick method not supported over Bluetooth")
+        res = await cmd_get_current_state(self.dev)
+        self.state.from_bytes(res)
+        return self.state
 
     async def get_fs_state(self):
         """
@@ -764,6 +864,15 @@ class PFxBrickBLE(PFxBrick):
         raises :obj:`NotImplementedError`
         """
         raise NotImplementedError("PFx Brick method not supported over Bluetooth")
+
+    async def send_raw_icd_command(self, msg):
+        """
+        Sends a raw ICD command message represented as a list of bytes.
+
+        :returns: :obj:`bytes` response from the PFx Brick
+        """
+        res = await cmd_raw(self.dev, msg)
+        return res
 
     async def set_notifications(self, events):
         """

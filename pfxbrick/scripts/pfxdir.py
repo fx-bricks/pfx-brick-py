@@ -4,6 +4,8 @@ pfxdir - shows the PFx Brick file directory listing
 """
 import argparse
 
+from rich import print as colourprint
+
 from pfxbrick import *
 from pfxbrick.pfxhelpers import get_one_pfxbrick
 
@@ -19,6 +21,13 @@ def main():
         default=None,
         help="Specify PFx Brick with serial number (if more than one connected)",
     )
+    parser.add_argument(
+        "-c",
+        "--colour",
+        action="store_true",
+        default=False,
+        help="Print directory listing in colour",
+    )
     args = parser.parse_args()
     argsd = vars(args)
 
@@ -27,7 +36,10 @@ def main():
     if not r:
         exit()
     b.refresh_file_dir()
-    print(b.filedir)
+    if argsd["colour"]:
+        colourprint(b.filedir.colour_dir())
+    else:
+        print(b.filedir)
     b.close()
 
 

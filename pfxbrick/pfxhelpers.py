@@ -540,3 +540,34 @@ def get_one_pfxbrick(serial_no=None):
     else:
         b = PFxBrick()
     return b
+
+
+def shorter_str(s):
+    """Replaces words in a string that are found in the helper dictionaries
+    in pfxdict.py  with shorter versions for a more compact description."""
+    tokens = [
+        "Increase Inc",
+        "Decrease Dec",
+        "Emergency Emcy",
+        "Oscillate Osc",
+        "Direction Dir",
+        "Brightness Bright",
+        "positive +",
+        "negative -",
+        "Modulated Mod",
+        "Alternating Alt",
+        "Style ",
+        "Left L",
+        "Right R",
+        "Joystick Joy",
+        "Event Evt",
+        "Centre Ctr",
+        "Flashers Flash",
+    ]
+    for t in tokens:
+        ts = t.split()
+        if len(ts) < 2:
+            s = s.replace(ts[0], "")
+        else:
+            s = s.replace(ts[0], ts[1])
+    return s

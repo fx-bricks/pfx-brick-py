@@ -26,6 +26,7 @@
 
 import hid
 from bleak import BleakClient, BleakScanner
+from numpy import isin
 
 from pfxbrick import *
 from pfxbrick.pfxfiles import fs_format
@@ -396,6 +397,50 @@ class PFxBrick:
         :param action: :obj:`PFxAction` action data structure class
         """
         res = cmd_test_action(self.dev, action.to_bytes())
+
+    def clear_action_by_address(self, address):
+        """
+        Clears a stored action in the event/action LUT at the
+        address specified. The address is converted into a
+        [eventID, IR channel] pair and the set_action method is
+        called with this function as a convenient wrapper.
+
+        :param address: :obj:`int` event/action LUT address (0 - 0x7F)
+                        :obj:`list,tuple,range` specify a list or range of addresses
+        """
+        if isinstance(address, (list, tuple)):
+            addresses = address
+        elif isinstance(address, range):
+            addresses = [x for x in range]
+        else:
+            addresses = [address]
+        for a in addresses:
+            if a > EVT_LUT_MAX:
+                print("Requested action at address %02X is out of range" % (a))
+                return None
+            else:
+                evt, ch = address_to_evtch(a)
+                self.clear_action(evt, ch)
+
+    def clear_action(self, evtID, ch):
+        """
+        Clears a stored action associated with a particular
+        [eventID / IR channel] event. The eventID and channel value
+        form a composite address pointer into the event/action LUT
+        in the PFx Brick. The address to the LUT is formed as:
+
+        Address[5:2] = event ID
+        Address[1:0] = channel
+
+        :param evtID: :obj:`int` event ID LUT address component (0 - 0x20)
+        :param ch: :obj:`int` channel index LUT address component (0 - 3)
+        """
+        if ch > 3 or evtID > EVT_ID_MAX:
+            print("Requested action (id=%02X, ch=%02X) is out of range" % (evtID, ch))
+            return None
+        else:
+            # set to an empty PFxAction to clear
+            res = cmd_set_event_action(self.dev, evtID, ch, PFxAction().to_bytes())
 
     def find_startup_action(self, lightfx=None, soundfx=None, motorfx=None):
         """

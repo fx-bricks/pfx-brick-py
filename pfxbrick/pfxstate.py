@@ -153,7 +153,7 @@ class PFxFSState:
 
     def from_bytes(self, msg):
         self.file_count = msg[1]
-        self.open_files = msg[18]
+        self.open_files = uint16_toint(msg[18:20])
         self.task_state = msg[2]
         self.flags = msg[3]
         self.erase_sector = uint16_toint(msg[4:6])
@@ -266,9 +266,9 @@ class PFxState:
         self.slow_count = uint16_toint(msg[55:57])
         self.status_latch1 = msg[57]
         self.status_latch2 = msg[58]
+        self.fs_state = msg[59]
         self.audio_peak = msg[60]
         self.audio_notch = msg[61]
-        self.fs_state = msg[59]
         self.script_state = msg[62]
         self.script_line = msg[63]
 

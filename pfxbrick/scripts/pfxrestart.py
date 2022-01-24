@@ -18,6 +18,13 @@ def main():
         default=None,
         help="Specify PFx Brick with serial number (if more than one connected)",
     )
+    parser.add_argument(
+        "-x",
+        "--halt",
+        action="store_true",
+        default=False,
+        help="Halt all activity on PFx Brick without restarting",
+    )
     args = parser.parse_args()
     argsd = vars(args)
 
@@ -25,19 +32,23 @@ def main():
     r = b.open()
     if not r:
         exit()
-    b.send_raw_icd_command(
-        [
-            PFX_USB_CMD_REBOOT,
-            PFX_REBOOT_BYTE0,
-            PFX_REBOOT_BYTE1,
-            PFX_REBOOT_BYTE2,
-            PFX_REBOOT_BYTE3,
-            PFX_REBOOT_BYTE4,
-            PFX_REBOOT_BYTE5,
-            PFX_REBOOT_BYTE6,
-        ]
-    )
-    print("PFx Brick restarted")
+    if argsd["halt"]:
+        b.test_action(PFxAction().all_off())
+        b.close()
+    else:
+        b.send_raw_icd_command(
+            [
+                PFX_USB_CMD_REBOOT,
+                PFX_REBOOT_BYTE0,
+                PFX_REBOOT_BYTE1,
+                PFX_REBOOT_BYTE2,
+                PFX_REBOOT_BYTE3,
+                PFX_REBOOT_BYTE4,
+                PFX_REBOOT_BYTE5,
+                PFX_REBOOT_BYTE6,
+            ]
+        )
+        print("PFx Brick restarted")
 
 
 if __name__ == "__main__":

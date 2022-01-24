@@ -23,12 +23,7 @@
 #
 # PFx Brick exceptions
 
-import os
-
-import hid
-
 from pfxbrick import *
-from pfxbrick.pfxhelpers import *
 
 
 class InvalidResponseException(Exception):

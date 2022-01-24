@@ -190,6 +190,24 @@ combo_lightfx_dict = {
     EVT_COMBOFX_FORMULA1: "Formula 1 Lights",
 }
 
+soundfx_dict = {
+    EVT_SOUND_NONE: "None",
+    EVT_SOUND_INC_VOL: "Increase Volume",
+    EVT_SOUND_DEC_VOL: "Decrease Volume",
+    EVT_SOUND_SET_VOL: "Set Volume",
+    EVT_SOUND_PLAY_ONCE: "Play Once",
+    EVT_SOUND_PLAY_CONT: "Play Repeat",
+    EVT_SOUND_PLAY_NTIMES: "Play N Times",
+    EVT_SOUND_PLAY_DUR: "Play for Duration",
+    EVT_SOUND_PLAY_PITCH: "Speed Modulated Pitch",
+    EVT_SOUND_PLAY_GATED: "Speed Modulated Gated",
+    EVT_SOUND_PLAY_AM: "Speed Modulated Volume",
+    EVT_SOUND_STOP: "Stop Play",
+    EVT_SOUND_PLAY_IDX_MOTOR: "Speed Indexed",
+    EVT_SOUND_PLAY_RAND: "Random Play",
+    EVT_SOUND_PLAY_PAUSE_FLAG: "Play/Pause",
+}
+
 evtid_dict = {
     EVT_ID_8879_TWO_BUTTONS: "Left + Right Button",
     EVT_ID_8879_LEFT_BUTTON: "Left Button",
@@ -197,7 +215,7 @@ evtid_dict = {
     EVT_ID_8879_LEFT_INC: "Left Wheel Inc",
     EVT_ID_8879_LEFT_DEC: "Left Wheel Dec",
     EVT_ID_8879_RIGHT_INC: "Right Wheel Inc",
-    EVT_ID_8879_RIGHT_DEC: "Rigth Wheel Dec",
+    EVT_ID_8879_RIGHT_DEC: "Right Wheel Dec",
     EVT_ID_8885_LEFT_FWD: "Left Joystick Fwd",
     EVT_ID_8885_LEFT_REV: "Left Joystick Rev",
     EVT_ID_8885_RIGHT_FWD: "Right Joystick Fwd",
@@ -212,6 +230,22 @@ evtid_dict = {
     EVT_ID_RCTRAIN_DOWN: "RC Train Down",
     EVT_ID_RCTRAIN_STOP: "RC Train Stop",
     EVT_ID_RCTRAIN_HORN: "RC Train Horn",
+    EVT_STARTUP_EVENT1: "Startup Event 1",
+    EVT_STARTUP_EVENT2: "Startup Event 2",
+    EVT_STARTUP_EVENT3: "Startup Event 3",
+    EVT_STARTUP_EVENT4: "Startup Event 4",
+    EVT_STARTUP_EVENT5: "Startup Event 5",
+    EVT_STARTUP_EVENT6: "Startup Event 6",
+    EVT_STARTUP_EVENT7: "Startup Event 7",
+    EVT_STARTUP_EVENT8: "Startup Event 8",
+    EVT_BUTTON_PRESS: "Button",
+    EVT_BUTTON_LONGPRESS: "Long Button",
+    EVT_BUTTON_DOWN: "Button Down",
+    EVT_BUTTON_UP: "Button Up",
+    EVT_BLE_CONNECT: "BLE Connect",
+    EVT_BLE_DISCONNECT: "BLE Disconnect",
+    EVT_USB_CONNECT: "USB Connect",
+    EVT_USB_DISCONNECT: "USB Disconnect",
 }
 
 fileid_dict = {

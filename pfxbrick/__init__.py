@@ -23,5 +23,6 @@ from .pfxble import PFxBrickBLE, ble_device_scanner, find_ble_pfxbricks
 from .pfxdict import *
 from .pfxexceptions import *
 from .pfxmsg import *
+from .pfxhelpers import *
 
 # fmt: on

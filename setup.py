@@ -77,6 +77,7 @@ setuptools.setup(
             "pfxrun=pfxbrick.scripts.pfxrun:main",
             "pfxfat=pfxbrick.scripts.pfxfat:main",
             "pfxrestart=pfxbrick.scripts.pfxrestart:main",
+            "pfxevents=pfxbrick.scripts.pfxevents:main",
         ],
     },
 )

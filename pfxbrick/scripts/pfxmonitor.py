@@ -85,15 +85,15 @@ def update_status(brick):
     st = brick.state
     panel = Table.grid(padding=0)
     for _ in range(8):
-        panel.add_column(ratio=1, min_width=8, justify="center")
-    panel.add_row("State", "Err", "Seconds", "Millisec", "Script", "Line", "L2")
+        panel.add_column(ratio=1, min_width=7, justify="center")
+    panel.add_row("State", "Err", "sec", "msec", "Script", "Line", "L2")
     es = (
         "[bold red]0x%02X" % (brick.error)
         if brick.error > 0
         else "[green]0x%02X" % (brick.error)
     )
     ss = (
-        "[magenta]0x%02X" % (st.script_state)
+        "[magenta]%02X" % (st.script_state)
         if st.script_state == 0
         else console.status("[bold magenta]0x%02X" % (st.script_state))
     )
@@ -104,7 +104,7 @@ def update_status(brick):
         "[cyan]%5d" % (st.millisec_count),
         ss,
         "[magenta]%3d" % (st.script_line),
-        "0x%02X" % (st.status_latch2),
+        "%02X" % (st.status_latch2),
     )
     return Panel(panel)
 

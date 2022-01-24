@@ -22,6 +22,8 @@ async def brick_session(brickdev):
     print("=======================")
     await brick.get_config()
     brick.print_config()
+    r = await brick.get_rssi()
+    print("RSSI = %s" % (r))
     await brick.close()
 
 
@@ -30,4 +32,5 @@ pfxdevs = loop.run_until_complete(ble_device_scanner())
 print("Found %d PFx Bricks" % (len(pfxdevs)))
 if len(pfxdevs) > 0:
     bricks = loop.run_until_complete(find_ble_pfxbricks(pfxdevs))
-    loop.run_until_complete(brick_session(bricks[0]))
+    if len(bricks) > 0:
+        loop.run_until_complete(brick_session(bricks[0]))

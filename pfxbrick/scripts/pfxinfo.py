@@ -34,7 +34,10 @@ def main():
         b.open()
         b.get_status()
         icd = b.get_icd_rev()
-        name = b.get_name()
+        if b.status == 0x00:
+            name = b.get_name()
+        else:
+            name = "Service Mode"
 
         table = Table(show_header=True, header_style="bold blue")
         bid = "[light_slate_blue]%s [bold cyan]%s" % (b.product_id, b.product_desc)
@@ -64,12 +67,13 @@ def main():
         table.add_row("Name                  : [bold yellow]%s" % (name))
 
         console.print(table)
-        b.get_current_state()
-        b.get_fs_state()
+        if b.status == 0x00:
+            b.get_current_state()
+            b.get_fs_state()
 
-        if argsd["config"]:
-            b.get_config()
-            console.print(str(b.config))
+            if argsd["config"]:
+                b.get_config()
+                console.print(str(b.config))
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ async def brick_session(brickdev):
     brick = PFxBrickBLE(dev_dict=brickdev, debug=False)
     await brick.open()
     max_speed = 50
-    audiofile = "yamanote16pcm22k"
+    audiofile = "yamanote16pcm22k.wav"
 
     # start looped audio playback and set volume
     await brick.repeat_audio_file(audiofile)

@@ -442,6 +442,29 @@ class PFxFile:
         )
         return s
 
+    def colour_str(self):
+        """
+        Convenient human readable colour string of a file directory entry.
+        """
+        attr_str = ""
+        if self.attributes in file_attr_dict:
+            attr_str = file_attr_dict[self.attributes]
+        elif self.id in fileid_dict:
+            attr_str = fileid_dict[self.id]
+        s = "%3d %-24s [bold white]%6.1f kB[/bold white] [bold blue]%04X[/bold blue] [bold black]%08X %08X[/bold black] [bold aquamarine3]%08X[/bold aquamarine3]  [bold black]%04X %02X[/bold black] %s" % (
+            self.id,
+            self.name,
+            float(self.size / 1000),
+            self.attributes,
+            self.userData1,
+            self.userData2,
+            self.crc32,
+            self.firstSector,
+            self.id,
+            attr_str,
+        )
+        return s
+
 
 class PFxDir:
     """
@@ -475,6 +498,18 @@ class PFxDir:
         for f in self.files:
             if f.id == fid:
                 return f
+        return None
+
+    def get_filename(self, fid):
+        """
+        Returns a filename with a numeric file ID
+
+        :param int fid: the unique file ID of desired directory entry
+        :returns: :obj:`str` filename of file ID, or None
+        """
+        f = self.get_file_dir_entry(fid)
+        if f is not None:
+            return f.name
         return None
 
     def find_available_file_id(self):
@@ -530,6 +565,38 @@ class PFxDir:
         )
         for f in self.files:
             sb.append(str(f))
+        sb.append(
+            "%d files, %.1f kB used, %.1f kB remaining"
+            % (
+                len(self.files),
+                float(self.bytesUsed / 1000),
+                float(self.bytesLeft / 1000),
+            )
+        )
+        s = "\n".join(sb)
+        return s
+
+    def colour_dir(self):
+        """
+        Convenient human readable string of the file directory with colour.
+        """
+        sb = []
+        sb.append(
+            "[bold yellow]%3s %-24s %6s    %4s %8s %8s %8s %5s %s[/bold yellow]"
+            % (
+                "ID",
+                "Name",
+                "Size",
+                "Attr",
+                "User1",
+                "User2",
+                "CRC32",
+                "Start",
+                "Ext Attr",
+            )
+        )
+        for f in self.files:
+            sb.append(f.colour_str())
         sb.append(
             "%d files, %.1f kB used, %.1f kB remaining"
             % (
