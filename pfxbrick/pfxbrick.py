@@ -26,7 +26,6 @@
 
 import hid
 from bleak import BleakClient, BleakScanner
-from numpy import isin
 
 from pfxbrick import *
 from pfxbrick.pfxfiles import fs_format
