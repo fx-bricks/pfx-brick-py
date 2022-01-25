@@ -211,4 +211,4 @@ Documentation
 * `PFx Brick Interface Control Document (ICD) v.3.38 <https://github.com/fx-bricks/pfx-brick-dev/raw/master/doc/ICD/PFxBrickICD-Rev3.38.pdf>`_ describes details of PFx Brick operation and communication protocol
 * `Python API Reference Documentation <https://www.fxbricks.com/docs/python/index.html>`_
 
-If you want to learn more about PFx Brick, check out `our website <https://fxbricks.com/pfxbrick>`_.
+If you want to learn more about PFx Brick, check out `our website <https://shop.fxbricks.com/pages/pfx-test>`_.

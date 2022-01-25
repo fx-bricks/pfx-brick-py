@@ -464,7 +464,13 @@ class PFxConfig:
             msg.append(self.settings.rapidDecelThr)
             msg.append(self.settings.brakeDecelThr)
             msg.append(self.settings.brakeSpeedThr)
-            msg.extend([0] * 7)
+            msg.extend([0] * 5)
+            # include new ICD revision to help the PFx Brick
+            # determine what version we are
+            major, minor = ver_to_bytes(ICD_REV)
+            msg.append(major)
+            msg.append(minor)
+
         msg.append(self.settings.irAutoOff)
         msg.append(self.settings.bleAutoOff)
         msg.append(self.settings.bleMotorWhenDisconnect)

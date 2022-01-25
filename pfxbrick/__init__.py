@@ -6,9 +6,11 @@ import os
 
 # fmt: off
 __project__ = 'pfxbrick'
-__version__ = '0.8.4'
+__version__ = '0.8.5'
 
 VERSION = __project__ + "-" + __version__
+
+ICD_REV = '3.38'
 
 script_dir = os.path.dirname(__file__)
 

@@ -2,6 +2,11 @@
 Change Log
 ==========
 
+v.0.8.5
+-------
+
+* updated configuration change message to send ICD revision
+
 v.0.8.4
 -------
 

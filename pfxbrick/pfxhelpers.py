@@ -146,6 +146,16 @@ def uint16_tover(msb, lsb):
     return res
 
 
+def ver_to_bytes(ver):
+    major, minor = 0, 0
+    vs = ver.split(".")
+    major = int(vs[0]) & 0x0F
+    vm = "%2s" % (vs[1])
+    minor = (int(vm[0]) & 0x0F) << 4
+    minor |= int(vm[1]) & 0x0F
+    return major, minor
+
+
 def int8_toint(val):
     if val & 0x80:
         return -((~val & 0x7F) + 1)
