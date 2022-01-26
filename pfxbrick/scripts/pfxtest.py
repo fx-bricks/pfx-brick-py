@@ -265,13 +265,16 @@ SCRIPT_TESTS = [
 
 def test_scripts(brick):
     for test in SCRIPT_TESTS:
+        console.log('Performing script test "%s"' % (test[2]))
         fid = copy_script_file(brick, test[0])
-        time.sleep(0.2)
-        result = test[1](brick, fid)
-        test_result("Executed test script [cyan]%s[/]" % (test[2]), result)
-        brick.remove_file(fid)
-        time.sleep(1)
-        os.remove(TMP_FILE)
+        with console.status("Testing...") as status:
+            time.sleep(0.2)
+            result = test[1](brick, fid)
+            test_result('Executed test script "%s"' % (test[2]), result)
+            console.log("")
+            brick.remove_file(fid)
+            time.sleep(1)
+            os.remove(TMP_FILE)
 
 
 def snapshot_config(brick):
@@ -495,7 +498,6 @@ def test_button_events(brick, testtime=10):
 
 
 def test_audio_playback(brick, fileid, name):
-    console.log("Testing playback of audio file %d (%s)" % (fileid, name))
     brick.refresh_file_dir()
     fd = brick.filedir.get_file_dir_entry(fileid)
     if fd is None:
@@ -538,6 +540,7 @@ def test_audio_playback(brick, fileid, name):
     )
     test_result("Audio peak values 0x%02X > 0" % (st.audio_peak), st.audio_peak > 0)
     time.sleep(file_dur / 2)
+
     st = brick.get_current_state()
     test_result(
         "File %d should have finished playback after %.1f sec" % (fileid, file_dur),
@@ -591,6 +594,7 @@ def test_motor_channel(brick, ch, speed):
     brick.stop_motor(ch)
     time.sleep(0.5)
     ok3 = check_motor_speed(brick, ch, 0)
+
     return ok1 & ok2 & ok3
 
 
@@ -599,7 +603,7 @@ def test_file_transfer(brick, fdata, fid=0, fn="test_data.wav", skip_readback=Fa
     with open(fn, "wb") as f:
         f.write(bindata)
     crc32 = get_file_crc32(fn)
-    console.log("Copying file %s with CRC32=0x%08X" % (fn, crc32))
+    console.log('Copying file "%s" with CRC32=0x%08X' % (fn, crc32))
     brick.put_file(fn, fid)
     fcrc = 0
     while fcrc == 0:
@@ -608,16 +612,17 @@ def test_file_transfer(brick, fdata, fid=0, fn="test_data.wav", skip_readback=Fa
         f0 = brick.filedir.get_file_dir_entry(fid)
         fcrc = f0.crc32
     test_result(
-        "Copied file directory %s CRC32=0x%08X" % (fn, f0.crc32), f0.crc32 == crc32
+        'File directory reports CRC32=0x%08X for "%s"' % (f0.crc32, fn),
+        f0.crc32 == crc32,
     )
     if skip_readback:
         return
-    console.log("Getting file %s with CRC32=0x%08X" % (fn, crc32))
+    console.log('Getting file "%s" with CRC32=0x%08X' % (fn, crc32))
     fnr = fn + ".rx"
     brick.get_file(fid, fnr)
     read_crc32 = get_file_crc32(fnr)
     test_result(
-        "Read back file %s CRC32=0x%08X" % (fnr, read_crc32), crc32 == read_crc32
+        'Read back file "%s" CRC32=0x%08X' % (fnr, read_crc32), crc32 == read_crc32
     )
     os.remove(fn)
     os.remove(fnr)
@@ -847,15 +852,33 @@ def main():
             res = test_bt_status(b)
             test_result("Bluetooth configuration", res)
 
+        # disable any startup scripts
+        b.refresh_file_dir()
+        if b.filedir.has_file("startup.pfx"):
+            console.log('Temporarily disabling "startup.pfx" script...')
+            b.rename_file("startup.pfx", "disable_startup.txt")
+
+        b.test_action(PFxAction().all_off())
+
         if argsd["motors"]:
             test_banner("Testing Motor Channels...")
             backup_config = snapshot_config(b)
             b.config.motors[0].accel = 0
             b.config.motors[0].decel = 0
+            b.config.motors[0].invert = False
+            b.config.motors[0].vmin = 0
+            b.config.motors[0].vmid = 127
+            b.config.motors[0].vmax = 255
             b.config.motors[1].accel = 0
             b.config.motors[1].decel = 0
+            b.config.motors[1].invert = False
+            b.config.motors[1].vmin = 0
+            b.config.motors[1].vmid = 127
+            b.config.motors[1].vmax = 255
             b.set_config()
             time.sleep(2)
+            b.test_action(PFxAction().all_off())
+
             res = test_motor_channel(b, 1, 50)
             test_result("Motor channel A +50", res)
             res = test_motor_channel(b, 1, -50)
@@ -865,7 +888,9 @@ def main():
             test_result("Motor channel B +75", res)
             res = test_motor_channel(b, 2, -75)
             test_result("Motor channel B -75", res)
+
             restore_config(b, backup_config)
+            b.test_action(PFxAction().all_off())
 
         if argsd["lights"]:
             test_banner("Testing Individual Light Channels...")
@@ -890,67 +915,71 @@ def main():
     if argsd["files"]:
         test_banner("Testing File System...")
         files = [
-            (10, SINFILE, 0x0000, 0x000204CE, 0x0000002C, "sin150Hz.wav"),
-            (11, PINKFILE, 0x0000, 0x0001B016, 0x0000002C, "pink3dB.wav"),
-            (12, CHIRP22K16, 0x0000, 0x000204CC, 0x0000002C, "chirp22k16.wav"),
-            (15, CHIRP11K8, 0x0003, 0x00008133, 0x0000002C, "chirp11k8.wav"),
+            (100, SINFILE, 0x0000, 0x000204CE, 0x0000002C, "sin150Hz.wav"),
+            (101, PINKFILE, 0x0000, 0x0001B016, 0x0000002C, "pink3dB.wav"),
+            (102, CHIRP22K16, 0x0000, 0x000204CC, 0x0000002C, "chirp22k16.wav"),
+            (103, CHIRP11K8, 0x0003, 0x00008133, 0x0000002C, "chirp11k8.wav"),
         ]
         if not argsd["long"]:
             files = files[0:2]
         for file in files:
             console.log(
-                "Testing file transfer integrity for file %d (%s)..."
+                'Testing file transfer integrity for file %d "%s"...'
                 % (file[0], file[5])
             )
             test_file_transfer(b, file[1], file[0], file[5])
             console.log("")
         b.refresh_file_dir()
-        for file in files:
-            console.log(
-                "Checking file %d (%s) directory attributes and name..."
-                % (file[0], file[5])
-            )
-            f = b.filedir.get_file_dir_entry(file[0])
-            test_result(
-                "File %s attributes=%X expected=%X" % (file[5], f.attributes, file[2]),
-                f.attributes == file[2],
-            )
-            test_result(
-                "File %s UserData1=%X expected=%X" % (file[5], f.userData1, file[3]),
-                f.userData1 == file[3],
-            )
-            test_result(
-                "File %s UserData2=%X expected=%X" % (file[5], f.userData2, file[4]),
-                f.userData2 == file[4],
-            )
-            oldfn = f.name
-            newfn = "file%d%d%d" % (
-                random.randint(0, 9),
-                random.randint(0, 9),
-                random.randint(0, 9),
-            )
-            console.log("Renaming file %s to %s" % (oldfn, newfn))
-            b.rename_file(file[0], newfn)
-            time.sleep(2)
-            ok = False
-            b.refresh_file_dir()
-            for e in b.filedir.files:
-                if e.name == newfn:
-                    ok = True
-                    break
-            test_result("File %s renamed to %s" % (oldfn, newfn), ok)
+        with console.status("Testing...") as status:
+            for file in files:
+                console.log(
+                    'Checking file %d "%s" directory attributes and name...'
+                    % (file[0], file[5])
+                )
+                f = b.filedir.get_file_dir_entry(file[0])
+                test_result(
+                    'File "%s" attributes=0x%X expected=0x%X'
+                    % (file[5], f.attributes, file[2]),
+                    f.attributes == file[2],
+                )
+                test_result(
+                    'File "%s" UserData1=0x%X expected=0x%X'
+                    % (file[5], f.userData1, file[3]),
+                    f.userData1 == file[3],
+                )
+                test_result(
+                    'File "%s" UserData2=0x%X expected=0x%X'
+                    % (file[5], f.userData2, file[4]),
+                    f.userData2 == file[4],
+                )
+                oldfn = f.name
+                newfn = "file%d%d%d" % (
+                    random.randint(0, 9),
+                    random.randint(0, 9),
+                    random.randint(0, 9),
+                )
+                console.log('Renaming file "%s" to "%s"' % (oldfn, newfn))
+                b.rename_file(file[0], newfn)
+                time.sleep(2)
+                ok = False
+                b.refresh_file_dir()
+                for e in b.filedir.files:
+                    if e.name == newfn:
+                        ok = True
+                        break
+                test_result('File "%s" renamed to "%s"' % (oldfn, newfn), ok)
 
-            console.log("Restoring filename %s to %s" % (newfn, oldfn))
-            b.rename_file(file[0], oldfn)
-            time.sleep(2)
-            ok = False
-            b.refresh_file_dir()
-            for e in b.filedir.files:
-                if e.name == oldfn:
-                    ok = True
-                    break
-            test_result("File %s restored to %s" % (oldfn, newfn), ok)
-            console.log("")
+                console.log('Restoring filename "%s" to "%s"' % (newfn, oldfn))
+                b.rename_file(file[0], oldfn)
+                time.sleep(2)
+                ok = False
+                b.refresh_file_dir()
+                for e in b.filedir.files:
+                    if e.name == oldfn:
+                        ok = True
+                        break
+                test_result('File "%s" restored to "%s"' % (newfn, oldfn), ok)
+                console.log("")
 
     if argsd["scripts"]:
         test_banner("Testing Script Execution...")
@@ -961,14 +990,13 @@ def main():
         else:
             test_scripts(b)
 
-    # with console.status("Testing...") as status:
     if argsd["audio"]:
         files = [
-            (11, PINKFILE, 0x0000, 0x0001B016, 0x0000002C, "pink3dB.wav"),
-            (12, CHIRP22K16, 0x0000, 0x000204CC, 0x0000002C, "chirp22k16.wav"),
-            (13, CHIRP22K8, 0x0002, 0x00010266, 0x0000002C, "chirp22k8.wav"),
-            (14, CHIRP11K16, 0x0001, 0x00010266, 0x0000002C, "chirp11k16.wav"),
-            (15, CHIRP11K8, 0x0003, 0x00008133, 0x0000002C, "chirp11k8.wav"),
+            (100, PINKFILE, 0x0000, 0x0001B016, 0x0000002C, "pink3dB.wav"),
+            (101, CHIRP22K16, 0x0000, 0x000204CC, 0x0000002C, "chirp22k16.wav"),
+            (102, CHIRP22K8, 0x0002, 0x00010266, 0x0000002C, "chirp22k8.wav"),
+            (103, CHIRP11K16, 0x0001, 0x00010266, 0x0000002C, "chirp11k16.wav"),
+            (104, CHIRP11K8, 0x0003, 0x00008133, 0x0000002C, "chirp11k8.wav"),
         ]
         if not argsd["long"]:
             files = files[0:2]
@@ -976,14 +1004,40 @@ def main():
         b.refresh_file_dir()
         test_banner("Testing Audio Playback...")
         for file in files:
+            console.log('Testing playback of audio file %d "%s"' % (file[0], file[5]))
             if not b.filedir.has_file(file[0]):
                 test_file_transfer(b, file[1], file[0], file[5], skip_readback=True)
-            test_audio_playback(b, file[0], file[5])
+            with console.status("Testing...") as status:
+                test_audio_playback(b, file[0], file[5])
 
+    console.log("Cleaning up...")
     if not argsd["keep"]:
-        for f in [10, 11, 12, 13, 14, 15]:
-            b.remove_file(f, silent=True)
+        b.refresh_file_dir()
+        for f in [100, 101, 102, 103, 104]:
+            if b.filedir.has_file(f):
+                console.log('Removing file %d "%s"' % (f, b.filedir.get_filename(f)))
+                b.remove_file(f, silent=True)
 
+    # restore any startup scripts
+    b.refresh_file_dir()
+    if b.filedir.has_file("disable_startup.txt"):
+        console.log('Restoring "startup.pfx" script')
+        b.rename_file("disable_startup.txt", "startup.pfx")
+        time.sleep(3.0)
+
+    console.log("Restarting PFx Brick...")
+    b.send_raw_icd_command(
+        [
+            PFX_USB_CMD_REBOOT,
+            PFX_REBOOT_BYTE0,
+            PFX_REBOOT_BYTE1,
+            PFX_REBOOT_BYTE2,
+            PFX_REBOOT_BYTE3,
+            PFX_REBOOT_BYTE4,
+            PFX_REBOOT_BYTE5,
+            PFX_REBOOT_BYTE6,
+        ]
+    )
     b.close()
 
 

@@ -41,7 +41,11 @@ def usb_transaction(hdev, msg):
     buf.extend(msg)
     buf.extend([0] * (64 - msglen))
     hdev.write(buf)
-    res = hdev.read(64)
+    if not msg[0] == PFX_CMD_FILE_WRITE_FAST:
+        res = hdev.read(64)
+    else:
+        res = [msg[0] | 0x80]
+        res.extend([0] * 63)
     if res:
         if res[0] == msg[0] | 0x80:
             return res

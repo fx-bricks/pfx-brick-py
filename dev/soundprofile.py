@@ -503,7 +503,7 @@ class SoundProfile:
             else:
                 fid = to_brick.filedir.find_available_file_id()
             sbytes = bytes("\n".join(s), encoding="utf-8")
-            fs_copy_file_to(to_brick.dev, fid, "startup.pfx", with_bytes=sbytes)
+            fs_copy_file_to(to_brick, fid, "startup.pfx", with_bytes=sbytes)
         elif as_bytes:
             return "\n".join(s)
         else:

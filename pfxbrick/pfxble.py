@@ -368,11 +368,13 @@ class PFxBrickBLE(PFxBrick):
     async def get_icd_rev(self, silent=False):
         """
         Requests the version of Interface Control Document (ICD)
-        the connected PFx Brick supports using the PFX_CMD_GET_ICD_REV
+        the connected PFx Brick supports using the `PFX_CMD_GET_ICD_REV`
         ICD message.  The resulting version number is stored in
         this class and also returned.
 
         :param boolean silent: flag to optionally silence the status LED blink
+
+        :returns: :obj:`str` ICD version, e.g. "3.38"
         """
         res = await cmd_get_icd_rev(self.dev, silent)
         self.icd_rev = uint16_tover(res[1], res[2])
@@ -382,7 +384,7 @@ class PFxBrickBLE(PFxBrick):
     async def get_status(self):
         """
         Requests the top level operational status of the PFx Brick
-        using the PFX_CMD_GET_STATUS ICD message.  The resulting
+        using the `PFX_CMD_GET_STATUS ICD` message.  The resulting
         status data is stored in this class and can be queried
         with typical class member access methods or the print_status method.
         """
@@ -399,7 +401,7 @@ class PFxBrickBLE(PFxBrick):
     async def get_config(self):
         """
         Retrieves configuration settings from the PFx Brick using
-        the PFX_CMD_GET_CONFIG ICD message. The configuration data
+        the `PFX_CMD_GET_CONFIG ICD` message. The configuration data
         is stored in the :obj:`PFxBrick.config` class member variable.
         """
         res = await cmd_get_config(self.dev)
@@ -409,7 +411,7 @@ class PFxBrickBLE(PFxBrick):
     async def set_config(self):
         """
         Writes the contents of the PFxConfig data structure class to
-        the PFx Brick using the PFX_CMD_SET_CONFIG ICD message.
+        the PFx Brick using the `PFX_CMD_SET_CONFIG` ICD message.
 
         It is recommended that the configuration be read from the
         PFx Brick (using get_config) before any changes are made to
@@ -428,7 +430,7 @@ class PFxBrickBLE(PFxBrick):
     async def get_name(self):
         """
         Retrieves the user defined name of the PFx Brick using
-        the PFX_CMD_GET_NAME ICD message. The name is stored in
+        the `PFX_CMD_GET_NAME ICD` message. The name is stored in
         the name class variable as a UTF-8 string.
 
         :returns: :obj:`str` user defined name
@@ -440,7 +442,7 @@ class PFxBrickBLE(PFxBrick):
     async def set_name(self, name):
         """
         Sets the user defined name of the PFx Brick using the
-        PFX_CMD_SET_NAME ICD message.
+        `PFX_CMD_SET_NAME` ICD message.
 
         :param name: :obj:`str` new name to set (up to 24 character bytes, UTF-8)
         """
@@ -594,7 +596,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def set_motor_speed(self, ch, speed, duration=None):
         """
-        A convenience wrapper for PFxAction().set_motor_speed
+        A convenience wrapper for `PFxAction().set_motor_speed`
 
         :param ch: [:obj:`int`] a list of motor channels (1-4)
         :param speed: :obj:`int` desired motor speed (-100 to +100)
@@ -611,7 +613,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def stop_motor(self, ch):
         """
-        A convenience wrapper for PFxAction().stop_motor
+        A convenience wrapper for `PFxAction().stop_motor`
 
         :param ch: [:obj:`int`] a list of motor channels (1-4)
         """
@@ -619,7 +621,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def light_on(self, ch):
         """
-        A convenience wrapper for PFxAction().light_on
+        A convenience wrapper for `PFxAction().light_on`
 
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
@@ -627,7 +629,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def light_off(self, ch):
         """
-        A convenience wrapper for PFxAction().light_off
+        A convenience wrapper for `PFxAction().light_off`
 
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
@@ -635,7 +637,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def light_toggle(self, ch):
         """
-        A convenience wrapper for PFxAction().light_toggle
+        A convenience wrapper `for PFxAction().light_toggle`
 
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
@@ -643,7 +645,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def set_brightness(self, ch, brightness):
         """
-        A convenience wrapper for PFxAction().set_brightness
+        A convenience wrapper for `PFxAction().set_brightness`
 
         :param ch: [:obj:`int`] a list of light channels (1-8)
         :param brightness: :obj:`int` brightness (0 - 255 max)
@@ -652,7 +654,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def combo_light_fx(self, fx, param=[0, 0, 0, 0, 0]):
         """
-        A convenience wrapper for PFxAction().combo_light_fx
+        A convenience wrapper for `PFxAction().combo_light_fx`
 
         :param fx: :obj:`int` desired light effect
         :param param: [:obj:`int`] a list of up to 5 light parameters
@@ -661,7 +663,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def light_fx(self, ch, fx, param=[0, 0, 0, 0, 0]):
         """
-        A convenience wrapper for PFxAction().light_fx
+        A convenience wrapper for `PFxAction().light_fx`
 
         :param ch: [:obj:`int`] a list of light channels (1-8)
         :param fx: :obj:`int` desired light effect
@@ -671,7 +673,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def sound_fx(self, fx, param=[0, 0], fileID=None):
         """
-        A convenience wrapper for PFxAction().sound_fx
+        A convenience wrapper for `PFxAction().sound_fx`
 
         :param fx: :obj:`int` desired sound action
         :param param: [:obj:`int`] a list of up to 2 sound parameters
@@ -683,7 +685,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def play_audio_file(self, fileID):
         """
-        A convenience wrapper for PFxAction().sound_fx
+        A convenience wrapper for `PFxAction().sound_fx`
 
         :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
@@ -692,7 +694,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def stop_audio_file(self, fileID):
         """
-        A convenience wrapper for PFxAction().stop_audio_file
+        A convenience wrapper for `PFxAction().stop_audio_file`
 
         :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
@@ -701,7 +703,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def repeat_audio_file(self, fileID):
         """
-        A convenience wrapper for PFxAction().repeat_audio_file
+        A convenience wrapper for `PFxAction().repeat_audio_file`
 
         :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
@@ -710,7 +712,7 @@ class PFxBrickBLE(PFxBrick):
 
     async def set_volume(self, volume):
         """
-        A convenience wrapper for PFxAction().set_volume
+        A convenience wrapper for `PFxAction().set_volume`
 
         :param volume: :obj:`int` desired audio volume (0 - 100%)
         """

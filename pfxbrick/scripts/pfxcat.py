@@ -42,7 +42,7 @@ def main():
     fd = b.filedir.get_file_dir_entry(fid)
     if fd is not None:
         fs_copy_file_from(
-            b.dev, fd, TMP_FILE, show_progress=False, as_bytes=as_bytes, to_console=True
+            b, fd, TMP_FILE, show_progress=False, as_bytes=as_bytes, to_console=True
         )
         os.remove(TMP_FILE)
     else:

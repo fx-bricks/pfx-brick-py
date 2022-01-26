@@ -995,6 +995,9 @@ PFX_CMD_FILE_GET_FS_STATE = 0x48
 PFX_CMD_GET_FLASH_SECTORMAP = 0x49
 PFX_CMD_GET_FLASH_DIR_ENTRY = 0x4A
 PFX_CMD_RUN_SCRIPT = 0x4B
+PFX_CMD_FILE_WRITE_FAST = 0x4C
+PFX_CMD_FILE_READ_FAST = 0x4D
+PFX_MSG_FILE_READ_FAST = 0xCD
 
 # /*******************************************************************************
 #  Bluetooth Interface Commands

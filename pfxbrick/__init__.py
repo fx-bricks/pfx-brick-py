@@ -8,9 +8,17 @@ import os
 __project__ = 'pfxbrick'
 __version__ = '0.8.5'
 
+# API version
+
 VERSION = __project__ + "-" + __version__
 
-ICD_REV = '3.38'
+# ICD version this API is compliant with
+#   for more detail, consult:
+#   https://www.fxbricks.com/downloads/PFxBrickICD-Rev3.39.pdf
+#   and
+#   https://github.com/fx-bricks/pfx-brick-dev
+
+ICD_REV = '3.39'
 
 script_dir = os.path.dirname(__file__)
 

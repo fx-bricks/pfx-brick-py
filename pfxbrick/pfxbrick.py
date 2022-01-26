@@ -189,11 +189,13 @@ class PFxBrick:
     def get_icd_rev(self, silent=False):
         """
         Requests the version of Interface Control Document (ICD)
-        the connected PFx Brick supports using the PFX_CMD_GET_ICD_REV
+        the connected PFx Brick supports using the `PFX_CMD_GET_ICD_REV`
         ICD message.  The resulting version number is stored in
         this class and also returned.
 
         :param boolean silent: flag to optionally silence the status LED blink
+
+        :returns: :obj:`str` ICD version, e.g. "3.38"
         """
         res = cmd_get_icd_rev(self.dev, silent)
         self.icd_rev = uint16_tover(res[1], res[2])
@@ -202,9 +204,13 @@ class PFxBrick:
     def get_status(self):
         """
         Requests the top level operational status of the PFx Brick
-        using the PFX_CMD_GET_STATUS ICD message.  The resulting
+
+        Summary operating status is obtained from the PFx Brick using
+        the `PFX_CMD_GET_STATUS ICD` message.  The resulting
         status data is stored in this class and can be queried
-        with typical class member access methods or the print_status method.
+        with class member access methods such as `status_str`.
+
+        :returns: None
         """
         res = cmd_get_status(self.dev)
         if res:
@@ -218,8 +224,13 @@ class PFxBrick:
 
     def status_str(self):
         """
-        Gets top level operational status information retrieved
-        by a previous call to the get_status method into a string
+        Returns a summary status string of the PFx Brick
+
+        A human readable string of PFx Brick basic identification and
+        and operating status.  A call to the `get_status` method is recommended
+        to ensure that the status information is recent.
+
+        :returns: :obj:`str` status string
         """
         s = []
         s.append("USB vendor ID         : 0x%04X" % (self.usb_vid))
@@ -254,7 +265,7 @@ class PFxBrick:
     def get_config(self):
         """
         Retrieves configuration settings from the PFx Brick using
-        the PFX_CMD_GET_CONFIG ICD message. The configuration data
+        the `PFX_CMD_GET_CONFIG` ICD message. The configuration data
         is stored in the :obj:`PFxBrick.config` class member variable.
         """
         res = cmd_get_config(self.dev)
@@ -270,11 +281,11 @@ class PFxBrick:
 
     def set_config(self):
         """
-        Writes the contents of the PFxConfig data structure class to
-        the PFx Brick using the PFX_CMD_SET_CONFIG ICD message.
+        Writes the contents of the :obj:`PFxConfig` data structure class to
+        the PFx Brick using the `PFX_CMD_SET_CONFIG ICD` message.
 
         It is recommended that the configuration be read from the
-        PFx Brick (using get_config) before any changes are made to
+        PFx Brick (using `get_config`) before any changes are made to
         the configuration and written back. This ensures that any
         configuration settings which are not desired to be changed
         are left in the same state.
@@ -290,7 +301,7 @@ class PFxBrick:
     def get_name(self):
         """
         Retrieves the user defined name of the PFx Brick using
-        the PFX_CMD_GET_NAME ICD message. The name is stored in
+        the `PFX_CMD_GET_NAME ICD` message. The name is stored in
         the name class variable as a UTF-8 string.
 
         :returns: :obj:`str` user defined name
@@ -303,7 +314,7 @@ class PFxBrick:
     def set_name(self, name):
         """
         Sets the user defined name of the PFx Brick using the
-        PFX_CMD_SET_NAME ICD message.
+        `PFX_CMD_SET_NAME ICD` message.
 
         :param name: :obj:`str` new name to set (up to 24 character bytes, UTF-8)
         """
@@ -474,7 +485,7 @@ class PFxBrick:
 
     def set_motor_speed(self, ch, speed, duration=None):
         """
-        A convenience wrapper for PFxAction().set_motor_speed
+        A convenience wrapper for `PFxAction().set_motor_speed`
 
         :param ch: [:obj:`int`] a list of motor channels (1-4)
         :param speed: :obj:`int` desired motor speed (-100 to +100)
@@ -489,7 +500,7 @@ class PFxBrick:
 
     def stop_motor(self, ch):
         """
-        A convenience wrapper for PFxAction().stop_motor
+        A convenience wrapper for `PFxAction().stop_motor`
 
         :param ch: [:obj:`int`] a list of motor channels (1-4)
         """
@@ -497,7 +508,7 @@ class PFxBrick:
 
     def light_on(self, ch):
         """
-        A convenience wrapper for PFxAction().light_on
+        A convenience wrapper for `PFxAction().light_on`
 
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
@@ -505,7 +516,7 @@ class PFxBrick:
 
     def light_off(self, ch):
         """
-        A convenience wrapper for PFxAction().light_off
+        A convenience wrapper for `PFxAction().light_off`
 
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
@@ -513,7 +524,7 @@ class PFxBrick:
 
     def light_toggle(self, ch):
         """
-        A convenience wrapper for PFxAction().light_toggle
+        A convenience wrapper for `PFxAction().light_toggle`
 
         :param ch: [:obj:`int`] a list of light channels (1-8)
         """
@@ -521,7 +532,7 @@ class PFxBrick:
 
     def set_brightness(self, ch, brightness):
         """
-        A convenience wrapper for PFxAction().set_brightness
+        A convenience wrapper for `PFxAction().set_brightness`
 
         :param ch: [:obj:`int`] a list of light channels (1-8)
         :param brightness: :obj:`int` brightness (0 - 255 max)
@@ -530,7 +541,7 @@ class PFxBrick:
 
     def combo_light_fx(self, fx, param=[0, 0, 0, 0, 0]):
         """
-        A convenience wrapper for PFxAction().combo_light_fx
+        A convenience wrapper for `PFxAction().combo_light_fx`
 
         :param fx: :obj:`int` desired light effect
         :param param: [:obj:`int`] a list of up to 5 light parameters
@@ -539,7 +550,7 @@ class PFxBrick:
 
     def light_fx(self, ch, fx, param=[0, 0, 0, 0, 0]):
         """
-        A convenience wrapper for PFxAction().light_fx
+        A convenience wrapper for `PFxAction().light_fx`
 
         :param ch: [:obj:`int`] a list of light channels (1-8)
         :param fx: :obj:`int` desired light effect
@@ -549,7 +560,7 @@ class PFxBrick:
 
     def sound_fx(self, fx, param=[0, 0], fileID=None):
         """
-        A convenience wrapper for PFxAction().sound_fx
+        A convenience wrapper for `PFxAction().sound_fx`
 
         :param fx: :obj:`int` desired sound action
         :param param: [:obj:`int`] a list of up to 2 sound parameters
@@ -561,7 +572,7 @@ class PFxBrick:
 
     def play_audio_file(self, fileID):
         """
-        A convenience wrapper for PFxAction().sound_fx
+        A convenience wrapper for `PFxAction().sound_fx`
 
         :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
@@ -570,7 +581,7 @@ class PFxBrick:
 
     def stop_audio_file(self, fileID):
         """
-        A convenience wrapper for PFxAction().stop_audio_file
+        A convenience wrapper for `PFxAction().stop_audio_file`
 
         :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
@@ -579,7 +590,7 @@ class PFxBrick:
 
     def repeat_audio_file(self, fileID):
         """
-        A convenience wrapper for PFxAction().repeat_audio_file
+        A convenience wrapper for `PFxAction().repeat_audio_file`
 
         :param fileID: :obj:`int` or :obj:`str` file ID or filename of an audio file in the file system
         """
@@ -588,7 +599,7 @@ class PFxBrick:
 
     def set_volume(self, volume):
         """
-        A convenience wrapper for PFxAction().set_volume
+        A convenience wrapper for `PFxAction().set_volume`
 
         :param volume: :obj:`int` desired audio volume (0 - 100%)
         """
@@ -633,7 +644,7 @@ class PFxBrick:
             self.refresh_file_dir()
             fileID = self.filedir.find_available_file_id()
         if fileID is not None:
-            fs_copy_file_to(self.dev, fileID, fn, show_progress)
+            fs_copy_file_to(self, fileID, fn, show_progress)
 
     def get_file(self, fileID, fn=None, show_progress=True):
         """
@@ -646,7 +657,7 @@ class PFxBrick:
         self.refresh_file_dir()
         fileID = self.file_id_from_str_or_int(fileID)
         f = self.filedir.get_file_dir_entry(fileID)
-        fs_copy_file_from(self.dev, f, fn, show_progress)
+        fs_copy_file_from(self, f, fn, show_progress)
 
     def remove_file(self, fileID, silent=False):
         """
@@ -696,7 +707,7 @@ class PFxBrick:
         """
         Renames a file on the file system.
 
-        :param fileID: :obj:`int` or :obj:`str` the file ID or filename of the file to remove
+        :param fileID: :obj:`int` or :obj:`str` the file ID or filename of the file to rename
         :param new_name: :obj:`str` new file name to apply (up to 32 characters UTF-8 encoded)
         """
         fileID = self.file_id_from_str_or_int(fileID)

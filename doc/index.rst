@@ -42,7 +42,6 @@ Table Of Contents
     utility_scripts.rst
     constantref.rst
 
-
 Indices and Tables
 ------------------
 

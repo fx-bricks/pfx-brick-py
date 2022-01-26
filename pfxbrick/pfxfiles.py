@@ -24,6 +24,7 @@
 # PFx Brick file system helpers
 
 import os
+import time
 
 from pfxbrick import *
 from pfxbrick.pfxdict import file_attr_dict, fileid_dict
@@ -116,7 +117,7 @@ def fs_remove_file(hdev, fid, silent=False):
     fs_error_check(res[1], silent=silent)
 
 
-def fs_copy_file_to(hdev, fid, fn, show_progress=True, with_bytes=None):
+def fs_copy_file_to(brick, fid, fn, show_progress=True, with_bytes=None):
     """
     File copy handler to put a file on the PFx Brick.
 
@@ -126,7 +127,7 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True, with_bytes=None):
     be time consuming. Therefore, a progress bar can be optionally shown
     on the console to monitor the transfer.
 
-    :param hdev: USB HID session handle
+    :param brick: :obj:`PFxBrick` object
     :param fid: a unique file ID to assign the copied file.
     :param fn: the host filename (optionally including path) to copy
     :param boolean show_progress: a flag to show the progress bar indicator during transfer.
@@ -135,6 +136,12 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True, with_bytes=None):
         nBytes = len(with_bytes)
     else:
         nBytes = os.path.getsize(fn)
+    if is_version_less_than(brick.icd_rev, "3.39"):
+        tx_chunk = 61
+        fast_write = False
+    else:
+        tx_chunk = 62
+        fast_write = True
     if nBytes > 0:
         msg = [PFX_CMD_FILE_OPEN]
         msg.append(fid)
@@ -146,7 +153,7 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True, with_bytes=None):
             msg.append(b)
         for i in range(32 - len(nd)):
             msg.append(0)
-        res = usb_transaction(hdev, msg)
+        res = usb_transaction(brick.dev, msg)
         if not res:
             return
         if fs_error_check(res[1]):
@@ -160,20 +167,24 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True, with_bytes=None):
                 transfer = progress.add_task("copy_to", filename=name, total=nBytes)
                 while (nCount < nBytes) and not err:
                     if with_bytes is None:
-                        buf = f.read(61)
+                        buf = f.read(tx_chunk)
                     else:
                         remain = len(with_bytes) - nCount
-                        remain = min(61, remain)
+                        remain = min(tx_chunk, remain)
                         buf = with_bytes[nCount : nCount + remain]
                     nRead = len(buf)
                     nCount += nRead
                     if nRead > 0:
-                        msg = [PFX_CMD_FILE_WRITE]
-                        msg.append(fid)
-                        msg.append(nRead)
+                        if fast_write:
+                            msg = [PFX_CMD_FILE_WRITE_FAST]
+                            msg.append(nRead)
+                        else:
+                            msg = [PFX_CMD_FILE_WRITE]
+                            msg.append(fid)
+                            msg.append(nRead)
                         for b in buf:
                             msg.append(b)
-                        res = usb_transaction(hdev, msg)
+                        res = usb_transaction(brick.dev, msg)
                         err = fs_error_check(res[1])
                         progress.update(transfer, advance=nRead)
 
@@ -181,7 +192,7 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True, with_bytes=None):
                     f.close()
                 msg = [PFX_CMD_FILE_CLOSE]
                 msg.append(fid)
-                res = usb_transaction(hdev, msg)
+                res = usb_transaction(brick.dev, msg)
                 fs_error_check(res[1])
             progress.remove_task(transfer)
         else:
@@ -191,22 +202,25 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True, with_bytes=None):
             err = False
             while (nCount < nBytes) and not err:
                 if with_bytes is None:
-                    buf = f.read(61)
+                    buf = f.read(tx_chunk)
                 else:
                     remain = len(with_bytes) - nCount
-                    remain = min(61, remain)
+                    remain = min(tx_chunk, remain)
                     buf = with_bytes[nCount : nCount + remain]
                 nRead = len(buf)
                 nCount += nRead
                 if nRead > 0:
-                    msg = [PFX_CMD_FILE_WRITE]
-                    msg.append(fid)
-                    msg.append(nRead)
+                    if fast_write:
+                        msg = [PFX_CMD_FILE_WRITE_FAST]
+                        msg.append(nRead)
+                    else:
+                        msg = [PFX_CMD_FILE_WRITE]
+                        msg.append(fid)
+                        msg.append(nRead)
                     for b in buf:
                         msg.append(b)
-                    res = usb_transaction(hdev, msg)
+                    res = usb_transaction(brick.dev, msg)
                     err = fs_error_check(res[1])
-                    progress.update(transfer, advance=nRead)
                     if show_progress:
                         printProgressBar(
                             nCount,
@@ -219,12 +233,12 @@ def fs_copy_file_to(hdev, fid, fn, show_progress=True, with_bytes=None):
                 f.close()
             msg = [PFX_CMD_FILE_CLOSE]
             msg.append(fid)
-            res = usb_transaction(hdev, msg)
+            res = usb_transaction(brick.dev, msg)
             fs_error_check(res[1])
 
 
 def fs_copy_file_from(
-    hdev, pfile, fn=None, show_progress=True, as_bytes=False, to_console=False
+    brick, pfile, fn=None, show_progress=True, as_bytes=False, to_console=False
 ):
     """
     File copy handler to get a file from the PFx Brick.
@@ -240,17 +254,19 @@ def fs_copy_file_from(
     :param fn: optional name to override the filename of the host's copy.
     :param boolean show_progress: a flag to show the progress bar indicator during transfer.
     """
-    msg = [PFX_CMD_FILE_OPEN]
     if pfile is None:
         return None
+    rx_chunk = 62
+    msg = [PFX_CMD_FILE_OPEN]
     msg.append(pfile.id)
     msg.append(0x01)  # READ mode
-    res = usb_transaction(hdev, msg)
-    rbytes = bytearray()
+    res = usb_transaction(brick.dev, msg)
     if not res:
         return None
     if fs_error_check(res[1]):
         return None
+
+    rbytes = bytearray()
     if has_rich and show_progress:
         with progress:
             nf = pfile.name
@@ -263,10 +279,10 @@ def fs_copy_file_from(
                 msg = [PFX_CMD_FILE_READ]
                 msg.append(pfile.id)
                 nToRead = pfile.size - nCount
-                if nToRead > 62:
-                    nToRead = 62
+                if nToRead > rx_chunk:
+                    nToRead = rx_chunk
                 msg.append(nToRead)
-                res = usb_transaction(hdev, msg)
+                res = usb_transaction(brick.dev, msg)
                 err = fs_error_check(res[1])
                 if not err:
                     nCount += res[1]
@@ -283,7 +299,7 @@ def fs_copy_file_from(
                     progress.update(transfer, advance=res[1])
             msg = [PFX_CMD_FILE_CLOSE]
             msg.append(pfile.id)
-            res = usb_transaction(hdev, msg)
+            res = usb_transaction(brick.dev, msg)
             fs_error_check(res[1])
         progress.remove_task(transfer)
         if not as_bytes:
@@ -300,10 +316,10 @@ def fs_copy_file_from(
             msg = [PFX_CMD_FILE_READ]
             msg.append(pfile.id)
             nToRead = pfile.size - nCount
-            if nToRead > 62:
-                nToRead = 62
+            if nToRead > rx_chunk:
+                nToRead = rx_chunk
             msg.append(nToRead)
-            res = usb_transaction(hdev, msg)
+            res = usb_transaction(brick.dev, msg)
             err = fs_error_check(res[1])
             if not err:
                 nCount += res[1]
@@ -327,7 +343,7 @@ def fs_copy_file_from(
                 )
         msg = [PFX_CMD_FILE_CLOSE]
         msg.append(pfile.id)
-        res = usb_transaction(hdev, msg)
+        res = usb_transaction(brick.dev, msg)
         fs_error_check(res[1])
         if not as_bytes:
             with open(nf, "wb") as f:
