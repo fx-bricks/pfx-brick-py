@@ -5,7 +5,8 @@ Change Log
 v.0.8.5
 -------
 
-* updated configuration change message to send ICD revision
+* support for new ICD revision v.3.39
+* updates to the scripts and documentation
 
 v.0.8.4
 -------
