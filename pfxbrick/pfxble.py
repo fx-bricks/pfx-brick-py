@@ -76,28 +76,38 @@ async def ble_device_scanner(
 
     pfxdevs = []
     total_scan_time = 0
+
     if filters is not None:
         if isinstance(filters, str):
             filters = [filters]
+
     while len(pfxdevs) < min_devices:
         if not silent:
             print("Scanning...")
+        
+        # Perform a bluetooth scan.
         async with BleakScanner() as scanner:
             await asyncio.sleep(scan_time)
             total_scan_time += scan_time
-            devices = await scanner.get_discovered_devices()
+            devices = scanner.discovered_devices
+        
+        # Print out the devices found in the scan if wanted.
         if not silent and len(devices) > 0:
             print("Found %d advertising devices" % (len(devices)))
             if verbose:
                 for i, d in enumerate(devices):
                     s = '%2d. UUID=%-36s "%s"' % (i + 1, d.address, d.name)
                     print(s)
+        
+        # Loop through the devices found and search for a PFx brick
+        # if found add it to the pfxdevs list
         for d in devices:
             if "PFx Brick" in d.name:
                 if _filter_device(d):
                     if not silent:
                         print("Found %s" % d.name)
                     pfxdevs.append(d)
+
         if total_scan_time > scan_timeout:
             break
     return pfxdevs
@@ -118,20 +128,27 @@ async def find_ble_pfxbricks(devices, connect_interval=5.0, timeout=30.0, silent
     async def connect_device(device, connect_timeout):
         async with BleakClient(device.address, timeout=connect_timeout) as client:
             sn = None
-            x = await client.is_connected()
-            rssi = await client.get_rssi()
-            for service in client.services:
-                if DEV_INFO_UUID.lower() in service.uuid:
-                    for char in service.characteristics:
-                        if DEV_SN_UUID in char.uuid:
-                            sn = bytes(await client.read_gatt_char(char.uuid))
-                            return sn, rssi
+
+            # only continue if we have a connection to the device
+            if client.is_connected:
+                rssi = device.rssi 
+                # get all the available services from the device
+                services = await client.get_services()
+
+                for service in services:
+                    if DEV_INFO_UUID.lower() in service.uuid:
+                        for char in service.characteristics:
+                            if DEV_SN_UUID in char.uuid:
+                                sn = bytes(await client.read_gatt_char(char.uuid))
+                                return sn, rssi
 
     pfxbricks = []
+
     for d in devices:
         sn = None
         connected = False
         total_connect_time = 0
+        
         while not connected and total_connect_time < timeout:
             try:
                 if not silent:
@@ -140,6 +157,7 @@ async def find_ble_pfxbricks(devices, connect_interval=5.0, timeout=30.0, silent
                 connected = True
             except:
                 total_connect_time += connect_interval
+
         if sn is not None:
             if not silent:
                 fmt = 'Found "%s" S/N=%s UUID=%s'
