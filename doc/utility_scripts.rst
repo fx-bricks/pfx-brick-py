@@ -268,6 +268,26 @@ Retrieves basic information from any connected PFx Bricks.
 
 |
 
+pfxscan
+=======
+
+Peforms a scan for any available PFx Bricks advertising on Bluetooth.  For each PFx Brick device it finds, it connects and retrieves its identity and operating status.
+
+.. code-block:: shell
+
+    $ pfxscan -h
+    usage: pfxscan [-h] [-s SCANTIME] [-t TIMEOUT]
+
+    Scan for PFx Bricks advertising on Bluetooth
+
+    optional arguments:
+    -h, --help            show this help message and exit
+    -s SCANTIME, --scantime SCANTIME
+                            Time interval (seconds) to scan for advertising PFx Bricks, default=10
+    -t TIMEOUT, --timeout TIMEOUT
+                            Timeout interval (seconds) to wait while connecting to a PFx Brick, default=15
+
+
 pfxevents
 =========
 

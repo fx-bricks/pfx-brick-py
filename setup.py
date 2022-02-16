@@ -53,14 +53,14 @@ setuptools.setup(
     long_description=build_description(),
     license="MIT",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Natural Language :: English",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.6",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
     ],
-    install_requires=["hidapi", "bleak", "rich"],
+    install_requires=["hidapi", "bleak>=0.12", "rich"],
     entry_points={
         "console_scripts": [
             "pfxcat=pfxbrick.scripts.pfxcat:main",
@@ -78,6 +78,7 @@ setuptools.setup(
             "pfxfat=pfxbrick.scripts.pfxfat:main",
             "pfxrestart=pfxbrick.scripts.pfxrestart:main",
             "pfxevents=pfxbrick.scripts.pfxevents:main",
+            "pfxscan=pfxbrick.scripts.pfxscan:main",
         ],
     },
 )

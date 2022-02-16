@@ -81,6 +81,43 @@ Brick Enumeration, Connection, Info Query BLE
         bricks = loop.run_until_complete(find_ble_pfxbricks(pfxdevs))
         loop.run_until_complete(brick_session(bricks[0]))
 
+Unless the Bluetooth hardware address of the PFx Brick is known in advance,
+then it must be obtained by performing a Bluetooth peripheral device scan to
+see which Bluetooth devices are currently advertising availability.  The
+Bluetooth hardware address is operating system dependent and must be provided
+in a UUID form that is compatible with your OS.
+
+For Windows and Linux this is typically in the form of "24:71:89:cc:09:05"
+and on macOS it is in the form of "B9EA5233-37EF-4DD6-87A8-2A875E821C46"
+
+If you already know the Bluetooth device UUID of the PFx Brick you wish to communicate with, then you can connect to it directly:
+
+.. code-block:: python
+
+    import asyncio
+
+    from pfxbrick import *
+
+
+    async def brick_session(uuid):
+        brick = PFxBrickBLE(uuid=uuid)
+        await brick.open()
+        print("PFx Brick Status / Identity")
+        print("===========================")
+        print("PFx Brick ICD version : %s" % (await brick.get_icd_rev()))
+        await brick.get_name()
+        print("PFx Brick name        : %s" % (brick.name))
+        await brick.get_status()
+        brick.print_status()
+        r = await brick.get_rssi()
+        print("RSSI = %s" % (r))
+        await brick.close()
+
+    # connect directly using the Bluetooth UUID
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(brick_session("059930E2-BE75-48A4-B193-3AD3F67246E4"))
+
+
 
 Changing Configuration
 ----------------------

@@ -82,6 +82,26 @@ Similar to a USB communication session, an instance to :py:class:`PFxBrickBLE` i
       bricks = loop.run_until_complete(find_ble_pfxbricks(pfxdevs))
       loop.run_until_complete(brick_session(bricks[0]))
 
+If you already know the Bluetooth device UUID of the PFx Brick you wish to communicate with, then you can connect to it directly:
+
+.. code-block:: python
+
+    import asyncio
+
+    from pfxbrick import *
+
+
+    async def brick_session(uuid):
+        brick = PFxBrickBLE(uuid=uuid)
+        await brick.open()
+        await brick.get_name()
+        print("PFx Brick name : %s" % (brick.name))
+        await brick.get_status()
+        brick.print_status()
+
+    # connect directly using the Bluetooth UUID
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(brick_session("059930E2-BE75-48A4-B193-3AD3F67246E4"))
 
 
 Getting PFx Brick Information

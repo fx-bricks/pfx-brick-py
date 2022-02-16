@@ -85,7 +85,7 @@ async def ble_device_scanner(
         async with BleakScanner() as scanner:
             await asyncio.sleep(scan_time)
             total_scan_time += scan_time
-            devices = await scanner.get_discovered_devices()
+            devices = scanner.discovered_devices
         if not silent and len(devices) > 0:
             print("Found %d advertising devices" % (len(devices)))
             if verbose:
@@ -96,7 +96,7 @@ async def ble_device_scanner(
             if "PFx Brick" in d.name:
                 if _filter_device(d):
                     if not silent:
-                        print("Found %s" % d.name)
+                        print("Found %s UUID=%-36s" % (d.name, d.address))
                     pfxdevs.append(d)
         if total_scan_time > scan_timeout:
             break
@@ -118,14 +118,17 @@ async def find_ble_pfxbricks(devices, connect_interval=5.0, timeout=30.0, silent
     async def connect_device(device, connect_timeout):
         async with BleakClient(device.address, timeout=connect_timeout) as client:
             sn = None
-            x = await client.is_connected()
-            rssi = await client.get_rssi()
-            for service in client.services:
-                if DEV_INFO_UUID.lower() in service.uuid:
-                    for char in service.characteristics:
-                        if DEV_SN_UUID in char.uuid:
-                            sn = bytes(await client.read_gatt_char(char.uuid))
-                            return sn, rssi
+            # only continue if we have a connection to the device
+            if client.is_connected:
+                rssi = device.rssi
+                # get all the available services from the device
+                services = await client.get_services()
+                for service in services:
+                    if DEV_INFO_UUID.lower() in service.uuid:
+                        for char in service.characteristics:
+                            if DEV_SN_UUID in char.uuid:
+                                sn = bytes(await client.read_gatt_char(char.uuid))
+                                return sn, rssi
 
     pfxbricks = []
     for d in devices:
@@ -168,14 +171,22 @@ class PFxBrickBLE(PFxBrick):
     PFxBrick class and fortunately some of the utility methods can be
     reused.
 
-    This class is initialized with a dictionary describing the desired
-    PFx Brick peripheral device to connect to as follows:
+    You can initialize a `PFxBrickBLE` object instance with either a dictionary
+    or a UUID string that specifies which PFx Brick to connect with.
+
+    The dictionary describing the desired PFx Brick peripheral device
+    is as follows:
 
     "address":  hardware address of the PFx Brick obtained by a Bluetooth device scan
     "serial_no":  optional serial number of the PFx Brick obtained by a device scan
     "name": optional name of the PFx Brick device obtained by a device scan
 
     Only the "address" key is mandatory, the other keys are provided if desired.
+
+    Alternatively, you can simply initialize the PFxBrickBLE class using a
+    UUID string like the following example:
+
+    brick = PFxBrickBLE(uuid="059930E2-BE75-48A4-B193-3AD3F67246E4")
 
     Unless the Bluetooth hardware address of the PFx Brick is known in advance,
     then it must be obtained by performing a Bluetooth peripheral device scan to
@@ -206,19 +217,25 @@ class PFxBrickBLE(PFxBrick):
         callback_motorb_speed (:obj:`func`): a function callback reference in response to a `PFX_NOTIFICATION_MOTORB_CURR_SPD` notification. Must have the call signature `func(speed)`
 
     :param dev_dict: :obj:`dict` a dictionary describing the PFx Brick device to connect. Must have the key "address" with the Bluetooth MAC address of the PFx Brick. Optional keys "name" and "serial_no" can be provided.
+    :param uuid: :obj:`str` a string representing the UUID/address of the PFx Brick device. This is an alternative to using the `dev_dict` argument to specify the PFx Brick.
     :param debug: :obj:`boolean` a flag to enable low level debug logging of Bluetooth session activity
     """
 
-    def __init__(self, dev_dict, debug=False):
+    def __init__(self, dev_dict=None, uuid=None, debug=False):
         super().__init__()
-        if "address" not in dev_dict:
-            raise BLEDeviceMissingAddressException()
+        if dev_dict is not None:
+            if "address" not in dev_dict:
+                raise BLEDeviceMissingAddressException()
+            else:
+                self.ble_address = dev_dict["address"]
+            if "serial_no" in dev_dict:
+                self.serial_no = dev_dict["serial_no"]
+            if "name" in dev_dict:
+                self.usb_prod_str = dev_dict["name"]
+        elif uuid is not None:
+            self.ble_address = uuid
         else:
-            self.ble_address = dev_dict["address"]
-        if "serial_no" in dev_dict:
-            self.serial_no = dev_dict["serial_no"]
-        if "name" in dev_dict:
-            self.usb_prod_str = dev_dict["name"]
+            raise BLEDeviceMissingAddressException()
         self.client = None
         self.is_open = False
         self.dev = None
@@ -237,17 +254,19 @@ class PFxBrickBLE(PFxBrick):
             h.setLevel(logging.DEBUG)
             self._log.addHandler(h)
 
-    async def open(self):
+    async def open(self, timeout=10):
         """
         Opens a BLE communication session with a PFx Brick.
 
         This method is called after this instance has been initialized with a valid
         Bluetooth address.
+
+        :param timeout: :obj:`float` timeout interval (seconds) to wait for an open connection
         """
         self.client = BleakClient(
             self.ble_address, disconnected_callback=self._disconnected_callback
         )
-        self.is_open = await self.client.connect(timeout=10)
+        self.is_open = await self.client.connect(timeout=timeout)
         if self.is_open:
             self._log.info("Connected to PFx Brick %s" % (self.ble_address))
             await self.client.start_notify(PFX_BLE_GATT_UART_RX_UUID, self._rx_callback)
@@ -438,6 +457,7 @@ class PFxBrickBLE(PFxBrick):
         res = await cmd_get_name(self.dev)
         if res:
             self.name = safe_unicode_str(res[1:25])
+        return self.name
 
     async def set_name(self, name):
         """

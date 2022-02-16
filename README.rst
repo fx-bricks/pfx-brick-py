@@ -164,6 +164,7 @@ The **pfxbrick** package will install some useful command line script applicatio
 * :code:`pfxtest` - PFx Brick self test utility
 * :code:`pfxplay` - plays an audio file on the PFx Brick
 * :code:`pfxrun` - runs a script a file on the PFx Brick
+* :code:`pfxscan` - scans for Bluetooth PFx Bricks and shows each brick's information
 
 After installing the **pfxbrick** package, you should be able to use any of these utilities directly from the command line as follows:
 

@@ -2,6 +2,12 @@
 Change Log
 ==========
 
+v.0.8.6
+-------
+
+* improved Bluetooth scanning and device discovery (thanks to a PR from @aholzel)
+* added new `pfxscan` command line utility
+
 v.0.8.5
 -------
 
