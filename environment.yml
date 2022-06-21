@@ -15,10 +15,10 @@ dependencies:
   - ipython
   - typing_extensions
   - nptyping
+  - black=20.8b1
   - pip
   - pip:
     - "--editable=."
     - click==8.0.2
-    - black==20.8b1
     - hidapi
     - bleak
