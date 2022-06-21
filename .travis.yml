@@ -21,6 +21,7 @@ matrix:
     env: PYTHON_VERSION=3.7
     os: linux
     script:
+    - pip install --upgrade click==8.0.2
     - black . --diff --check
 
 addons:
