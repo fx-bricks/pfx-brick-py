@@ -25,6 +25,13 @@ def main():
         default=False,
         help="Halt all activity on PFx Brick without restarting",
     )
+    parser.add_argument(
+        "-r",
+        "--reset",
+        action="store_true",
+        default=False,
+        help="Reset PFx Brick to factory defaults",
+    )
     args = parser.parse_args()
     argsd = vars(args)
 
@@ -35,6 +42,20 @@ def main():
     if argsd["halt"]:
         b.test_action(PFxAction().all_off())
         b.close()
+    elif argsd["reset"]:
+        b.send_raw_icd_command(
+            [
+                PFX_CMD_SET_FACTORY_DEFAULTS,
+                PFX_RESET_BYTE0,
+                PFX_RESET_BYTE1,
+                PFX_RESET_BYTE2,
+                PFX_RESET_BYTE3,
+                PFX_RESET_BYTE4,
+                PFX_RESET_BYTE5,
+                PFX_RESET_BYTE6,
+            ]
+        )
+        print("PFx Brick reset to factory defaults")
     else:
         b.send_raw_icd_command(
             [

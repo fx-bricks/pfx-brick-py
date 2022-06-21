@@ -1017,6 +1017,7 @@ def main():
             if b.filedir.has_file(f):
                 console.log('Removing file %d "%s"' % (f, b.filedir.get_filename(f)))
                 b.remove_file(f, silent=True)
+        time.sleep(3.0)
 
     # restore any startup scripts
     b.refresh_file_dir()

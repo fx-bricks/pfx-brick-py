@@ -46,7 +46,7 @@ async def brick_session(brickdev):
     await brick.close()
 
 
-loop = asyncio.get_event_loop()
+loop = asyncio.new_event_loop()
 pfxdevs = loop.run_until_complete(ble_device_scanner())
 print("Found %d PFx Bricks" % (len(pfxdevs)))
 if len(pfxdevs) > 0:

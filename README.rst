@@ -61,6 +61,8 @@ It is recommended to use the `brew <https://brew.sh>`_ package manager to instal
 
     $ brew install hidapi
 
+Note: for python scripts that use Bluetooth communication with the PFx Brick running under macOS 11.0 (Big Sur) or later, permission must be granted to your terminal shell to use Bluetooth. Go to System Preferences -> Security & Privacy -> Privacy, select Bluetooth from the list, click the (+) button and select your terminal shell, e.g. Terminal.app or iTerm.app, etc.
+
 Installation with pip
 ---------------------
 

@@ -70,15 +70,24 @@ def main():
         default=15,
         help="Timeout interval (seconds) to wait while connecting to a PFx Brick, default=15",
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="Show verbose output from scanning",
+    )
     args = parser.parse_args()
     argsd = vars(args)
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
     pfxdevs = []
     with console.status("Scanning...") as status:
         pfxdevs = loop.run_until_complete(
             ble_device_scanner(
-                scan_timeout=float(argsd["scantime"]), silent=True, filters=["16 MB"]
+                scan_timeout=float(argsd["scantime"]),
+                silent=not argsd["verbose"],
+                verbose=argsd["verbose"],
             )
         )
     print("Found %d PFx Bricks" % (len(pfxdevs)))
