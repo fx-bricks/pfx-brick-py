@@ -6,7 +6,7 @@ import os
 
 # fmt: off
 __project__ = 'pfxbrick'
-__version__ = '0.8.6'
+__version__ = '0.8.7'
 
 # API version
 

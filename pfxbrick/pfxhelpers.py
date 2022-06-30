@@ -218,6 +218,105 @@ def evtch_to_address(evt, ch):
     return address
 
 
+def motor_mask_to_script_str(x):
+    s = []
+    s.append("[")
+    if x & EVT_MOTOR_OUTPUT_A:
+        s.append("A, ")
+    if x & EVT_MOTOR_OUTPUT_B:
+        s.append("B, ")
+    if x & EVT_MOTOR_OUTPUT_C:
+        s.append("C, ")
+    if x & EVT_MOTOR_OUTPUT_D:
+        s.append("D ")
+    s = "".join(s)
+    s = s.rstrip().rstrip(",")
+    s = s + "]"
+    return s
+
+
+def lightch_mask_to_script_str(x):
+    s = []
+    s.append("[")
+    for i in range(8):
+        if x & (1 << i):
+            s.append("%d, " % (i + 1))
+    s = "".join(s)
+    s = s.rstrip().rstrip(",")
+    s = s + "]"
+    return s
+
+
+IR_MASK_SPEED = 0x01
+IR_MASK_JOY = 0x02
+IR_MASK_LEFT = 0x04
+IR_MASK_RIGHT = 0x08
+IR_MASK_BUTTON = 0x10
+IR_MASK_UP = 0x20
+IR_MASK_DOWN = 0x40
+
+
+def ir_mask_to_event_id(x):
+    if x == (IR_MASK_SPEED | IR_MASK_BUTTON):
+        return EVT_8879_TWO_BUTTONS
+    elif x == (IR_MASK_SPEED | IR_MASK_LEFT | IR_MASK_BUTTON):
+        return EVT_8879_LEFT_BUTTON
+    elif x == (IR_MASK_SPEED | IR_MASK_RIGHT | IR_MASK_BUTTON):
+        return EVT_8879_RIGHT_BUTTON
+    elif x == (IR_MASK_SPEED | IR_MASK_LEFT | IR_MASK_UP):
+        return EVT_8879_LEFT_INC
+    elif x == (IR_MASK_SPEED | IR_MASK_LEFT | IR_MASK_DOWN):
+        return EVT_8879_LEFT_DEC
+    elif x == (IR_MASK_SPEED | IR_MASK_RIGHT | IR_MASK_UP):
+        return EVT_8879_RIGHT_INC
+    elif x == (IR_MASK_SPEED | IR_MASK_RIGHT | IR_MASK_DOWN):
+        return EVT_8879_RIGHT_DEC
+    elif x == (IR_MASK_JOY | IR_MASK_LEFT | IR_MASK_UP):
+        return EVT_8885_LEFT_FWD
+    elif x == (IR_MASK_JOY | IR_MASK_LEFT | IR_MASK_DOWN):
+        return EVT_8885_LEFT_REV
+    elif x == (IR_MASK_JOY | IR_MASK_RIGHT | IR_MASK_UP):
+        return EVT_8885_RIGHT_FWD
+    elif x == (IR_MASK_JOY | IR_MASK_RIGHT | IR_MASK_DOWN):
+        return EVT_8885_RIGHT_REV
+    elif x == (IR_MASK_JOY | IR_MASK_LEFT):
+        return EVT_8885_LEFT_CTROFF
+    elif x == (IR_MASK_JOY | IR_MASK_RIGHT):
+        return EVT_8885_RIGHT_CTROFF
+    return 0
+
+
+def script_ir_mask_to_address(x):
+    """Converts IR mask specification from a script to a event LUT address."""
+    mask = 0
+    add = 0
+    xs = x.split()
+    for i, e in enumerate(xs):
+        if "speed" in e:
+            mask |= IR_MASK_SPEED
+        elif "joy" in e:
+            mask |= IR_MASK_JOY
+        elif "left" in e:
+            mask |= IR_MASK_LEFT
+        elif "right" in e:
+            mask |= IR_MASK_RIGHT
+        elif "up" in e:
+            mask |= IR_MASK_UP
+        elif "down" in e:
+            mask |= IR_MASK_DOWN
+        elif "button" in e:
+            mask |= IR_MASK_BUTTON
+        elif "ch" in e:
+            if (i + 1) < len(xs):
+                add += int(xs[i + 1]) - 1
+    add += ir_mask_to_event_id(mask)
+    return add
+
+
+def script_ir_mask_to_evtch(x):
+    return address_to_evtch(script_ir_mask_to_address(x))
+
+
 def period_param(period):
     x = float(period)
     if x < 0.250:

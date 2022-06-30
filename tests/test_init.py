@@ -60,3 +60,15 @@ def test_helpers():
     assert s1 == 0
     assert s2 == 2
     assert s3 == 3
+
+
+def test_conversions():
+    s1 = "speed ch 2 right up"
+    e1 = script_ir_mask_to_address(s1)
+    assert e1 == EVT_8879_RIGHT_INC + 1
+    s2 = "joy ch 1 left down"
+    e2 = script_ir_mask_to_address(s2)
+    assert e2 == EVT_8885_LEFT_REV + 0
+    s3 = "speed ch 3 left button"
+    e3 = script_ir_mask_to_address(s3)
+    assert e3 == EVT_8879_LEFT_BUTTON + 2

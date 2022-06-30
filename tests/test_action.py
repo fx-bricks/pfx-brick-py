@@ -75,3 +75,21 @@ def test_equality():
     assert a1 == a3
     a3.soundFxId = 3
     assert not a1 == a3
+
+
+def test_script_str():
+    a1 = PFxAction()
+    a1.set_motor_speed([1, 2], 50)
+    assert a1.motorParam1 == 0x9F
+    assert a1.motorActionId == EVT_MOTOR_SET_SPD | 0x03
+    s1 = a1.to_event_script_str(0x3C)
+    assert "event 0x3C" in s1
+    assert "motor [A, B]" in s1
+    assert "fx 0x7 159 0" in s1
+
+    a2 = PFxAction()
+    a2.light_on([1, 8])
+    s2 = a2.to_event_script_str(0x40)
+    assert "event 0x40" in s2
+    assert "light [1, 8]" in s2
+    assert "fx 0x01 0 0 0 1 0" in s2

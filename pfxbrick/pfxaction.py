@@ -89,6 +89,8 @@ class PFxAction:
         self.soundParam1 = 0
         self.soundParam2 = 0
 
+        self.fileIDstr = None
+
     def __eq__(self, other):
         """Dunder method for equality"""
         for k, v in self.__dict__.items():
@@ -144,16 +146,56 @@ class PFxAction:
         self.motorActionId = m
         return self
 
-    def stop_motor(self, ch):
+    def stop_motor(self, ch, estop=True):
         """
         Populates an action to stop the specifed motor channel(s).
+
+        :param ch: [:obj:`int`] a list of motor channels (1-4)
+        :param estop: :obj:`boolean` specifies emergency/instant stop
+        :returns: :obj:`PFxAction` self
+        """
+        m = ch_to_mask(listify(ch)) & EVT_MOTOR_OUTPUT_MASK
+        if not estop:
+            m |= EVT_MOTOR_STOP
+        self.motorActionId = m
+        return self
+
+    def change_dir(self, ch):
+        """
+        Populates an action to change direction in specifed motor channel(s).
 
         :param ch: [:obj:`int`] a list of motor channels (1-4)
         :returns: :obj:`PFxAction` self
         """
         m = ch_to_mask(listify(ch)) & EVT_MOTOR_OUTPUT_MASK
-        m |= EVT_MOTOR_ESTOP
+        m |= EVT_MOTOR_CHANGE_DIR
         self.motorActionId = m
+        return self
+
+    def increase_speed(self, ch, step=1, bidir=False):
+        """
+        Populates an action to increase speed in specifed motor channel(s).
+
+        :param ch: [:obj:`int`] a list of motor channels (1-4)
+        :returns: :obj:`PFxAction` self
+        """
+        m = ch_to_mask(listify(ch)) & EVT_MOTOR_OUTPUT_MASK
+        m |= EVT_MOTOR_INC_SPD_BI if bidir else EVT_MOTOR_INC_SPD
+        self.motorActionId = m
+        self.motorParam1 = step
+        return self
+
+    def decrease_speed(self, ch, step=1, bidir=False):
+        """
+        Populates an action to increase speed in specifed motor channel(s).
+
+        :param ch: [:obj:`int`] a list of motor channels (1-4)
+        :returns: :obj:`PFxAction` self
+        """
+        m = ch_to_mask(listify(ch)) & EVT_MOTOR_OUTPUT_MASK
+        m |= EVT_MOTOR_DEC_SPD_BI if bidir else EVT_MOTOR_DEC_SPD
+        self.motorActionId = m
+        self.motorParam1 = step
         return self
 
     def light_on(self, ch):
@@ -285,7 +327,10 @@ class PFxAction:
         """
         self.soundFxId = fx
         if fileID is not None:
-            self.soundFileId = fileID
+            if isinstance(fileID, int):
+                self.soundFileId = fileID
+            else:
+                self.fileIDstr = fileID
         for i, p in enumerate(param):
             if i == 0:
                 self.soundParam1 = p
@@ -446,6 +491,130 @@ class PFxAction:
         msg.append(self.soundParam1)
         msg.append(self.soundParam2)
         return msg
+
+    def to_event_script_str(self, evtID, ch=None):
+        """
+        PFx script language representation.
+
+        Converts an action to a PFx script representation with the keywork 'event' and the
+        action encapsulated in curly braces.  The event can be specified either with an
+        event ID / IR channel pair or by the address (specified with evtID=address and ch not used)
+
+        :param evtID: :obj:`int` event id or address of action
+        :param ch: :obj:`int` IR channel of event (0-3) or None if evtID=address
+        :returns: :obj:`str` string representation of event/action
+        """
+        if ch is None:
+            evs = "0x%02X" % evtID
+        else:
+            if evtID == EVT_ID_8879_TWO_BUTTONS:
+                evs = "ir speed ch %d button" % (ch + 1)
+            elif evtID == EVT_ID_8879_LEFT_BUTTON:
+                evs = "ir speed ch %d left button" % (ch + 1)
+            elif evtID == EVT_ID_8879_RIGHT_BUTTON:
+                evs = "ir speed ch %d right button" % (ch + 1)
+            elif evtID == EVT_ID_8879_LEFT_INC:
+                evs = "ir speed ch %d left up" % (ch + 1)
+            elif evtID == EVT_ID_8879_LEFT_DEC:
+                evs = "ir speed ch %d left down" % (ch + 1)
+            elif evtID == EVT_ID_8879_RIGHT_INC:
+                evs = "ir speed ch %d right up" % (ch + 1)
+            elif evtID == EVT_ID_8879_RIGHT_DEC:
+                evs = "ir speed ch %d right down" % (ch + 1)
+            elif evtID == EVT_ID_8885_LEFT_FWD:
+                evs = "ir joy ch %d left up" % (ch + 1)
+            elif evtID == EVT_ID_8885_LEFT_REV:
+                evs = "ir joy ch %d left down" % (ch + 1)
+            elif evtID == EVT_ID_8885_RIGHT_FWD:
+                evs = "ir joy ch %d right up" % (ch + 1)
+            elif evtID == EVT_ID_8885_RIGHT_REV:
+                evs = "ir joy ch %d right down" % (ch + 1)
+            elif evtID == EVT_ID_8885_LEFT_CTROFF:
+                evs = "ir joy ch %d left" % (ch + 1)
+            elif evtID == EVT_ID_8885_RIGHT_CTROFF:
+                evs = "ir joy ch %d right" % (ch + 1)
+            elif evtID == EVT_ID_STARTUP_EVENT:
+                evs = "startup %d" % (ch + 1)
+            elif evtID == EVT_ID_STARTUP_EVENT2:
+                evs = "startup %d" % (ch + 5)
+        s = []
+        s.append("event %s {" % (evs))
+        s.append("%s" % (self.to_script_str(indent="  ")))
+        s.append("}")
+        return "\n".join(s)
+
+    def to_script_str(self, indent=""):
+        """
+        PFx script language representation.
+
+        Converts an action to a PFx script representation.
+
+        :returns: :obj:`str` string representation of event/action
+        """
+        s = []
+        if self.motorActionId & EVT_MOTOR_OUTPUT_MASK:
+            ms = motor_mask_to_script_str(self.motorActionId & EVT_MOTOR_OUTPUT_MASK)
+            mid = (self.motorActionId & EVT_MOTOR_ACTION_ID_MASK) >> 4
+            s.append(
+                "%smotor %s fx 0x%01X %d %d"
+                % (indent, ms, mid, self.motorParam1, self.motorParam2)
+            )
+        if self.lightFxId & EVT_LIGHT_COMBO_MASK:
+            s.append(
+                "%slight all fx 0x%02X %d %d %d %d %d"
+                % (
+                    indent,
+                    self.lightFxId & EVT_LIGHT_ID_MASK,
+                    self.lightParam1,
+                    self.lightParam2,
+                    self.lightParam3,
+                    self.lightParam4,
+                    self.lightParam5,
+                )
+            )
+        elif self.lightFxId & EVT_LIGHT_ID_MASK:
+            lc = lightch_mask_to_script_str(self.lightOutputMask)
+            s.append(
+                "%slight %s fx 0x%02X %d %d %d %d %d"
+                % (
+                    indent,
+                    lc,
+                    self.lightFxId & EVT_LIGHT_ID_MASK,
+                    self.lightParam1,
+                    self.lightParam2,
+                    self.lightParam3,
+                    self.lightParam4,
+                    self.lightParam5,
+                )
+            )
+        if self.soundFxId:
+            if self.fileIDstr is not None:
+                # action specified with a string based filename
+                s.append(
+                    '%ssound fx 0x%02X "%s" %d %d'
+                    % (
+                        indent,
+                        self.soundFxId,
+                        self.fileIDstr,
+                        self.soundParam1,
+                        self.soundParam2,
+                    )
+                )
+            else:
+                # action specified with numeric fileID
+                s.append(
+                    "%ssound fx 0x%02X %d %d %d"
+                    % (
+                        indent,
+                        self.soundFxId,
+                        self.soundFileId,
+                        self.soundParam1,
+                        self.soundParam2,
+                    )
+                )
+        if len(s) == 0:
+            s.append("# cleared action")
+        return "\n".join(s)
 
     def verbose_line_str(self, brick):
         """

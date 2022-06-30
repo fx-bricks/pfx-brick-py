@@ -5,6 +5,7 @@ from audiofile import AudioFile
 from toolbox import *
 
 from pfxbrick.pfx import *
+from pfxbrick.pfxaction import *
 from pfxbrick.pfxfiles import fs_copy_file_to
 from pfxbrick.pfxhelpers import uint16_to_bytes, uint32_to_bytes
 
@@ -24,6 +25,12 @@ attr_dict = {
     "startup": 0x5C,
     "shutdown": 0x7C,
 }
+
+
+def listify(x):
+    if not isinstance(x, list):
+        return [x]
+    return x
 
 
 def map_pct_to_motor_step(amount):
@@ -140,11 +147,22 @@ class SoundProfile:
         self.vmin = None
         self.vmid = None
         self.vmax = None
+        self.motor_invert = None
+        self.motor_pfmode = None
+        self.motor_low_torque = None
 
         self.increase_speed = None
         self.decrease_speed = None
         self.change_dir = None
         self.stop = None
+        self.emergency_stop = None
+        self.increase_volume = None
+        self.decrease_volume = None
+        self.increase_brightness = None
+        self.decrease_brightness = None
+        self.clear_remote = None
+        self.forward_lights = None
+        self.reverse_lights = None
 
         self.default_volume = None
         self.rapid_accel_thr = 0
@@ -182,10 +200,22 @@ class SoundProfile:
         self.vmin = None
         self.vmid = None
         self.vmax = None
+        self.motor_invert = None
+        self.motor_pfmode = None
+        self.motor_low_torque = None
+
         self.increase_speed = None
         self.decrease_speed = None
         self.change_dir = None
         self.stop = None
+        self.emergency_stop = None
+        self.increase_volume = None
+        self.decrease_volume = None
+        self.increase_brightness = None
+        self.decrease_brightness = None
+        self.clear_remote = None
+        self.forward_lights = None
+        self.reverse_lights = None
 
         self.default_volume = None
         self.rapid_accel_thr = 0
@@ -336,13 +366,33 @@ class SoundProfile:
                 self.vmid = int(v)
             elif k == "vmax":
                 self.vmax = int(v)
-            elif k in ["increase_speed", "decrease_speed", "stop", "change_dir"]:
+            elif k in [
+                "increase_speed",
+                "decrease_speed",
+                "stop",
+                "change_dir",
+                "emergency_stop",
+                "clear_remote",
+                "motor_invert",
+                "motor_pfmode",
+                "motor_low_torque",
+                "increase_volume",
+                "decrease_volume",
+                "increase_brightness",
+                "decrease_brightness",
+                "forward_lights",
+                "reverse_lights",
+            ]:
                 self.__dict__[k] = v
             elif k == "motor_channel":
-                if str(v).lower() in ["a", "0"]:
-                    self.motor_ch = 0
-                elif str(v).lower() in ["b", "1"]:
-                    self.motor_ch = 1
+                if len(str(v)) == 1:
+                    if str(v).lower() in ["a", "0"]:
+                        self.motor_ch = 0
+                    elif str(v).lower() in ["b", "1"]:
+                        self.motor_ch = 1
+                elif len(str(v)) == 2:
+                    if str(v).lower() == "ab":
+                        self.motor_ch = -1
             elif k == "motor_speed":
                 if v.lower() not in ["target", "current"]:
                     raise ValueError(
@@ -351,6 +401,7 @@ class SoundProfile:
                     )
                 else:
                     self.motor_speed = v.lower()
+
         if not "notch_bounds" in d:
             new_bounds = self.bounds_from_notchcount(self.notch_count)
             self.notch_bounds = new_bounds
@@ -380,16 +431,32 @@ class SoundProfile:
         if self.default_volume is not None:
             s.append("set config vol = %d" % (self.default_volume))
         ch = "a" if self.motor_ch == 0 else "b"
-        if self.acceleration is not None:
-            s.append("set config motor %s accel = %d" % (ch, self.acceleration))
-        if self.deceleration is not None:
-            s.append("set config motor %s decel = %d" % (ch, self.deceleration))
-        if self.vmin is not None:
-            s.append("set config motor %s v0 = %d" % (ch, self.vmin))
-        if self.vmid is not None:
-            s.append("set config motor %s v1 = %d" % (ch, self.vmid))
-        if self.vmax is not None:
-            s.append("set config motor %s v2 = %d" % (ch, self.vmax))
+        ch = []
+        if self.motor_ch == 0 or self.motor_ch == -1:
+            ch.append("a")
+        if self.motor_ch == 1 or self.motor_ch == -1:
+            ch.append("b")
+        for c in ch:
+            if self.acceleration is not None:
+                s.append("set config motor %s accel = %d" % (c, self.acceleration))
+            if self.deceleration is not None:
+                s.append("set config motor %s decel = %d" % (c, self.deceleration))
+            if self.vmin is not None:
+                s.append("set config motor %s v0 = %d" % (c, self.vmin))
+            if self.vmid is not None:
+                s.append("set config motor %s v1 = %d" % (c, self.vmid))
+            if self.vmax is not None:
+                s.append("set config motor %s v2 = %d" % (c, self.vmax))
+            if self.motor_invert is not None:
+                s.append(
+                    "set config motor %s invert = %d" % (c, int(self.motor_invert))
+                )
+            if self.motor_pfmode is not None:
+                s.append("set config motor %s pf = %d" % (c, int(self.motor_pfmode)))
+            if self.motor_low_torque is not None:
+                s.append(
+                    "set config motor %s torque = %d" % (c, int(self.motor_low_torque))
+                )
         s.append("set config nc = %d" % (self.notch_count))
         for i in range(self.notch_count - 1):
             s.append("set config nb %d = %d" % (i + 1, self.notch_bounds[i]))
@@ -453,9 +520,7 @@ class SoundProfile:
         if self.gated_loops is not None:
             s.append("\n# Activate motor gated sound effects")
             if len(self.gated_loops) > 0:
-                motor_op = 0
-                if self.motor_ch == 1:
-                    motor_op = 1
+                motor_op = 1 if self.motor_ch == 1 else 0
                 # assert using current speed
                 motor_op |= 0x04
                 s.append("sound fx 9 0 0x%02X 0x%02X" % (motor_op, self.gated_gain))
@@ -466,35 +531,100 @@ class SoundProfile:
                 name = sound["audiofile"].name + sound["audiofile"].ext
                 if "probability" in sound:
                     s.append("# random sound effect")
-                    s.append('sound fx 13 "%s" %d 0' % (name, sound["probability"]))
-                elif "trigger" in sound:
-                    repeat = ""
-                    if "repeat" in sound:
-                        if sound["repeat"]:
-                            repeat = "repeat"
-                    s.append(
-                        'event ir %s {\n  sound play "%s" %s\n}'
-                        % (sound["trigger"], name, repeat)
+                    a = PFxAction().sound_fx(
+                        fx=13, param=[sound["probability"], 0], fileID=name
                     )
-        s.append("\n# setup remote control")
+                    s.append(a.to_script_str())
+                elif "trigger" in sound:
+                    if "repeat" in sound and sound["repeat"]:
+                        a = PFxAction().repeat_audio_file(fileID=name)
+                    else:
+                        a = PFxAction().play_audio_file(fileID=name)
+                    s.append(
+                        a.to_event_script_str(
+                            *script_ir_mask_to_evtch(sound["trigger"])
+                        )
+                    )
+
+        if self.forward_lights is not None:
+            s.append("\n# Forward (head) lights")
+            mopt = 3 if self.motor_ch == 1 else 1
+            a = PFxAction().light_fx(
+                self.forward_lights["channels"], 1, param=[mopt, 4, 0, 1, 0]
+            )
+            s.append(a.to_script_str())
+
+        if self.reverse_lights is not None:
+            s.append("\n# Reverse (tail) lights")
+            mopt = 4 if self.motor_ch == 1 else 2
+            a = PFxAction().light_fx(
+                self.reverse_lights["channels"], 1, param=[mopt, 4, 0, 1, 0]
+            )
+            s.append(a.to_script_str())
+
+        if self.motor_ch == 0:
+            ch = 1
+        elif self.motor_ch == 1:
+            ch = 2
+        elif self.motor_ch == -1:
+            ch = [1, 2]
+        s.append("\n# Setup remote control")
         if self.increase_speed is not None:
-            trig = self.increase_speed["trigger"]
             step = 0
             if "amount" in self.increase_speed:
                 step = map_pct_to_motor_step(self.increase_speed["amount"])
-            s.append("event ir %s {\n  motor %s fx 0x2 %d 0\n}" % (trig, ch, step))
+            s.append("# Increase speed")
+            for t in listify(self.increase_speed["trigger"]):
+                a = PFxAction().increase_speed(ch, step=step, bidir=False)
+                s.append(a.to_event_script_str(*script_ir_mask_to_evtch(t)))
         if self.decrease_speed is not None:
-            trig = self.decrease_speed["trigger"]
             step = 0
             if "amount" in self.decrease_speed:
                 step = map_pct_to_motor_step(self.decrease_speed["amount"])
-            s.append("event ir %s {\n  motor %s fx 0x3 %d 0\n}" % (trig, ch, step))
+            s.append("# Decrease speed")
+            for t in listify(self.decrease_speed["trigger"]):
+                a = PFxAction().decrease_speed(ch, step=step, bidir=False)
+                s.append(a.to_event_script_str(*script_ir_mask_to_evtch(t)))
         if self.stop is not None:
-            trig = self.stop["trigger"]
-            s.append("event ir %s {\n  motor %s fx 0x1 0 0\n}" % (trig, ch))
+            s.append("# Stop")
+            for t in listify(self.stop["trigger"]):
+                a = PFxAction().stop_motor(ch, estop=False)
+                s.append(a.to_event_script_str(*script_ir_mask_to_evtch(t)))
+        if self.emergency_stop is not None:
+            s.append("# Emergency Stop")
+            for t in listify(self.emergency_stop["trigger"]):
+                a = PFxAction().stop_motor(ch, estop=True)
+                s.append(a.to_event_script_str(*script_ir_mask_to_evtch(t)))
         if self.change_dir is not None:
-            trig = self.change_dir["trigger"]
-            s.append("event ir %s {\n  motor %s fx 0x6 0 0\n}" % (trig, ch))
+            s.append("# Change direction")
+            for t in listify(self.change_dir["trigger"]):
+                a = PFxAction().change_dir(ch)
+                s.append(a.to_event_script_str(*script_ir_mask_to_evtch(t)))
+        if self.increase_volume is not None:
+            s.append("# Increase volume")
+            for t in listify(self.increase_volume["trigger"]):
+                a = PFxAction().sound_fx(fx=1)
+                s.append(a.to_event_script_str(*script_ir_mask_to_evtch(t)))
+        if self.decrease_volume is not None:
+            s.append("# Decrease volume")
+            for t in listify(self.decrease_volume["trigger"]):
+                a = PFxAction().sound_fx(fx=2)
+                s.append(a.to_event_script_str(*script_ir_mask_to_evtch(t)))
+        if self.increase_brightness is not None:
+            s.append("# Increase brightness")
+            for t in listify(self.increase_brightness["trigger"]):
+                a = PFxAction().light_fx([x + 1 for x in range(8)], fx=2)
+                s.append(a.to_event_script_str(*script_ir_mask_to_evtch(t)))
+        if self.decrease_brightness is not None:
+            s.append("# Decrease brightness")
+            for t in listify(self.decrease_brightness["trigger"]):
+                a = PFxAction().light_fx([x + 1 for x in range(8)], fx=3)
+                s.append(a.to_event_script_str(*script_ir_mask_to_evtch(t)))
+        if self.clear_remote is not None:
+            s.append("# clear actions from remote events")
+            for e in listify(self.clear_remote):
+                a = PFxAction()
+                s.append(a.to_event_script_str(*script_ir_mask_to_evtch(e)))
         s.append("\n")
 
         if to_brick is not None:

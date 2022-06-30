@@ -467,17 +467,20 @@ class PFxFile:
             attr_str = file_attr_dict[self.attributes]
         elif self.id in fileid_dict:
             attr_str = fileid_dict[self.id]
-        s = "%3d %-24s [bold white]%6.1f kB[/bold white] [bold blue]%04X[/bold blue] [bold black]%08X %08X[/bold black] [bold aquamarine3]%08X[/bold aquamarine3]  [bold black]%04X %02X[/bold black] %s" % (
-            self.id,
-            self.name,
-            float(self.size / 1000),
-            self.attributes,
-            self.userData1,
-            self.userData2,
-            self.crc32,
-            self.firstSector,
-            self.id,
-            attr_str,
+        s = (
+            "%3d %-24s [bold white]%6.1f kB[/bold white] [bold blue]%04X[/bold blue] [bold black]%08X %08X[/bold black] [bold aquamarine3]%08X[/bold aquamarine3]  [bold black]%04X %02X[/bold black] %s"
+            % (
+                self.id,
+                self.name,
+                float(self.size / 1000),
+                self.attributes,
+                self.userData1,
+                self.userData2,
+                self.crc32,
+                self.firstSector,
+                self.id,
+                attr_str,
+            )
         )
         return s
 
