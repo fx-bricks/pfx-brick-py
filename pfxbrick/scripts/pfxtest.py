@@ -131,6 +131,7 @@ def do_test_script_config(brick, fid):
     brick.run_script(fid)
     time.sleep(2)
     brick.stop_script()
+    time.sleep(1)
     brick.get_config()
     new_settings = [
         (brick.config.settings.notchCount, 5),
@@ -279,16 +280,16 @@ def test_scripts(brick):
 
 def snapshot_config(brick):
     brick.get_config()
-    backup_config = copy.deepcopy(brick.config)
+    backup_config = brick.config.copy()
     return backup_config
 
 
-def restore_config(brick, config):
-    if config is not None:
-        brick.config = copy.deepcopy(config)
+def restore_config(brick, from_config):
+    if from_config is not None:
+        brick.config = from_config.copy()
         brick.set_config()
         console.log("Writing back original configuration values...")
-        time.sleep(3)
+    time.sleep(3)
 
 
 def test_dac(brick):
@@ -989,6 +990,7 @@ def main():
             )
         else:
             test_scripts(b)
+        time.sleep(2)
 
     if argsd["audio"]:
         files = [

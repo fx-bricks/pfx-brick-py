@@ -163,6 +163,7 @@ class SoundProfile:
         self.clear_remote = None
         self.forward_lights = None
         self.reverse_lights = None
+        self.toggle_lights = None
 
         self.default_volume = None
         self.rapid_accel_thr = 0
@@ -216,6 +217,7 @@ class SoundProfile:
         self.clear_remote = None
         self.forward_lights = None
         self.reverse_lights = None
+        self.toggle_lights = None
 
         self.default_volume = None
         self.rapid_accel_thr = 0
@@ -382,6 +384,7 @@ class SoundProfile:
                 "decrease_brightness",
                 "forward_lights",
                 "reverse_lights",
+                "toggle_lights",
             ]:
                 self.__dict__[k] = v
             elif k == "motor_channel":
@@ -549,18 +552,32 @@ class SoundProfile:
         if self.forward_lights is not None:
             s.append("\n# Forward (head) lights")
             mopt = 3 if self.motor_ch == 1 else 1
+            fade = self.forward_lights["fade"] if "fade" in self.forward_lights else 0
+            fade = fade_time_param(fade)
             a = PFxAction().light_fx(
-                self.forward_lights["channels"], 1, param=[mopt, 4, 0, 1, 0]
+                self.forward_lights["channels"], 1, param=[mopt, fade, 0, 1, 0]
             )
             s.append(a.to_script_str())
 
         if self.reverse_lights is not None:
             s.append("\n# Reverse (tail) lights")
             mopt = 4 if self.motor_ch == 1 else 2
+            fade = self.reverse_lights["fade"] if "fade" in self.reverse_lights else 0
+            fade = fade_time_param(fade)
             a = PFxAction().light_fx(
-                self.reverse_lights["channels"], 1, param=[mopt, 4, 0, 1, 0]
+                self.reverse_lights["channels"], 1, param=[mopt, fade, 0, 1, 0]
             )
             s.append(a.to_script_str())
+
+        if self.toggle_lights is not None:
+            s.append("\n# Toggle lights channels")
+            fade = self.toggle_lights["fade"] if "fade" in self.toggle_lights else 0
+            fade = fade_time_param(fade)
+            for t in listify(self.toggle_lights["trigger"]):
+                a = PFxAction().light_fx(
+                    self.toggle_lights["channels"], 1, param=[0, fade, 0, 0, 0]
+                )
+                s.append(a.to_event_script_str(*script_ir_mask_to_evtch(t)))
 
         if self.motor_ch == 0:
             ch = 1

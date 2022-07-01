@@ -76,6 +76,14 @@ class PFxSettings:
         self.brakeDecelThr = 0
         self.brakeSpeedThr = 0
 
+    def copy(self):
+        x = PFxSettings()
+        for k, v in self.__dict__.items():
+            x.__dict__[k] = v
+        for i, e in enumerate(self.notchBounds):
+            x.notchBounds[i] = e
+        return x
+
     def __eq__(self, other):
         for k, v in self.__dict__.items():
             if k not in other.__dict__:
@@ -144,6 +152,12 @@ class PFxMotor:
         self.vmin = 0
         self.vmid = 128
         self.vmax = 255
+
+    def copy(self):
+        x = PFxMotor()
+        for k, v in self.__dict__.items():
+            x.__dict__[k] = v
+        return x
 
     def __repr__(self):
         s = "invert=%02X torqueComp=%02X tlgMode=%02X" % (
@@ -237,6 +251,14 @@ class PFxLights:
         self.pfBrightnessC = 0
         self.pfBrightnessD = 0
 
+    def copy(self):
+        x = PFxLights()
+        for k, v in self.__dict__.items():
+            x.__dict__[k] = v
+        for i, e in enumerate(self.startupBrightness):
+            x.startupBrightness[i] = e
+        return x
+
     def __repr__(self):
         sb = "".join("{:02X} ".format(x) for x in self.startupBrightness)
         sp = "".join(
@@ -310,6 +332,12 @@ class PFxAudio:
         self.treble = 0
         self.defaultVolume = 0
 
+    def copy(self):
+        x = PFxAudio()
+        for k, v in self.__dict__.items():
+            x.__dict__[k] = v
+        return x
+
     def __eq__(self, other):
         for k, v in self.__dict__.items():
             if k not in other.__dict__:
@@ -365,6 +393,16 @@ class PFxConfig:
             self.icd_rev = icd_rev
         else:
             self.icd_rev = "3.38"
+
+    def copy(self):
+        x = PFxConfig()
+        x.settings = self.settings.copy()
+        x.lights = self.lights.copy()
+        x.audio = self.audio.copy()
+        x.icd_rev = self.icd_rev
+        for i, e in enumerate(self.motors):
+            x.motors[i] = e.copy()
+        return x
 
     def __eq__(self, other):
         for k, v in self.__dict__.items():

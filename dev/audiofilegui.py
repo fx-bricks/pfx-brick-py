@@ -186,18 +186,18 @@ class AudioFileGui:
             err = False
             interval = 0
             while (nCount < nBytes) and not err:
-                buf = f.read(61)
+                buf = f.read(62)
                 nRead = len(buf)
                 nCount += nRead
                 if nRead > 0:
-                    msg = [PFX_CMD_FILE_WRITE]
-                    msg.append(self.fileid)
+                    msg = [PFX_CMD_FILE_WRITE_FAST]
+                    # msg.append(self.fileid)
                     msg.append(nRead)
                     for b in buf:
                         msg.append(b)
                     res = usb_transaction(brick.dev, msg)
                     err = fs_error_check(res[1])
-                if (interval % 256) == 0 or abs(nBytes - nCount) < 61:
+                if (interval % 256) == 0 or abs(nBytes - nCount) < 62:
                     sg.one_line_progress_meter(
                         "Copying File to PFx Brick",
                         nCount,

@@ -84,7 +84,7 @@ def test_script_str():
     assert a1.motorActionId == EVT_MOTOR_SET_SPD | 0x03
     s1 = a1.to_event_script_str(0x3C)
     assert "event 0x3C" in s1
-    assert "motor [A, B]" in s1
+    assert "motor [a, b]" in s1
     assert "fx 0x7 159 0" in s1
 
     a2 = PFxAction()

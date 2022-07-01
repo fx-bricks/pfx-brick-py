@@ -222,13 +222,13 @@ def motor_mask_to_script_str(x):
     s = []
     s.append("[")
     if x & EVT_MOTOR_OUTPUT_A:
-        s.append("A, ")
+        s.append("a, ")
     if x & EVT_MOTOR_OUTPUT_B:
-        s.append("B, ")
+        s.append("b, ")
     if x & EVT_MOTOR_OUTPUT_C:
-        s.append("C, ")
+        s.append("c, ")
     if x & EVT_MOTOR_OUTPUT_D:
-        s.append("D ")
+        s.append("d ")
     s = "".join(s)
     s = s.rstrip().rstrip(",")
     s = s + "]"
@@ -465,6 +465,41 @@ def duration_to_fixed_value(duration):
         return EVT_SOUND_DUR_2M
     else:
         return EVT_SOUND_DUR_5M
+
+
+def fade_time_param(fade_time):
+    x = float(fade_time)
+    if x < 0.050:
+        return EVT_FADE_TIME_NONE
+    elif x < 0.1:
+        return EVT_FADE_TIME_50MS
+    elif x < 0.2:
+        return EVT_FADE_TIME_100MS
+    elif x < 0.4:
+        return EVT_FADE_TIME_200MS
+    elif x < 0.5:
+        return EVT_FADE_TIME_400MS
+    elif x < 0.6:
+        return EVT_FADE_TIME_500MS
+    elif x < 0.8:
+        return EVT_FADE_TIME_600MS
+    elif x < 1.0:
+        return EVT_FADE_TIME_800MS
+    elif x < 1.5:
+        return EVT_FADE_TIME_1S
+    elif x < 2.0:
+        return EVT_FADE_TIME_1_5S
+    elif x < 2.5:
+        return EVT_FADE_TIME_2S
+    elif x < 3.0:
+        return EVT_FADE_TIME_2_5S
+    elif x < 4.0:
+        return EVT_FADE_TIME_3S
+    elif x < 5.0:
+        return EVT_FADE_TIME_4S
+    elif x < 10.0:
+        return EVT_FADE_TIME_5S
+    return EVT_FADE_TIME_10S
 
 
 def printProgressBar(
